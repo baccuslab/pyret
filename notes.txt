@@ -1,0 +1,43 @@
+Notes on transition from MATLAB to Python analysis
+
+Data translation
+----------------
+
+Both the experimental data and the spike-sorting data are stored in MATLAB 
+structure arrays. Getting the spike times out should be no problem. I have already
+written something to write individual cell spike times from the GroupCW structure 
+array. 
+
+Getting the experimental data is going to be more difficult. I store everything
+in nested and non-scalar MATLAB structure arrays, which are a bear to parse directly
+in Python, even using scipy.io.loadmat. I can get the full field names easily enough
+using the function recursiveFieldNames.m, but how should I write them out? MAT-files
+seem like the logical choice, probably one for each field. Something based on using
+MATLAB's "save(s, 'struct')" functionality.
+
+I can write a file for each of the non-scalar substructures of my standard ex
+experimental structure, 'disp' and 'info' ('key' is not needed). Then I can write one
+file for each 'stim' block, containing all of the block-specific information.
+
+It definitely makes sense to do all this work when the data is saved originally, after
+the successful completion of the experiment, rather than filtering/parsing the structures
+after the fact.
+
+Random number generators
+------------------------
+
+I generally only save the random number streams used to generate the stimuli, rather
+than saving large files with the actual pseudo-random numbers used in the stimulus.
+While this saves space, I don't really see a way around actually writing them out 
+at some point. I cannot store the streams and generate the numbers as needed in Python,
+as the algorithms appear to be different. Therefore writing out the actual stimuli used,
+even if they happen to be many minutes of spatial white noise, seems like the best
+way forward. Crap that's a lot of space, like up to 30-50Mb for spatial white noise,
+depending on the length.
+
+
+Other
+-----
+
+Given the issues with translating MATLAB structures and PRNG methods, it may be worthwhile
+to look back at PsychoPy...
