@@ -7,8 +7,8 @@ tools for interacting with binary recording files
 '''
 
 # Imports
-from os import path
 import scipy as sp
+from os import path
 
 def readbin(fname, chan=0):
 	'''

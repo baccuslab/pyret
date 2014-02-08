@@ -1,110 +1,102 @@
-# lntools.py
-#
-# Module for linear-nonlinear model data analysis of extracellular recordings
-#
-# (C) 2014 bnaecker@stanford.edu
+'''
+lntools.py
 
-## Imports
+tools for basic linear-nonlinear model components
+
+(C) 2014 bnaecker, nirum
+'''
+
+# Imports
 import scipy as sp
 import matplotlib.pyplot as plt
 import seaborn
 
-## Bin spikes
-def binspikes(spikes, tmax, binsize=0.01):
+def getste(stim, vbl, spk, nframes=25, reshape=False):
 	'''
-	Bin spike times at the given resolution
+	usage: ste = getste(stim, vbl, spk, nframes)
+	construct the spike-triggered ensemble
 
-	INPUT:
-		spikes	- list of spike time arrays for each cell
-		tmax	- max time (usually end of experiment or last VBL timestamp)
-		binsize	- bin size in msec
-	
-	OUTPUT:
-		bspikes	- list of binned spikes for each cell
-		tax		- time axis
+	input:
+		stim	- the stimulus array. can be 1-, 2-, or 3-dimensional, corresponding
+				  to temporal, lines, or spatial white noise stimuli
+		vbl		- the vbl timestamp array
+		spk		- list of spike-time arrays for each cell
+		nframes	- number of frames to consider for the ste
+		reshape - reshape the STE to return it as an array of (stimdim1, ..., stimdimN, nframes)
+				  rather than the default prod(stimsize) * nframes
+
+	output:
+		ste		- the spike-triggered ensemble, same shape as stim
 	'''
-	tbins = sp.arange(0, tmax, binsize)
-	bspikes = []
-	for cell in spikes:
-		hist, tax = sp.histogram(cell, bins = tbins)
-		bspikes.append(hist)
-	return bspikes, tax
+	if sp.ndim(stim) == 3:
+		ste = _ste_spatialwn(stim, vbl, spk, nframes, reshape)
+	elif sp.ndim(stim) == 2:
+		ste = _ste_lineswn(stim, vbl, spk, nframes, reshape)
+	elif sp.ndim(stim) == 1:
+		ste = _ste_temporalwn(stim, vbl, spk, nframes, reshape)
 
-def estimatefr(bspikes, nfiltpts = 7, filtsd = 2):
+	return ste
+
+def _ste_spatialwn(stim, vbl, spk, nframes, reshape):
 	'''
-	Filter the binned spike times with a Gaussian to obtain an estimate of the firing rate
-
-	INPUT:
-		bspikes		- list of binned spike times for each cell
-		nfiltpts	- number of pts in the Gaussian filter
-		filtsd		- SD of the Gaussian filter
-
-	OUTPUT:
-		rates		- list of firing rates for each cell
+	spike-triggered ensemble for spatial white noise stimuli. not called directly, 
+	only through lntools.getste
 	'''
-	from scipy.signal import gaussian, lfilter
-	win = gaussian(nfiltpts, filtsd)
-	rates = []
-	for cell in bspikes:
-		rates.append(lfilter(win, 1, cell))
-	return rates
-
-## Spike-triggered ensemble for spatial white noise stimuli
-def ste_spatialwn(stim, vbl, st, nframes = 25):
-	'''
-	Creates the spike-triggered ensemble over the range of VBL timestamps given
-	Assumes that the VBL array has been offset appropriately
-
-	INPUT:
-		stim	- the stimulus array
-		vbl		- array of timestamps for the stimulus
-		st		- the spike times for the cell
-		nframes - number of frames before the spike to consider as part of STE
-	
-	OUTPUT:
-		ste		- array of stimuli preceding the spike, as an ndarray
-	'''
-
-	# Construct list to hold full STE across every cell
+	# Return list
+	ncells = len(spk)
 	ste = []
 
 	# Loop over cells
-	for cell in st:
+	for cell in spk:
 
-		# Number of spikes
-		nspikes = len(cell)
-		si = 0
+		# Capture white noise spikes only
+		wnspikes = cell[sp.logical_and(cell > vbl[0], cell <= vbl[-1])]
+		nspikes = wnspikes.size
 
-		# Preallocate ndarray to hold the STE
-		thisste = sp.zeros((nspikes, stim.shape[0] * stim.shape[1] * nframes))
+		# Prealloc array to hold STE
+		wnste = sp.zeros((nspikes, stim.shape[0] * stim.shape[1] * nframes))
 
 		# Notify
-		print(' cell {c} of {nc} ({ns} spikes) ...'.format( \
-				c = st.index(cell) + 1, nc = len(st), ns = nspikes), end = '', flush = True)
+		print(' cell {c} of {nc} ({ns} spikes) ...'.format(\
+				c = spk.index(cell) + 1, nc = ncells, ns = nspikes), \
+				end = '', flush = True)
 
 		# Loop over spikes
-		for spike in cell:
+		si = 0
+		for spike in wnspikes:
 
-			# Find the block number
-			block = sp.where(sp.logical_and(vbl[0, :] < spike, spike <= vbl[-1, :]))[0]
+			# Find VBL array block
+			block = sp.logical_and(vbl[0, :] < spike, spike <= vbl[-1, :])
 
-			# Find the frame preceding in this block
-			frame = sp.sum(sp.where((vbl[:, block] - spike) < 0, 1, 0)) - 1
-
-			# Add the stimulus of the preceding frames, vectorized
+			# Add immediately preceding nframes frames
+			frame = sp.sum(vbl[:, block] < spike) - 1
 			if frame < nframes:
 				continue
-			thisste[si, :] = stim[:, :, frame : frame - nframes : -1].flatten()
-
-			# Increment spike-counter
+			wnste[si, :] = stim[:, :, frame : frame - nframes : -1].flatten()
 			si += 1
 
-		# Append this cell's STE as an nd-array to the full STE
-		ste.append(thisste)
+		# Append this ste to the list
+		ste.append(wnste)
 		print(' done.', flush = True)
 
-	# Return the STE
+	if reshape:
+		return [s.reshape(s.shape[0], stim.shape[0], stim.shape[1], nframes)\
+				for s in ste]
 	return ste
+			
+def _ste_lineswn(stim, vbl, spk, nframes):
+	'''
+	spike-triggered ensemble for lines white noise stimuli. not called directly, 
+	only through lntools.getste
+	'''
+	raise NotImplemented
+
+def _ste_temporalwn(stim, vbl, spk, nframes):
+	'''
+	spike-triggered ensemble for temporal white noise stimuli. not called directly, 
+	only through lntools.getste
+	'''
+	raise NotImplemented
 
 def tfsta(tfwn, tfvbl, spikes, upfact = 2, nbands = 3, length = 25, donorm = False):
 	'''

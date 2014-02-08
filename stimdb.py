@@ -7,7 +7,7 @@ tools for interacting with the stimulus database
 '''
 
 # Imports
-import re, os
+import os
 from scipy.io import loadmat
 
 def dblist(stimtype, verbose=False):
