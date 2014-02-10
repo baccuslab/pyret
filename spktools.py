@@ -82,7 +82,7 @@ def estfr(bspk, binsize=0.01, npts=7, sd=2):
     # Filter each cell's binned spike times
     rates = []
     for cell in bspk:
-            rates.append(signal.lfilter(filt, 1, cell) / binsize)
+		rates.append(signal.lfilter(filt, 1, cell) / binsize)
     
     return rates
 
