@@ -9,7 +9,6 @@ tools for basic linear-nonlinear model components
 # Imports
 import scipy as sp
 import matplotlib.pyplot as plt
-import seaborn
 
 def getste(stim, vbl, spk, nframes=25, reshape=False):
 	'''

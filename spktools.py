@@ -82,7 +82,7 @@ def estfr(bspk, binsize=0.01, npts=7, sd=2):
     # Filter each cell's binned spike times
     rates = []
     for cell in bspk:
-		rates.append(signal.lfilter(filt, 1, cell) / binsize)
+        rates.append(signal.lfilter(filt, 1, cell) / binsize)
     
     return rates
 
@@ -123,6 +123,7 @@ def raster(spk, cells=None, trange=None):
     plt.ylabel('cell #', fontdict={'fontsize':20})
     plt.ylim(ymin = 0, ymax=ncells + 1)
     plt.show()
+    plt.draw()
     
     return fig
 
@@ -170,5 +171,6 @@ def psth(rates, tax, cells=None, trange=None):
             plt.title('cell {c} psth'.format(c = cell + 1), fontdict={'fontsize': 24})
             plt.xlabel('time (s)', fontdict={'fontsize':20})
     plt.show()
+    plt.draw()
     
     return fig

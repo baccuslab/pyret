@@ -6,30 +6,113 @@ Brief description
 -----------------
 
 The pyret package provides a set of tools useful in the analysis of retina experiments
-in the Baccus lab. It contains methods for interacting with experimental data, both
-raw and processed, querying the stimulus database, running basic analyses such as 
-the computation of linear filters, and a few simple routines for visualization of the
-experimental data.
+in the Baccus lab. It contains routines for interacting with raw Igor binary files
+from the recording computer, manipulating spike trains, performing basic spike-triggered
+analyses, a few retina simulation tools, and visualization tools for all these.
 
 Submodule overview
 ------------------
 
-[__rbin__](#rbin) 			-- reading binary recording files, useful for checking the photodiode
+[**binary**](#binary)	-- reading binary recording files, useful for checking the photodiode
 
-[__spktools__](#spktools)	-- basic manipulation of spike-times, including binning, smoothing, rasters and psths
+[**spk**](#spk)			-- basic manipulation of spike-times, including binning & smoothing
 
-[__lntools__](#lntools)		-- computing components of simple linear-nonlinear models, including linear filters and nonlinearities
+[**sta**](#sta)			-- computing components of simple linear-nonlinear models, including linear filters and nonlinearities
 
-[__retsim__](#retsim)		-- tools for simulating the retina (LN, LN-LN, LNIAF, LNK, LNKS models)
+[**retsim**](#retsim)	-- tools for simulating the retina (LN, LN-LN, LNIAF, LNK, LNKS models)
+
+[**viz**](#viz)			-- visualization methods
+
+Classes overview
+----------------
+
+[**Cell**](#cell)			-- individual cell
+
+[**Stimulus**](#stim)		-- a stimulus
 
 
-Submodules
-----------
+Submodules in detail
+--------------------
 
-<h3 id="rbin">rbin</h3>
+<h3 id="binary">rbin</h3>
+<hr>
+Tools for reading Igor binary files, particularly for interacting with the photodiode.
 
-<h3 id="spktools">spktools</h3>
+<blockquote> 
+<p>`readbinhdr(fname)`
+read the header from the file `fname`</p>
+</blockquote>
 
-<h3 id="lntools">lntools</h3>
+<blockquote> 
+<p>`readbin(fname, chan=0)`
+read the channel `chan` from the file `fname`</p>
+</blockquote>
+
+<h3 id="spk">spktools</h3>
+<hr>
+Tools for manipulating spike-time arrays.
+
+<blockquote>
+<p>`binspikes(spk, binsize=0.01)`
+bin spike times at the given resolution</p>
+</blockquote>
+
+<blockquote>
+<p>`estimatefr(bspk, npts=9, sd=2)`
+estimate firing rate by smoothing binned spikes</p>
+</blockquote>
+
+<h3 id="sta">sta</h3>
+<hr>
+Tools for performing spike-triggered average analyses
+
+<blockquote>
+<p>`getste(stim, vbl, spk, nframes=25)`
+find the spike-triggered ensemble </p>
+</blockquote>
+
+<blockquote>
+<p>`sta(stim, vbl, spk, nframes=25)`
+compute the spike-triggered average </p>
+</blockquote>
+
+<blockquote>
+<p>`stc(stim, vbl, spk, nframes=25)`
+compute the spike-triggered covariance </p>
+</blockquote>
+
+<blockquote>
+<p>`nonlin(stim, sta, nbins=30)`
+compute nonlinearities</p>
+</blockquote>
 
 <h3 id="retsim">retsim</h3>
+<hr>
+Tools for simulating the retina.
+
+<h3 id="viz">viz</h3>
+<hr>
+Visualization tools.
+
+<blockquote>
+<p>`raster(spk, trange=None)`
+plot spike raster over the given time range</p>
+</blockquote>
+
+<blockquote>
+<p>`psth(spk, trange=None)`
+plot psth over the given time range</p>
+</blockquote>
+
+<blockquote>
+<p>`playsta(sta, trange=None)`
+play a spatio-temporal STA as a movie</p>
+</blockquote>
+
+Classes in detail
+-----------------
+
+<h3 id="Cell">retsim</h3>
+
+<h3 id="Stimulus">retsim</h3>
+
