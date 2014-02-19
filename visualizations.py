@@ -238,3 +238,23 @@ def temporal(time, temporalFilter, ax=None):
     plt.draw()
 
     return ax
+
+def plotSTA(sta, timeSlice=-1):
+
+    # create the figure
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    # temporal slice to plot
+    if timeSlice == -1:
+        idx, spatialIdx, timeSlice = st.findFilterPeak(sta)
+
+    # make the plot plot
+    maxval = np.ceil(np.max(np.abs(sta)))
+    imgplot = plt.imshow(sta[:,:,timeSlice])
+    imgplot.set_cmap('RdBu')
+    #imgplot.set_clim(-maxval,maxval)
+    imgplot.set_interpolation('nearest')
+    plt.colorbar()
+    plt.show()
+    plt.draw()
