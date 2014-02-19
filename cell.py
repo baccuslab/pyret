@@ -19,43 +19,79 @@ class Cell:
     Data
     ----
 
-    All data is stored as NumPy arrays, unless otherwise noted.
+    All data is stored as NumPy arrays, unless otherwise noted. Furthermore,
+    all data attributes are optional. For example, the spike-triggered ensemble
+    usually has a significant memory footprint, and so it need not ever be
+    stored.
 
     spk:
         Spike-times
+
     rate:
         Instantaneous firing rate
+
     ste:
         Spike-triggered stimulus ensemble
+
     sta:
         Spike-triggered average
+
+    filtax:
+        Time axis for the STE/STA
+
+    nonlin:
+        A cell's nonlinearity
+
+    celltype:
+        A string defining the cell type, e.g., 'on' or 'off'
+
+    notes:
+        A string with any other notes you wish
+
+    uid:
+        NotImplemented
 
     Functions
     ---------
 
+    The function attributes of the Cell class are generally pretty flexible. 
+    For example, the `plot` method will handle cases in which the spike-triggered
+    average of a cell is purely temporal or spatiotemporal. Though many of the data
+    attributes are optional (see the discussion of STE's above), these functions 
+    will raise exceptions when the required data is missing.
+
     plot:
-        Plots the spike-triggered average for the cell
+        Plots the spike-triggered average and nonlinearity for the cell
+
     getsta:
         Computes the spike-triggered average
+
     getste:
         Computes the spike-triggered ensemble
+
     psth:
         Plot a psth
 
     '''
 
-    def __init__(self):
-        self.spk = None
-        self.ste = None
-        self.sta = None
+    def __init__(self, spk=None):
+        '''
+        Usage: c = Cell(), c = Cell(spk)
+        Construct a Cell object, optionally with an array of spike times
+
+        '''
+        (self.ste, self.sta, self.filtax, self.nonlin) = (None for i in range(4))
+        (self.celltype, self.notes, self.uid) = ('' for i in range(3))
 
     def addspikes(self, spk):
         '''
         Usage: c.addspikes(spk)
         Add spike times to the cell
 
-        Input:
-            spk - NumPy array of spike times
+        Input
+        -----
+        spk:
+            NumPy array of spike times
 
         '''
         self.spk = spk
@@ -101,7 +137,7 @@ class Cell:
             raise AttributeError
         else:
             # Compute the ensemble
-            self.ste = stefun(stim, time, self.spk, length)
+            self.ste, self.filtax = stefun(stim, time, self.spk, length)
 
     def getsta(self, stim=None, time=None, length=None, useC=False, saveste=True):
         '''
@@ -169,7 +205,7 @@ class Cell:
                 raise ValueError
             
             # Compute the ste
-            localste = getste(stim, time, length, useC)
+            localste, self.filtax = getste(stim, time, length, useC)
 
             # Compute its mean
             self.sta = sp.mean(localste, axis=-1)
@@ -183,8 +219,40 @@ class Cell:
         Usage: c.plot()
         Plot the spike-triggered average for the given cell.
 
+        This function should intelligently plot the STA, regardless of
+        its shape. If the cell contains only a temporal STA, a single plot
+        is created. If the cell contains a spatio-temporal receptive field,
+        one subplot shows the temporal kernel, the other shows the frame of
+        spatiotemporal STA with the largest absolute deviation from the mean.
+
         '''
-        pass
+        # Check that the STA exists
+        if self.sta is None:
+            print('Cell contains no STA, please compute it first')
+            raise AttributeError
+
+        # Plot the appropriate STA
+        if sp.ndim(self.sta) == 2:
+            # Plot temporal STA
+
+            # Make a figure
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+
+            # Plot the STA
+            ax.plot(self.filtax, self.sta)
+
+            # Labels etc
+            ax.title('Linear filter', fontdict={'fontsize': 24})
+            ax.xlabel('Time (s)', fontdict={'fontsize': 20})
+
+            # Show the plot
+            plt.show()
+            plt.draw()
+
+        elif sp.ndim(self.sta) == 3:
+            # Plot spatial and temporal STA
+            raise NotImplementedError
 
     def psth(self, trange=None):
         '''
@@ -200,4 +268,4 @@ class Cell:
             attribute, c.spk
 
         '''
-        pass
+        raise NotImplementedError
