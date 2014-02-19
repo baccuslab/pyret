@@ -8,18 +8,20 @@ Brief description
 The pyret package provides a set of tools useful in the analysis of retina experiments
 in the Baccus lab. It contains routines for interacting with raw Igor binary files
 from the recording computer, manipulating spike trains, performing basic spike-triggered
-analyses, a few retina simulation tools, and visualization tools for all these.
+analyses, and visualization tools for all these.
+
+The package describes a Cell class, which contains data and functionality associated 
+with individual cells recorded during an experiment. The class is described in detail 
+below.
 
 Submodule overview
 ------------------
 
-[**binary**](#binary)	-- reading binary recording files, useful for checking the photodiode
+[**rbin**](#binary)		-- reading binary recording files, useful for checking the photodiode
 
 [**spk**](#spk)			-- basic manipulation of spike-times, including binning & smoothing
 
 [**sta**](#sta)			-- computing components of simple linear-nonlinear models, including linear filters and nonlinearities
-
-[**retsim**](#retsim)	-- tools for simulating the retina (LN, LN-LN, LNIAF, LNK, LNKS models)
 
 [**viz**](#viz)			-- visualization methods
 
@@ -28,9 +30,6 @@ Classes overview
 
 [**Cell**](#cell)			-- individual cell
 
-[**Stimulus**](#stim)		-- a stimulus
-
-
 Submodules in detail
 --------------------
 
@@ -38,81 +37,66 @@ Submodules in detail
 <hr>
 Tools for reading Igor binary files, particularly for interacting with the photodiode.
 
-<blockquote> 
-<p>`readbinhdr(fname)`
-read the header from the file `fname`</p>
-</blockquote>
+`readbinhdr(fname)`
+read the header from the file `fname`
 
-<blockquote> 
-<p>`readbin(fname, chan=0)`
-read the channel `chan` from the file `fname`</p>
-</blockquote>
+`readbin(fname, chan=0)`
+read the channel `chan` from the file `fname`
 
-<h3 id="spk">spktools</h3>
+<h3 id="spk">spk</h3>
 <hr>
 Tools for manipulating spike-time arrays.
 
-<blockquote>
-<p>`binspikes(spk, binsize=0.01)`
-bin spike times at the given resolution</p>
-</blockquote>
+`binspikes(spk, binsize=0.01)`
+bin spike times at the given resolution
 
-<blockquote>
-<p>`estimatefr(bspk, npts=9, sd=2)`
-estimate firing rate by smoothing binned spikes</p>
-</blockquote>
+`estimatefr(bspk, npts=9, sd=2)`
+estimate firing rate by smoothing binned spikes
 
 <h3 id="sta">sta</h3>
 <hr>
 Tools for performing spike-triggered average analyses
 
-<blockquote>
-<p>`getste(stim, vbl, spk, nframes=25)`
-find the spike-triggered ensemble </p>
-</blockquote>
+`getste(stim, vbl, spk, nframes=25)`
+find the spike-triggered ensemble
 
-<blockquote>
-<p>`sta(stim, vbl, spk, nframes=25)`
-compute the spike-triggered average </p>
-</blockquote>
+`sta(stim, vbl, spk, nframes=25)`
+compute the spike-triggered average
 
-<blockquote>
-<p>`stc(stim, vbl, spk, nframes=25)`
-compute the spike-triggered covariance </p>
-</blockquote>
+`stc(stim, vbl, spk, nframes=25)`
+compute the spike-triggered covariance
 
-<blockquote>
-<p>`nonlin(stim, sta, nbins=30)`
-compute nonlinearities</p>
-</blockquote>
-
-<h3 id="retsim">retsim</h3>
-<hr>
-Tools for simulating the retina.
+`nonlin(stim, sta, nbins=30)`
+compute nonlinearities
 
 <h3 id="viz">viz</h3>
 <hr>
 Visualization tools.
 
-<blockquote>
-<p>`raster(spk, trange=None)`
-plot spike raster over the given time range</p>
-</blockquote>
+`raster(spk, trange=None)`
+plot spike raster over the given time range
 
-<blockquote>
-<p>`psth(spk, trange=None)`
-plot psth over the given time range</p>
-</blockquote>
+`psth(spk, trange=None)`
+plot psth over the given time range
 
-<blockquote>
-<p>`playsta(sta, trange=None)`
-play a spatio-temporal STA as a movie</p>
-</blockquote>
+`playsta(sta, trange=None)`
+play a spatio-temporal STA as a movie
 
-Classes in detail
------------------
+<h2 id="cell">Cell class</h2>
+<h4>Data</h4>
 
-<h3 id="Cell">retsim</h3>
+`spk` - array of spike times
 
-<h3 id="Stimulus">retsim</h3>
+`sta` - array containing the spike-triggered average
 
+`ste` - array containing the spike-triggered ensemble
+
+<h4>Functions</h4>
+
+`getsta` - compute the spike-triggered average
+
+`getste` - compute the spike-triggered average
+
+`plot` - plot the spike-triggered average
+
+`psth` - plot a PSTH
