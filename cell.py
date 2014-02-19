@@ -5,10 +5,11 @@
 # (C) 2014 bnaecker, nirum
 
 # Imports
-import scipy as sp
+import numpy as np
 import matplotlib.pyplot as plt
 import lntools
 import spktools
+import viz
 
 class Cell:
     '''
@@ -16,61 +17,100 @@ class Cell:
     specific to individual cells recorded in an extracellular
     experiment.
 
-    Data
-    ----
+    Data attributes
+    ---------------
 
-    All data is stored as NumPy arrays, unless otherwise noted. Furthermore,
-    all data attributes are optional. For example, the spike-triggered ensemble
-    usually has a significant memory footprint, and so it need not ever be
-    stored.
+        Info
+        ----
 
-    spk:
-        Spike-times
+        These attributes provide information about the Cell object,
+        such as its cell-type, etc.
 
-    rate:
-        Instantaneous firing rate
+        celltype:
+            A string defining the cell type, e.g., 'on' or 'off'
 
-    ste:
-        Spike-triggered stimulus ensemble
+        notes:
+            A string with any other notes you wish
 
-    sta:
-        Spike-triggered average
+        uid:
+            NotImplemented
 
-    filtax:
-        Time axis for the STE/STA
+        Spike data
+        ----------
 
-    nonlin:
-        A cell's nonlinearity
+        These data attributes are specific to actual neural data,
+        such as spike-times, linear filters, etc
 
-    celltype:
-        A string defining the cell type, e.g., 'on' or 'off'
+        spk:
+            Spike-times
 
-    notes:
-        A string with any other notes you wish
+        rate:
+            Instantaneous firing rate. # NotImplemented 
 
-    uid:
-        NotImplemented
+        ste:
+            Spike-triggered stimulus ensemble
 
-    Functions
-    ---------
+        sta:
+            Spike-triggered average
 
-    The function attributes of the Cell class are generally pretty flexible. 
-    For example, the `plot` method will handle cases in which the spike-triggered
-    average of a cell is purely temporal or spatiotemporal. Though many of the data
-    attributes are optional (see the discussion of STE's above), these functions 
-    will raise exceptions when the required data is missing.
+        staax:
+            Time axis for the STE/STA
 
-    plot:
-        Plots the spike-triggered average and nonlinearity for the cell
+        nonlin:
+            A cell's nonlinearity
 
-    getsta:
-        Computes the spike-triggered average
+        nonlinax:
+            Axis (bins) for the nonlinearity
 
-    getste:
-        Computes the spike-triggered ensemble
+    Function attributes
+    -------------------
 
-    psth:
-        Plot a psth
+        Setters
+        -------
+
+        These function attributes set the "info" attributes of the
+        Cell object, such as its cell-type, etc.
+
+        settype:
+            Sets the cell-type attribute
+
+        setnotes:
+            Set the notes string for the cell
+
+        setid:
+            Set the uid attribute of the cell
+
+        Computation
+        -----------
+
+        These functions compute various attributes of the Cell object,
+        such as linear filters, nonlinearities, etc.
+
+        addspk:
+            Adds an array spike times for the cell
+
+        getsta:
+            Computes the spike-triggered average
+
+        getste:
+            Computes the spike-triggered ensemble
+
+        getstc:
+            Computes the spike-triggered covariance
+
+        getnonlin:
+            Computes the nonlinearity
+
+        Plotting
+        --------
+
+        The Cell class contains a single, flexible plotting method, simply
+        called `plot`. Exactly what is plotted is controlled by keyword
+        arguments. See the docstring for Cell.plot() for more information.
+
+        plot:
+            Plot various attributes of the cell, such as linear filters,
+            ellipses, nonlinearity, etc.
 
     '''
 
@@ -139,9 +179,9 @@ class Cell:
             # Compute the ensemble
             self.ste, self.filtax = stefun(stim, time, self.spk, length)
 
-    def getsta(self, stim=None, time=None, length=None, useC=False, saveste=True):
+    def getsta(self, stim=None, time=None, length=None, useC=False):
         '''
-        Usage: c.getsta(), c.getsta(stim, time, length, useC=False, saveste=True)
+        Usage: c.getsta(), c.getsta(stim, time, length, useC=False)
         Compute the spike-triggered average of the cell. The function 
         has two forms.
 
@@ -158,7 +198,7 @@ class Cell:
         Form 2:
         -------
 
-        Usage: c.getsta(stim, time, length, useC=True, saveste=True)
+        Usage: c.getsta(stim, time, length, useC=False)
 
         In the second form, the stimulus, time array, and desired filter
         length must be passed.
@@ -179,11 +219,6 @@ class Cell:
         useC:
             Boolean, describing whether to use the compiled C fastste module
             to compute the average. Defaults to False.
-        
-        saveste:
-            Boolean. The STA is computed by constructing the spike-triggered
-            ensemble, then taking the average. The parameter `saveste` defines
-            whether this ste is saved as the class attribute `c.ste`.
 
         '''
         # Determine which form of the function is being called
@@ -194,78 +229,91 @@ class Cell:
                 print('in its second form, with all input arguments defined')
                 raise AttributeError
             
-            # STE exists, compute its average across last dimension
-            self.sta = sp.mean(self.ste, axis=-1)
+            # STE exists, compute its average across the first dimension
+            self.sta = np.mean(self.ste, axis=0)
 
         else:
             # Second form of the argument, ensure all arguments given
-            if stim is None or time is None or length is None:
+            if not all((stim, time, length)):
                 print('Using the second form of the function, the stimulus, time')
                 print('array, and desired filter length must be given')
                 raise ValueError
             
-            # Compute the ste
-            localste, self.filtax = getste(stim, time, length, useC)
+            # Compute the STA
+            self.sta, self.staax = lntools.getste(stim, time, length, useC)
 
-            # Compute its mean
-            self.sta = sp.mean(localste, axis=-1)
-
-            # Save the STE, if requested
-            if saveste:
-                self.ste = localste
-
-    def plot(self):
+    def plot(self, time=True, space=True, ellipse=True):
         '''
-        Usage: c.plot()
+        Usage: c.plot(**kwargs)
         Plot the spike-triggered average for the given cell.
 
-        This function should intelligently plot the STA, regardless of
-        its shape. If the cell contains only a temporal STA, a single plot
-        is created. If the cell contains a spatio-temporal receptive field,
-        one subplot shows the temporal kernel, the other shows the frame of
-        spatiotemporal STA with the largest absolute deviation from the mean.
+        The Cell.plot() method is a very general and flexible function to plot
+        the various data of the cell. Which components to plot are specified
+        by keyword arguments, all of which are Boolean.
+
+        kwargs
+        ------
+
+        time:
+            Plot the temporal kernel of the receptive field.
+
+        space:
+            Plot the spatial kernel of the receptive field.
+
+        ellipse:
+            Plot a Gaussian ellipse fit to the cell's spatial receptive field.
 
         '''
-        # Check that the STA exists
-        if self.sta is None:
-            print('Cell contains no STA, please compute it first')
-            raise AttributeError
+        # Break if nothing requested
+        if not any((time, space, ellipse)):
+            return
 
-        # Plot the appropriate STA
-        if sp.ndim(self.sta) == 2:
-            # Plot temporal STA
+        # Compute spatial and temporal kernels
+        s, t = lntools.decompose(self.sta)
 
-            # Make a figure
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
+        # Make a figure
+        fig = plt.figure()
 
-            # Plot the STA
-            ax.plot(self.filtax, self.sta)
+        # Make the right number of axes
+        naxes = sum([time, (space or ellipse)])
+        axlist = fig.add_subplot(naxes, 1, 1)
 
-            # Labels etc
-            ax.title('Linear filter', fontdict={'fontsize': 24})
-            ax.xlabel('Time (s)', fontdict={'fontsize': 20})
+        # Plot the temporal kernel
+        if time:
+            viz.temporal(self.staax, t, axlist[0])
 
-            # Show the plot
-            plt.show()
-            plt.draw()
+        # Plot the spatial kernel
+        if space:
+            viz.spatial(s, axlist[-1])
 
-        elif sp.ndim(self.sta) == 3:
-            # Plot spatial and temporal STA
-            raise NotImplementedError
+        # Plot the ellipse
+        if ellipse:
+            if not self.ellipse:
+                # Compute ellipse
+                self.ellipse = filtertools.getellipse(s)
+            # Plot ellipse
+            viz.ellipse(self.ellipse, axlist[-1])
 
-    def psth(self, trange=None):
+    def setnotes(self, notes):
         '''
-        Usage: c.psth(trange=None)
-        Plot a PSTH for the cell over the given time range.
-
-        Input
-        -----
-
-        trange:
-            2-element tuple, defining time range over which to plot. If 
-            None (the default), plots a PSTH over the range of the spike-time
-            attribute, c.spk
-
+        Usage: c.setnotes(notes)
+        Sets the notes attribute of the Cell object.
+        
         '''
-        raise NotImplementedError
+        self.notes = notes
+
+    def setid(self, uid):
+        '''
+        Usage: c.setid(uid)
+        Sets the unique id (uid) attribute of the Cell object.
+        
+        '''
+        self.uid = uid
+
+    def settype(self, celltype):
+        '''
+        Usage: c.celltype(uid)
+        Sets the cell-type of the Cell object
+        
+        '''
+        self.celltype = celltype
