@@ -1,12 +1,15 @@
-'''
+"""
 viz.py
 
 Tools for visualizing data from retinal experiments.
 
 (C) 2014 bnaecker, nirum
-'''
-import scipy as sp
+"""
+
+import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
+import filterTools as ft
 from matplotlib import animation
 
 def raster(spk, cells=None, trange=None):
@@ -49,8 +52,8 @@ def raster(spk, cells=None, trange=None):
 	fig = plt.figure()
 	ncells = len(cells)
 	for cell in range(ncells):
-		spikes = spk[cell][sp.logical_and(spk[cell] >= trange[0], spk[cell] < trange[1])]
-		plt.plot(spikes, (cell + 1) * sp.ones(spikes.shape), color = 'k', marker = '.', linestyle = 'none')
+		spikes = spk[cell][np.logical_and(spk[cell] >= trange[0], spk[cell] < trange[1])]
+		plt.plot(spikes, (cell + 1) * np.ones(spikes.shape), color = 'k', marker = '.', linestyle = 'none')
 
 	# Labels etc
 	plt.title('spike rasters', fontdict={'fontsize':24})
@@ -59,7 +62,7 @@ def raster(spk, cells=None, trange=None):
 	plt.ylim(ymin = 0, ymax=ncells + 1)
 	plt.show()
 	plt.draw()
-	
+
 	return fig
 
 def psth(rates, tax, cells=None, trange=None):
@@ -101,11 +104,11 @@ def psth(rates, tax, cells=None, trange=None):
 			trange = (max(trange[0], 0), min(trange[1], tax.max()))
 
 	# Compute plot indices
-	plotinds = sp.logical_and(trange[0] <= tax, tax < trange[1])
+	plotinds = np.logical_and(trange[0] <= tax, tax < trange[1])
 
 	# Compute number of subplots
-	n = round(sp.sqrt(ncells))
-	nplots = (n, sp.ceil(ncells / n))
+	n = round(np.sqrt(ncells))
+	nplots = (n, np.ceil(ncells / n))
 
 	# Plot psths for each cell
 	fig = plt.figure()
@@ -118,44 +121,50 @@ def psth(rates, tax, cells=None, trange=None):
 		plt.xlabel('time (s)', fontdict={'fontsize':20})
 	plt.show()
 	plt.draw()
-	
+
 	return fig
 
-def playsta(sta):
+def playsta(sta, repeat=True, frametime=100):
 	'''
 	Usage: playsta(sta)
 	Plays a spatiotemporal spike-triggered average as a movie
 
 	Input
 	-----
-		
+
 	sta:
 		Spike-triggered average array, shaped as (npix, npix, nframes)
-	
+
+    repeat [optional, default=True]:
+        Whether or not to repeat the animation
+
+    frametime [optional, default=100]:
+        Length of time each frame is displayed for (in milliseconds)
+
 	Output
 	------
-	
+
 	None
 
 	'''
 
 	# Initial frame
-	im0 = sta[:, :, 0]
+	initialFrame = sta[:, :, 0]
 
 	# Set up the figure
 	fig = plt.figure()
 	ax = plt.axes(xlim=(0, sta.shape[0]), ylim=(0, sta.shape[1]))
-	img = plt.imshow(im0)
+	img = plt.imshow(initialFrame)
 
 	# Set up the colors
-	maxval = sp.ceil(sp.absolute(sta).max())
+	maxval = np.ceil(np.absolute(sta).max())
 	img.set_cmap('gray')
 	img.set_interpolation('nearest')
 	plt.colorbar()
-	
+
 	# Animation initialization function
 	def init():
-		img.set_data(im0)
+		img.set_data(initialFrame)
 		return img
 
 	# Animation function (called sequentially)
@@ -165,41 +174,67 @@ def playsta(sta):
 		return img
 
 	# Call the animator
-	anim = animation.FuncAnimation(fig, animate, 
-			sp.arange(sta.shape[-1]), init_func=init, interval=50, repeat=False)
+	anim = animation.FuncAnimation(fig, animate,
+			np.arange(sta.shape[-1]), init_func=init, interval=frametime, repeat=False)
 	plt.show()
 	plt.draw()
 
-def plotsta(sta, timeslice=-1):
-	'''
-	Usage: plotsta(sta, timeslice=-1)
-	Plot the given spike-triggered average.
+def spatial(spatialFrame, ax=None):
+    '''
+	Usage: myAxes = spatial(frame, ax=myAxes)
+	Plot a spatial filter on a given axes
 
 	Input
 	-----
-	
-	sta:
-		The spike-triggered average to plot, as an array.
 
-	timeslice:
-		Which frame to plot. Default of -1 indicates that the frame with
-		the largest absolute deviation from the mean should be plotted.
-	
-	'''
+	spatialFrame:
+		The frame to plot, as an (n x n) matrix.
+    ax [optional]:
+        the axes on which to plot the data; defaults to creating a new figure
 
-	# Create the figure
-	fig = plt.figure()
-	ax = fig.add_subplot(111)
+    Output
+    ------
+    axes handle
 
-	# Temporal slice to plot
-	if timeslice == -1:
-		idx = sp.unravel_index(sp.absolute(sta).argmax(), sta.shape)
+    '''
 
-	# Make the plot plot
-	maxval = sp.ceil(sp.absolute(sta).max())
-	imgplot = plt.imshow(sta[:, :, timeslice])
-	imgplot.set_cmap('RdBu')
-	imgplot.set_interpolation('nearest')
-	plt.colorbar()
-	plt.show()
-	plt.draw()
+    if not ax:
+        ax = plt.figure().add_subplot(111)
+
+    img = ax.imshow(spatialFrame)
+    img.set_cmap('RdBu')
+    img.set_interpolation('nearest')
+    plt.colorbar()
+    plt.show()
+    plt.draw()
+
+    return ax
+
+def temporal(time, temporalFilter, ax=None):
+    '''
+	Usage: myAxes = temporal(time, filter, ax=myAxes)
+	Plot a temporal filter on a given axes
+
+    Input
+    -----
+    time:
+        a time vector to plot against
+    temporalFilter:
+        the temporal filter to plot, has the same dimensions as time
+    ax [optional]:
+        the axes on which to plot the data; defaults to creating a new figure
+
+    Output
+    ------
+    axes handle
+
+    '''
+
+    if not ax:
+        ax = plt.figure().add_subplot(111)
+
+    ax.plot(time, temporalFilter, linestyle='-', linewidth=2, color='LightCoral')
+    plt.show()
+    plt.draw()
+
+    return ax
