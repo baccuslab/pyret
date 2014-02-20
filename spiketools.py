@@ -1,7 +1,7 @@
 '''
-spktools.py
+spiketools.py
 
-Tools for loading and basic manipulation of spike times
+Tools for basic manipulation of spike trains
 
 (C) 2014 bnaecker, nirum
 '''
@@ -23,17 +23,17 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None):
 	
 	EITHER:
 
-		tmax:
-			Maximum bin time. Usually end of experiment, but could
-			really be anything.
+            tmax:
+                Maximum bin time. Usually end of experiment, but could
+                really be anything.
 
-		binsize:
-			Size of bins (in milliseconds).
+            binsize:
+                Size of bins (in milliseconds).
 
 	OR:
 
-		time:
-			The array to use as the actual bins to np.histogram
+            time:
+                The array to use as the actual bins to np.histogram
 
     Output
     ------
@@ -51,9 +51,9 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None):
 		return np.histogram(spk, bins=time)
 
     # If not, use either tmax or the maximum spike time and the binsize
-	if not tmax:
-		tmax = spk.max()
-	tbins = np.arange(0, tmax, binsize)
+    if not tmax:
+        tmax = spk.max()
+    tbins = np.arange(0, tmax, binsize)
     bspk, _ = np.histogram(cell, bins=tbins)
 
     return bspk, tbins

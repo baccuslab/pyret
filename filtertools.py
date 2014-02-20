@@ -1,7 +1,7 @@
 '''
 filtertools.py
 
-tools for computation of basic linear filters
+Tools for computation of basic linear filters
 
 (C) 2014 bnaecker, nirum
 '''
