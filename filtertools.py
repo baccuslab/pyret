@@ -290,46 +290,86 @@ def getellipse(F, scale=1.5):
     return ell
 
 def filterpeak(sta):
-	'''
-	Usage: idx, spaceidx, timeidx = filterpeak(sta)
-	Find the peak (single point in space/time) of a smoothed filter
+    '''
+    Usage: idx, spaceidx, timeidx = filterpeak(sta)
+    Find the peak (single point in space/time) of a smoothed filter
 
-	'''
-	# Smooth filter
-	fs = smoothfilter(sta, spacesig=0.7, timesig=1)
+    '''
+    # Smooth filter
+    fs = smoothfilter(sta, spacesig=0.7, timesig=1)
 
-	# Find the index of the maximal point
-	idx = np.unravel_index(np.abs(fs).argmax(), fs.shape)
+    # Find the index of the maximal point
+    idx = np.unravel_index(np.abs(fs).argmax(), fs.shape)
 
-	# Split into spatial/temporal indices
-	sidx = np.roll(idx[:2], 1)
-	tidx = idx[-1]
+    # Split into spatial/temporal indices
+    sidx = np.roll(idx[:2], 1)
+    tidx = idx[-1]
 
-	# Return the indices
-	return idx, sidx, tidx
+    # Return the indices
+    return idx, sidx, tidx
 
 def smoothfilter(f, spacesig=0.5, timesig=1):
-	'''
-	Usage: fsmooth = smoothfilter(f, spacesig=0.5, timesig=1):
-	Smooths a 3D spatiotemporal linear filter using a multi-dimensional
-	Gaussian filter with the given properties.
+    '''
+    Usage: fsmooth = smoothfilter(f, spacesig=0.5, timesig=1):
+    Smooths a 3D spatiotemporal linear filter using a multi-dimensional
+    Gaussian filter with the given properties.
 
-	Input
-	-----
+    Input
+    -----
 
-	f:
-		3D filter to be smoothed
-	
-	spacesig, timesig:
-		The spatial and temporal standard deviations of the Gaussian
-		filter used to smooth the given filter
+    f:
+            3D filter to be smoothed
+    
+    spacesig, timesig:
+            The spatial and temporal standard deviations of the Gaussian
+            filter used to smooth the given filter
 
-	Output
-	------
+    Output
+    ------
 
-	fsmooth:
-		The smoothed filter, with the same shape as the input
-	
-	'''
-	return gaussian_filter(f, (spacesig, spacesig, timesig), order=0)
+    fsmooth:
+            The smoothed filter, with the same shape as the input
+    
+    '''
+    return gaussian_filter(f, (spacesig, spacesig, timesig), order=0)
+
+def cutout(s, idx, width=5):
+    '''
+    Usage: cut = cutout(s, idx, width=5)
+    Cut out a chunk of the given stimulus or filter
+
+    Input
+    -----
+
+    s:
+        Stimulus or filter from which the chunk is cut out
+
+    idx:
+        2D array-like, specifying the row and column indices of
+        the center of the section to be cut out
+
+    width:
+        The size of the chunk to cut out from the start indices
+
+    Output
+    ------
+
+    rs:
+        The cut out section of the given stimulus or filter
+
+    '''
+
+    # Find the indices
+    row = np.arange(idx[0] - width, idx[0] + width + 1)
+    col = np.arange(idx[1] - width, idx[1] + width + 1)
+
+    # Make sure the indices are within the bounds of the given array
+    row = row[(row >= 0) & (row < stim.shape[0])]
+    col = col[(col >= 0) & (col < stim.shape[1])]
+
+    # Mesh the indices
+    rmesh, cmesh = np.meshgrid(row, col)
+
+    # Extract and return the reduced array
+    return s[rmesh, cmesh, :]
 
