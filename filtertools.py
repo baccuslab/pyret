@@ -176,7 +176,13 @@ def lowranksta(f, k=10):
     '''
 
     # Compute the SVD of the full filter
-    u, s, v = np.linalg.svd(f.reshape(-1, f.shape[-1]), full_matrices=False)
+    try:
+        u, s, v = np.linalg.svd(f.reshape(-1, f.shape[-1]), full_matrices=False)
+    except LinAlgError:
+        print('The SVD did not converge for the given spatiotemporal filter')
+        print('The data is likely too noisy to compute a rank-{0} approximation'.format(k))
+        print('Try reducing the requested rank.')
+        return None, None, None, None
 
     # Keep the top k components
     k = np.min([k, s.size])
