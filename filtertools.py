@@ -289,3 +289,47 @@ def getellipse(F, scale=1.5):
 
     return ell
 
+def filterpeak(sta):
+	'''
+	Usage: idx, spaceidx, timeidx = filterpeak(sta)
+	Find the peak (single point in space/time) of a smoothed filter
+
+	'''
+	# Smooth filter
+	fs = smoothfilter(sta, spacesig=0.7, timesig=1)
+
+	# Find the index of the maximal point
+	idx = np.unravel_index(np.abs(fs).argmax(), fs.shape)
+
+	# Split into spatial/temporal indices
+	sidx = np.roll(idx[:2], 1)
+	tidx = idx[-1]
+
+	# Return the indices
+	return idx, sidx, tidx
+
+def smoothfilter(f, spacesig=0.5, timesig=1):
+	'''
+	Usage: fsmooth = smoothfilter(f, spacesig=0.5, timesig=1):
+	Smooths a 3D spatiotemporal linear filter using a multi-dimensional
+	Gaussian filter with the given properties.
+
+	Input
+	-----
+
+	f:
+		3D filter to be smoothed
+	
+	spacesig, timesig:
+		The spatial and temporal standard deviations of the Gaussian
+		filter used to smooth the given filter
+
+	Output
+	------
+
+	fsmooth:
+		The smoothed filter, with the same shape as the input
+	
+	'''
+	return gaussian_filter(f, (spacesig, spacesig, timesig), order=0)
+
