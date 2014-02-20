@@ -13,7 +13,7 @@ from scipy.ndimage.filters import gaussian_filter
 
 def getste(time, stimulus, spikes, filterlength):
     '''
-    Usage: ste, tax = getste(time, stimulus, spikes, filterlength)
+    
     Construct the spike-triggered ensemble
 
     Input
@@ -63,21 +63,22 @@ def getste(time, stimulus, spikes, filterlength):
     cstim = stimulus.reshape(stimulus.shape[0], -1)
 
     # Preallocate STE array
-    ste = np.empty((nzhist.size, filterlength, cstim.shape[0]))
+    ste = np.empty((nzhist.size, filterlength, cstim.shape[1]))
 
     # Add filterlength frames preceding each spike to the STE array
     for idx, val in enumerate(nzhist):
-        ste[idx, :, :] = hist[val] * stimulus[val - filterlenth : val, :]
+        ste[idx, :, :] = hist[val] * cstim[val - filterlength : val, :]
 
     # Construct a time axis to return
     tax = time[:filterlength] - time[0]
 
     # Return reshaped STE and the time axis
-    return ste.reshape(nzhist.size, stimulus.shape), tax
+    ste = np.reshape(ste, (nzhist.size, filterlength, stimulus.shape[1], -1))
+    return ste, tax
 
 def getsta(time, stimulus, spikes, filterlength):
     '''
-    Usage: sta, tax = getste(time, stimulus, spikes, filterlength)
+    
     Compute the spike-triggered average
 
     Input
@@ -131,17 +132,18 @@ def getsta(time, stimulus, spikes, filterlength):
 
     # Add filterlength frames preceding each spike to the running STA
     for idx in nzhist:
-        sta += hist[idx] * stimulus[idx - filterlength : idx, :]
+        sta += hist[idx] * cstim[idx - filterlength : idx, :]
 
     # Construct a time axis to return
     tax = time[:filterlength] - time[0]
 
     # Return reshaped STA and the time axis
-    return sta.reshape(filterlength, stimulus.shape[1:]), tax
+    sta = np.reshape(sta, (filterlength, stimulus.shape[1], -1))
+    return sta, tax
 
 def lowranksta(f, k=10):
     '''
-    Usage: fk, u, s, v = lowranksta(f, k=10)
+    
     Decomposes a 3D spatiotemporal filter into the outer product 
     of spatial and temporal components (via the SVD). This is useful,
     for example, in computing the spatial and temporal kernels of a
@@ -187,7 +189,7 @@ def lowranksta(f, k=10):
 
 def decompose(sta):
     '''
-    Usage: s, t = decompose(sta)
+    
     Decomposes a spatiotemporal STA into a spatial and temporal kernel
 
     Input
@@ -206,7 +208,7 @@ def decompose(sta):
         The temporal kernel
 
     '''
-    _, u, _, v = lowranksta(f, k=1)
+    _, u, _, v = lowranksta(sta, k=1)
     return u[:, 0].reshape(sta.shape[:2]), v[:, 0]
 
 def _fit2Dgaussian(histogram, numSamples=1e4):
@@ -260,7 +262,7 @@ def _im2hist(data, spatialSmoothing = 2.5):
 
 def getellipse(F, scale=1.5):
     '''
-    Usage: ell = getellipse(staframe, scale=1.5)
+    
     Fit an ellipse to the given spatial receptive field
 
     Input
@@ -282,7 +284,7 @@ def getellipse(F, scale=1.5):
 
     # Get ellipse parameters
     histogram = _im2hist(F)
-    center, widths, theta, xx, yy = fit2Dgaussian(histogram, numSamples=1e5)
+    center, widths, theta, xx, yy = _fit2Dgaussian(histogram, numSamples=1e5)
 
     # Generate ellipse
     ell = Ellipse(xy=center, width=scale*widths[0], height=scale*widths[1], angle=np.rad2deg(theta)+90)
@@ -291,7 +293,7 @@ def getellipse(F, scale=1.5):
 
 def filterpeak(sta):
     '''
-    Usage: idx, spaceidx, timeidx = filterpeak(sta)
+    
     Find the peak (single point in space/time) of a smoothed filter
 
     '''
@@ -310,7 +312,7 @@ def filterpeak(sta):
 
 def smoothfilter(f, spacesig=0.5, timesig=1):
     '''
-    Usage: fsmooth = smoothfilter(f, spacesig=0.5, timesig=1):
+    
     Smooths a 3D spatiotemporal linear filter using a multi-dimensional
     Gaussian filter with the given properties.
 
@@ -333,16 +335,17 @@ def smoothfilter(f, spacesig=0.5, timesig=1):
     '''
     return gaussian_filter(f, (spacesig, spacesig, timesig), order=0)
 
-def cutout(s, idx, width=5):
+def cutout(arr, idx, width=5):
     '''
-    Usage: cut = cutout(s, idx, width=5)
+    
     Cut out a chunk of the given stimulus or filter
 
     Input
     -----
 
-    s:
-        Stimulus or filter from which the chunk is cut out
+    arr:
+        Stimulus or filter array from which the chunk is cut out. The array
+        should be shaped as (time, pix, pix).
 
     idx:
         2D array-like, specifying the row and column indices of
@@ -354,22 +357,26 @@ def cutout(s, idx, width=5):
     Output
     ------
 
-    rs:
+    cut:
         The cut out section of the given stimulus or filter
 
     '''
+
+    # Check idx is a 2-elem array-like
+    if len(idx) != 2:
+        raise ValueError
 
     # Find the indices
     row = np.arange(idx[0] - width, idx[0] + width + 1)
     col = np.arange(idx[1] - width, idx[1] + width + 1)
 
     # Make sure the indices are within the bounds of the given array
-    row = row[(row >= 0) & (row < stim.shape[0])]
-    col = col[(col >= 0) & (col < stim.shape[1])]
+    row = row[(row >= 0) & (row < arr.shape[-2])]
+    col = col[(col >= 0) & (col < arr.shape[-1])]
 
     # Mesh the indices
     rmesh, cmesh = np.meshgrid(row, col)
 
     # Extract and return the reduced array
-    return s[rmesh, cmesh, :]
+    return arr[:, rmesh, cmesh]
 

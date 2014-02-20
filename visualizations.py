@@ -306,10 +306,15 @@ def ellipse(ell, ax=None):
 	
 	'''
 
-	# Add it to the plot
+	# Set some properties
 	ell.set_facecolor('green')
 	ell.set_alpha(0.5)
 	ell.set_edgecolor('black')
+
+	# Create axes or add to given
+	if not ax:
+		fig = plt.figure()
+		ax = fig.add_subplot(111)
 	ax.add_artist(ell)
 
 	plt.show()
