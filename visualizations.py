@@ -239,22 +239,37 @@ def temporal(time, temporalFilter, ax=None):
 
     return ax
 
-def plotSTA(sta, timeSlice=-1):
+def plotsta(time, sta, timeSlice=None):
+    '''
+	Usage: fig, ax = plotsta(sta, timeSlice=8)
+	Plot a spatial and temporal filter
+
+    Input
+    -----
+    time:
+        a time vector to plot against
+    sta:
+        the filter to plot
+    timeslice [optional]:
+        the index of the spatial slice to plot
+
+    Output
+    ------
+    axes handle
+
+    '''
 
     # create the figure
     fig = plt.figure()
-    ax = fig.add_subplot(111)
 
-    # temporal slice to plot
-    if timeSlice == -1:
-        idx, spatialIdx, timeSlice = st.findFilterPeak(sta)
+    # decompose
+    spatialProfile, temporalFilter = ft.decompose(sta)
 
-    # make the plot plot
-    maxval = np.ceil(np.max(np.abs(sta)))
-    imgplot = plt.imshow(sta[:,:,timeSlice])
-    imgplot.set_cmap('RdBu')
-    #imgplot.set_clim(-maxval,maxval)
-    imgplot.set_interpolation('nearest')
-    plt.colorbar()
-    plt.show()
-    plt.draw()
+    # plot spatial profile
+    axspatial = spatial(spatialProfile, fig.add_subplot(121))
+
+    # plot temporal profile
+    axtemporal = temporal(time, temporalFilter, fig.add_subplot(122))
+
+    # return handles
+    return fig, (axspatial, axtemporal)
