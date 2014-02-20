@@ -17,13 +17,13 @@ below.
 Submodule overview
 ------------------
 
-[**rbin**](#binary)		-- reading binary recording files, useful for checking the photodiode
+[**binary**](#binary)		-- reading binary recording files, useful for checking the photodiode
 
-[**spk**](#spk)			-- basic manipulation of spike-times, including binning & smoothing
+[**spiketools**](#spk)		-- basic manipulation of spike-times, including binning & smoothing
 
-[**sta**](#sta)			-- computing components of simple linear-nonlinear models, including linear filters and nonlinearities
+[**filtertools**](#sta)		-- computing components of simple linear-nonlinear models, including linear filters and nonlinearities
 
-[**viz**](#viz)			-- visualization methods
+[**visualization**](#viz)	-- visualization methods
 
 Classes overview
 ----------------
@@ -33,70 +33,104 @@ Classes overview
 Submodules in detail
 --------------------
 
-<h3 id="binary">rbin</h3>
+<h3 id="binary">binary</h3>
 <hr>
 Tools for reading Igor binary files, particularly for interacting with the photodiode.
 
 `readbinhdr(fname)`
-read the header from the file `fname`
+Read the header from the file `fname`
 
 `readbin(fname, chan=0)`
-read the channel `chan` from the file `fname`
+Read the channel `chan` from the file `fname`
 
-<h3 id="spk">spk</h3>
+<h3 id="spk">spiketools</h3>
 <hr>
 Tools for manipulating spike-time arrays.
 
 `binspikes(spk, binsize=0.01)`
-bin spike times at the given resolution
+Bin spike times at the given resolution
 
-`estimatefr(bspk, npts=9, sd=2)`
-estimate firing rate by smoothing binned spikes
+`estfr(bspk, npts=9, sd=2)`
+Estimate firing rate by smoothing binned spikes
 
-<h3 id="sta">sta</h3>
+<h3 id="sta">filtertools</h3>
 <hr>
-Tools for performing spike-triggered average analyses
+Tools for computing linear filters of various kinds.
 
-`getste(stim, vbl, spk, nframes=25)`
-find the spike-triggered ensemble
+`getste(time, stimulus, spikes, length)`
+Construct the spike-triggered stimulus ensemble
 
-`sta(stim, vbl, spk, nframes=25)`
-compute the spike-triggered average
+`getsta(time, stimulus, spikes, length)`
+Compute the spike-triggered average
 
-`stc(stim, vbl, spk, nframes=25)`
-compute the spike-triggered covariance
+`getstc(time, stimulus, spikes, length)`
+Compute the spike-triggered covariance
 
-`nonlin(stim, sta, nbins=30)`
-compute nonlinearities
+`lowranksta(sta, k=10)`
+Compute a rank-k approximation to the given spatiotemporal STA
 
-<h3 id="viz">viz</h3>
+`decompose(sta)`
+Decompose the given spatiotemporal STA into a spatial and temporal kernel.
+
+<h3 id="viz">visualization</h3>
 <hr>
 Visualization tools.
 
 `raster(spk, trange=None)`
-plot spike raster over the given time range
+Plot spike raster over the given time range
 
 `psth(spk, trange=None)`
-plot psth over the given time range
+Plot psth over the given time range
 
-`playsta(sta, trange=None)`
-play a spatio-temporal STA as a movie
+`playsta(sta, repeat=True, frametime=100)`
+Play a spatio-temporal STA as a movie
+
+`plotsta(time, sta, timeslice=None)`
+Plot the spatial and temporal kernels of a spatiotemporal STA
+
+`temporal(time, temporalfilter, ax=None)`
+Plot the given temporal filter
+
+`spatial(spatialfilter, ax=None)`
+Plot the given spatial filter
 
 <h2 id="cell">Cell class</h2>
+<h4>Constructor</h4>
+`c = cell.Cell(spk=None)`
+Construct a Cell object, optionally giving the spike times for the cell
+
 <h4>Data</h4>
 
-`spk` - array of spike times
+`celltype`	- A string defining the cell-type (e.g., 'on')
 
-`sta` - array containing the spike-triggered average
+`notes`		- A string with user-defined notes
 
-`ste` - array containing the spike-triggered ensemble
+`uid`		- A string/date unique ID for the cell. *Not yet implemented.*
+
+`spk` 		- Array of spike times
+
+`sta` 		- Spike-triggered average for the cell
+
+`staax`		- Time axis for the STA
+
+`ste` 		- Spike-triggered stimulus ensemble
+
+`nonlin`	- Nonlinearity for the cell. *Not yet implemented.*
+
+`nonlinax`	- Axis for the nonlinearity. *Not yet implemented*
 
 <h4>Functions</h4>
 
-`getsta` - compute the spike-triggered average
+`settype`, `setnotes`, `setuid`
+Setter methods for the corresponding attributes
 
-`getste` - compute the spike-triggered average
+`getsta` 	- Compute the spike-triggered average
 
-`plot` - plot the spike-triggered average
+`getste` 	- Compute the spike-triggered average
 
-`psth` - plot a PSTH
+`getstc`	- Compute the spike-triggered covariance. *Not yet implemented.*
+
+`getnonlin`	- Compute the cell's nonlinarity. *Not yet implemented.*
+
+`plot` 		- General plotting function for showing the linear filters in various forms
+
