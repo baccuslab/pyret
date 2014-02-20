@@ -273,3 +273,35 @@ def plotsta(time, sta, timeSlice=None):
 
     # return handles
     return fig, (axspatial, axtemporal)
+
+def ellipse(ell, ax=None):
+	'''
+	Usage: ax = ellipse(ell, ax=None)
+	Plot the given ellipse, fit to the spatial receptive field of a cell
+
+	Input
+	-----
+
+	ell:
+		A matplotlib.patches.Ellipse object
+
+	ax [optional]:
+		The axes onto which the ellipse should be plotted. Defaults to a new figure
+
+	Output
+	------
+
+	ax:
+		The axes onto which the ellipse is plotted
+	
+	'''
+
+	# Add it to the plot
+	ell.set_facecolor('green')
+	ell.set_alpha(0.5)
+	ell.set_edgecolor('black')
+	ax.add_artist(ell)
+
+	plt.show()
+	plt.draw()
+	return ax

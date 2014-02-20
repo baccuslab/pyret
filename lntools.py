@@ -6,9 +6,11 @@ tools for basic linear-nonlinear model components
 (C) 2014 bnaecker, nirum
 '''
 
-# Imports
 import scipy as sp
+import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse
+from scipy.ndimage.filters import gaussian_filter
 
 def getste(stim, vbl, spk, nframes=25, reshape=False):
 	'''
@@ -319,3 +321,84 @@ def plotstimfreq(stim, fpc = 1500, ifi = 0.01, waitframes = 2):
 	plt.plot(tax, stim)
 	plt.subplot(212)
 	plt.plot(f[:100], sps[:100, :], linewidth = 2)
+
+def _fit2Dgaussian(histogram, numSamples=1e4):
+	''' Fit 2D gaussian to empirical histogram '''
+
+	# Indices
+	x = np.linspace(0,1,histogram.shape[0])
+	y = np.linspace(0,1,histogram.shape[1])
+	xx,yy = np.meshgrid(x,y)
+
+	# Draw samples
+	indices = np.random.choice(np.flatnonzero(histogram+1), size=numSamples, replace=True, p=histogram.ravel())
+	x_samples = xx.ravel()[indices]
+	y_samples = yy.ravel()[indices]
+
+	# Fit mean / covariance
+	samples = np.array((x_samples,y_samples))
+	centerIdx = np.unravel_index(np.argmax(histogram), histogram.shape)
+	center = (xx[centerIdx], yy[centerIdx])
+	C = np.cov(samples)
+
+	# Get width / angles
+	widths,vectors = np.linalg.eig(C)
+	angle = np.arccos(vectors[0,0])
+
+	return center, widths, angle, xx, yy
+
+def _im2hist(data, spatialSmoothing = 2.5):
+    """ Converts 2D image to histogram """
+
+    # Smooth the data
+    data_smooth = gaussian_filter(data, spatialSmoothing, order=0)
+
+    # Mean subtract
+    mu = np.median(data_smooth)
+    data_centered = data_smooth - mu
+
+    # Figure out if it is an on or off profile
+    if np.abs(np.max(data_centered)) < np.abs(np.min(data_centered)):
+
+        # flip from 'off' to 'on'
+        data_centered *= -1;
+
+    # Min-subtract
+    data_centered -= np.min(data_centered)
+
+    # Normalize to a PDF
+    pdf = data_centered / np.sum(data_centered)
+
+    return pdf
+
+def getellipse(F, scale=1.5):
+	'''
+	Usage: ell = getellipse(staframe, scale=1.5)
+	Fit an ellipse to the given spatial receptive field
+
+	Input
+	-----
+
+	staframe:
+		The spatial receptive field to which the ellipse should be fit
+
+	scale:
+		Scale factor for the ellipse
+
+	Output
+	------
+
+	ell:
+		A matplotlib.patches.Ellipse object
+
+	'''
+
+	# Get ellipse parameters
+	histogram = _im2hist(F)
+	center, widths, theta, xx, yy = fit2Dgaussian(histogram, numSamples=1e5)
+
+	# Generate ellipse
+	ell = Ellipse(xy=center, width=scale*widths[0], height=scale*widths[1], angle=np.rad2deg(theta)+90)
+
+	return ell
+
