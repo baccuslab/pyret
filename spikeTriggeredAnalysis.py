@@ -136,9 +136,9 @@ def smoothFilter(f, spatialSigma=0.5, temporalSigma=1):
 
     return scipyfilt.gaussian_filter(f, (spatialSigma, spatialSigma, temporalSigma), order=0)
 
-def spacetimeSep(f, k=10):
+def lowranksta(f, k=10):
     """
-    fk, u, s, v = spacetimeSep(f, k=10)
+    fk, u, s, v = lowranksta(f, k=10)
 
     Decomposes a 3D spatiotemporal filter into the outer product of spatial and temporal components (via the SVD)
 
@@ -166,3 +166,13 @@ def spacetimeSep(f, k=10):
 
     # return these components and the low-rank STA
     return fk, u, s, v
+
+def decompose(sta):
+	'''
+	Usage: s, t = decompose(sta)
+	Decomposes a spatiotemporal STA into a spatial and temporal kernel
+
+	'''
+	_, u, _, v = lowranksta(f, k=1)
+	return u[:, 0].reshape(sta.shape[:2]), v[:, 0]
+
