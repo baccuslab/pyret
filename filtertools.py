@@ -174,7 +174,7 @@ def lowranksta(f, k=10):
     '''
 
     # Compute the SVD of the full filter
-    u, s, v = svd(f.reshape(-1, f.shape[-1]), full_matrices=False)
+    u, s, v = np.linalg.svd(f.reshape(-1, f.shape[-1]), full_matrices=False)
 
     # Keep the top k components
     k = np.min([k, s.size])
