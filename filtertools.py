@@ -269,16 +269,16 @@ def getellipse(F, scale=1.5):
     -----
 
     staframe:
-            The spatial receptive field to which the ellipse should be fit
+        The spatial receptive field to which the ellipse should be fit
 
     scale:
-            Scale factor for the ellipse
+        Scale factor for the ellipse
 
     Output
     ------
 
     ell:
-            A matplotlib.patches.Ellipse object
+        A matplotlib.patches.Ellipse object
 
     '''
 
@@ -320,17 +320,17 @@ def smoothfilter(f, spacesig=0.5, timesig=1):
     -----
 
     f:
-            3D filter to be smoothed
+        3D filter to be smoothed
     
     spacesig, timesig:
-            The spatial and temporal standard deviations of the Gaussian
-            filter used to smooth the given filter
+        The spatial and temporal standard deviations of the Gaussian
+        filter used to smooth the given filter
 
     Output
     ------
 
     fsmooth:
-            The smoothed filter, with the same shape as the input
+        The smoothed filter, with the same shape as the input
     
     '''
     return gaussian_filter(f, (spacesig, spacesig, timesig), order=0)

@@ -21,19 +21,19 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None):
     spk:
         Array of spike times
 	
-	EITHER:
+    EITHER:
 
-            tmax:
-                Maximum bin time. Usually end of experiment, but could
-                really be anything.
+        tmax:
+            Maximum bin time. Usually end of experiment, but could
+            really be anything.
 
-            binsize:
-                Size of bins (in milliseconds).
+        binsize:
+            Size of bins (in milliseconds).
 
-	OR:
+    OR:
 
-            time:
-                The array to use as the actual bins to np.histogram
+        time:
+            The array to use as the actual bins to np.histogram
 
     Output
     ------
@@ -46,9 +46,9 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None):
 
     '''
 
-	# Check if actual time bins are specified
-	if time is not None:
-		return np.histogram(spk, bins=time)
+    # Check if actual time bins are specified
+    if time is not None:
+        return np.histogram(spk, bins=time)
 
     # If not, use either tmax or the maximum spike time and the binsize
     if not tmax:

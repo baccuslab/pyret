@@ -132,6 +132,7 @@ class Cell:
 
         Input
         -----
+
         spk:
             NumPy array of spike times
 
@@ -190,7 +191,7 @@ class Cell:
         has two forms.
 
         Form 1:
-        ------------------
+        -------
 
         Usage: c.getsta()
 

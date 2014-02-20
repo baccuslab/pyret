@@ -1,5 +1,5 @@
 '''
-rbin
+binary.py
 
 Tools for interacting with binary recording files
 
