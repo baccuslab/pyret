@@ -6,32 +6,38 @@ Tools for loading and basic manipulation of spike times
 (C) 2014 bnaecker, nirum
 '''
 
-import os
-import re
-import scipy as sp
+import numpy as np
 from scipy.io import loadmat
 from scipy import signal
 
-def binspikes(spk, tmax, binsize=0.01):
+def binspikes(spk, tmax=None, binsize=0.01, time=None):
     '''
-    Usage: bspk, tax = binspikes(spk, tmax, binsize)
-    Bin spike times at the given resolution
+    
+    Bin spike times at the given resolution. The function has two forms.
 
     Input
     -----
 
     spk:
         Array of spike times
+	
+	EITHER:
 
-    tmax:
-        Maximum bin time. Usually end of experiment, but could
-        really be anything.
+		tmax:
+			Maximum bin time. Usually end of experiment, but could
+			really be anything.
 
-    binsize:
-        Size of bins (in milliseconds).
+		binsize:
+			Size of bins (in milliseconds).
+
+	OR:
+
+		time:
+			The array to use as the actual bins to np.histogram
 
     Output
     ------
+
     bspk:
         Binned spike times
 
@@ -39,14 +45,22 @@ def binspikes(spk, tmax, binsize=0.01):
         The bins themselves.
 
     '''
-    # Histogram count for each cell
-    tbins = sp.arange(0, tmax, binsize)
-    bspk, tax = sp.histogram(cell, bins = tbins)
-    return bspk, tax[:-1]
+
+	# Check if actual time bins are specified
+	if time is not None:
+		return np.histogram(spk, bins=time)
+
+    # If not, use either tmax or the maximum spike time and the binsize
+	if not tmax:
+		tmax = spk.max()
+	tbins = np.arange(0, tmax, binsize)
+    bspk, _ = np.histogram(cell, bins=tbins)
+
+    return bspk, tbins
 
 def estfr(bspk, binsize=0.01, npts=7, sd=2):
     '''
-    Usage: rates = estfr(bspk, npts, sd)
+    
     Estimate the instantaneous firing rates from binned spike counts
 
     Input

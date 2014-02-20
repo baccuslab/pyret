@@ -1,20 +1,20 @@
-"""
-viz.py
+'''
+visualizations.py
 
 Tools for visualizing data from retinal experiments.
 
 (C) 2014 bnaecker, nirum
-"""
+'''
 
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import filterTools as ft
+import filtertools as ft
 from matplotlib import animation
 
 def raster(spk, cells=None, trange=None):
 	'''
-	Usage: fig = raster(spk, cells, trange)
+	
 	Plot a raster of spike times over the given time
 
 	Input
@@ -67,7 +67,7 @@ def raster(spk, cells=None, trange=None):
 
 def psth(rates, tax, cells=None, trange=None):
 	'''
-	Usage: fig = psth(rates, tax, cells, trange)
+	
 	Plot psths for the given cells over the given time
 
 	Input
@@ -126,7 +126,7 @@ def psth(rates, tax, cells=None, trange=None):
 
 def playsta(sta, repeat=True, frametime=100):
 	'''
-	Usage: playsta(sta)
+	
 	Plays a spatiotemporal spike-triggered average as a movie
 
 	Input
@@ -181,7 +181,7 @@ def playsta(sta, repeat=True, frametime=100):
 
 def spatial(spatialFrame, ax=None):
     '''
-	Usage: myAxes = spatial(frame, ax=myAxes)
+	
 	Plot a spatial filter on a given axes
 
 	Input
@@ -189,11 +189,13 @@ def spatial(spatialFrame, ax=None):
 
 	spatialFrame:
 		The frame to plot, as an (n x n) matrix.
+
     ax [optional]:
         the axes on which to plot the data; defaults to creating a new figure
 
     Output
     ------
+
     axes handle
 
     '''
@@ -212,20 +214,24 @@ def spatial(spatialFrame, ax=None):
 
 def temporal(time, temporalFilter, ax=None):
     '''
-	Usage: myAxes = temporal(time, filter, ax=myAxes)
+	
 	Plot a temporal filter on a given axes
 
     Input
     -----
+
     time:
         a time vector to plot against
+
     temporalFilter:
         the temporal filter to plot, has the same dimensions as time
+
     ax [optional]:
         the axes on which to plot the data; defaults to creating a new figure
 
     Output
     ------
+
     axes handle
 
     '''
@@ -241,20 +247,24 @@ def temporal(time, temporalFilter, ax=None):
 
 def plotsta(time, sta, timeSlice=None):
     '''
-	Usage: fig, ax = plotsta(sta, timeSlice=8)
+	
 	Plot a spatial and temporal filter
 
     Input
     -----
+
     time:
         a time vector to plot against
+
     sta:
         the filter to plot
+
     timeslice [optional]:
         the index of the spatial slice to plot
 
     Output
     ------
+
     axes handle
 
     '''
@@ -276,7 +286,7 @@ def plotsta(time, sta, timeSlice=None):
 
 def ellipse(ell, ax=None):
 	'''
-	Usage: ax = ellipse(ell, ax=None)
+	
 	Plot the given ellipse, fit to the spatial receptive field of a cell
 
 	Input

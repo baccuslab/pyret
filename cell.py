@@ -1,18 +1,20 @@
-# cell.py
-#
-# Definition of Cell class in pyret package
-#
-# (C) 2014 bnaecker, nirum
+'''
+cell.py
 
-# Imports
+Definition of the Cell class.
+
+(C) 2014 bnaecker, nirum
+'''
+
 import numpy as np
 import matplotlib.pyplot as plt
-import lntools
-import spktools
-import viz
+import filtertools as ft
+import spiketools as spk
+import visualizations as viz
 
 class Cell:
     '''
+
     The Cell class bundles together useful data and functionality
     specific to individual cells recorded in an extracellular
     experiment.
@@ -116,7 +118,7 @@ class Cell:
 
     def __init__(self, spk=None):
         '''
-        Usage: c = Cell(), c = Cell(spk)
+        
         Construct a Cell object, optionally with an array of spike times
 
         '''
@@ -125,7 +127,7 @@ class Cell:
 
     def addspikes(self, spk):
         '''
-        Usage: c.addspikes(spk)
+        
         Add spike times to the cell
 
         Input
@@ -136,9 +138,9 @@ class Cell:
         '''
         self.spk = spk
 
-    def getste(self, stim, time, length, useC=False):
+    def getste(self, time, stim, length, useC=False):
         '''
-        Usage: c.getste(stim, time, length, useC=False)
+        
         Construct the spike-triggered ensemble from the given stimulus.
         If the cell contains no spike-time array, an AttributeError is 
         raised.
@@ -146,13 +148,13 @@ class Cell:
         Input
         -----
 
+        time:
+            Time array, defining the time axis of the stimulus
+
         stim:
             Stimulus array. first dimension should be the time
             axis of the stimulus, second should be all spatial 
             stimulus dimensions collapsed
-
-        time:
-            Time array, defining the time axis of the stimulus
 
         length:
             Time into the past (in seconds) over which to construct the STE.
@@ -170,6 +172,8 @@ class Cell:
             #except ImportError:
                 #useC = False
                 #stefun = lntools.basicste
+        else:
+            stefun = ft.getste
 
         if self.spk is None:
             # Assert that Cell contains some spikes
@@ -177,11 +181,11 @@ class Cell:
             raise AttributeError
         else:
             # Compute the ensemble
-            self.ste, self.filtax = stefun(stim, time, self.spk, length)
+            self.ste, self.filtax = stefun(time, stim, self.spk, length)
 
-    def getsta(self, stim=None, time=None, length=None, useC=False):
+    def getsta(self, time=None, stim=None, length=None, useC=False):
         '''
-        Usage: c.getsta(), c.getsta(stim, time, length, useC=False)
+        
         Compute the spike-triggered average of the cell. The function 
         has two forms.
 
@@ -198,7 +202,7 @@ class Cell:
         Form 2:
         -------
 
-        Usage: c.getsta(stim, time, length, useC=False)
+        Usage: c.getsta(time, stim, length, useC=False)
 
         In the second form, the stimulus, time array, and desired filter
         length must be passed.
@@ -206,12 +210,12 @@ class Cell:
         Input
         -----
 
+        time:
+            Time array, defining the time axis of the stimulus.
+
         stim:
             Stimulus array. First dimension should be time axis of the
             stimulus, and second should be all spatial dimensions collapsed
-
-        time:
-            Time array, defining the time axis of the stimulus.
 
         length:
             Time into past (in seconds) over which to construct the STA.
@@ -240,10 +244,11 @@ class Cell:
                 raise ValueError
             
             # Compute the STA
-            self.sta, self.staax = lntools.getste(stim, time, length, useC)
+            self.sta, self.filtax = ft.getste(time, stim, self.spk, length)
 
     def plot(self, time=True, space=True, ellipse=True):
         '''
+
         Usage: c.plot(**kwargs)
         Plot the spike-triggered average for the given cell.
 
@@ -269,7 +274,7 @@ class Cell:
             return
 
         # Compute spatial and temporal kernels
-        s, t = lntools.decompose(self.sta)
+        s, t = ft.decompose(self.sta)
 
         # Make a figure
         fig = plt.figure()
@@ -280,7 +285,7 @@ class Cell:
 
         # Plot the temporal kernel
         if time:
-            viz.temporal(self.staax, t, axlist[0])
+            viz.temporal(self.filtax, t, axlist[0])
 
         # Plot the spatial kernel
         if space:
@@ -290,13 +295,14 @@ class Cell:
         if ellipse:
             if not self.ellipse:
                 # Compute ellipse
-                self.ellipse = filtertools.getellipse(s)
+                self.ellipse = ft.getellipse(s)
+
             # Plot ellipse
             viz.ellipse(self.ellipse, axlist[-1])
 
     def setnotes(self, notes):
         '''
-        Usage: c.setnotes(notes)
+        
         Sets the notes attribute of the Cell object.
         
         '''
@@ -304,7 +310,7 @@ class Cell:
 
     def setid(self, uid):
         '''
-        Usage: c.setid(uid)
+        
         Sets the unique id (uid) attribute of the Cell object.
         
         '''
@@ -312,7 +318,7 @@ class Cell:
 
     def settype(self, celltype):
         '''
-        Usage: c.celltype(uid)
+        
         Sets the cell-type of the Cell object
         
         '''
