@@ -23,6 +23,8 @@ Submodule overview
 
 [**filtertools**](#sta)		-- computing components of simple linear-nonlinear models, including linear filters and nonlinearities
 
+[**stimulustools**](#stim)	-- tools for manipulating stimuli, e.g., upsampling.
+
 [**visualization**](#viz)	-- visualization methods
 
 Classes overview
@@ -71,6 +73,20 @@ Compute a rank-k approximation to the given spatiotemporal STA
 
 `decompose(sta)`
 Decompose the given spatiotemporal STA into a spatial and temporal kernel.
+
+<h3 id="stim">stimulustools</h3>
+<hr>
+Stimulus tools.
+
+`upsamplestim(time, stim, upfact)`
+Upsample the stimulus by the given factor.
+
+`downsamplestim(time, stim, upfact)`
+Downsample the stimulus by the given factor.
+
+`slicestim(stim, history, locations=None)`
+Take slices of length `history` from the given stimulus, optionally
+specifying the temporal locations of the slices.
 
 <h3 id="viz">visualization</h3>
 <hr>
