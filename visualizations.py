@@ -260,7 +260,7 @@ def playsta(sta, repeat=True, frametime=100):
 
     # Call the animator
     anim = animation.FuncAnimation(fig, animate,
-                np.arange(sta.shape[-1]), init_func=init, interval=frametime, repeat=False)
+                np.arange(sta.shape[-1]), init_func=init, interval=frametime, repeat=repeat)
     plt.show()
     plt.draw()
 
@@ -398,8 +398,8 @@ def ellipse(ell, ax=None):
 
     # Create axes or add to given
     if not ax:
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
     ax.add_artist(ell)
 
     plt.show()
