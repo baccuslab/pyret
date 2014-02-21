@@ -127,7 +127,7 @@ Construct a Cell object, optionally giving the spike times for the cell
 
 `sta` 		- Spike-triggered average for the cell
 
-`staax`		- Time axis for the STA
+`filtax`	- Time axis for the STA/STE
 
 `ste` 		- Spike-triggered stimulus ensemble
 

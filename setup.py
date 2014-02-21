@@ -18,4 +18,8 @@ setup(name = 'pyret',
             'Intended Audience :: Science/Research', 
             'Operating System :: MacOS :: MacOS X',
             'Topic :: Scientific/Engineering :: Information Analysis'],
+        packages = ['pyret'],
+        package_dir = {'pyret': ''},
+        py_modules = ['binary', 'spiketools', 'filtertools', 'stimulustools'],
+        license = 'LICENSE.txt'
         )

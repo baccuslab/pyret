@@ -139,7 +139,7 @@ class Cell:
         '''
         self.spk = spk
 
-    def getste(self, time, stim, length, useC=False):
+    def getste(self, time, stim, length):
         '''
         
         Construct the spike-triggered ensemble from the given stimulus.
@@ -159,22 +159,8 @@ class Cell:
 
         length:
             Time into the past (in seconds) over which to construct the STE.
-           
-        useC:
-            Boolean, describing whether or not to use the compiled
-            C fastste module to construct the ensemble. Defaults to False.
 
         '''
-        # Define the function used to compute the ensemble
-        if useC:
-            raise NotImplementedError
-            #try:
-                #stefun = fastste.fastste
-            #except ImportError:
-                #useC = False
-                #stefun = lntools.basicste
-        else:
-            stefun = ft.getste
 
         if self.spk is None:
             # Assert that Cell contains some spikes
@@ -182,9 +168,9 @@ class Cell:
             raise AttributeError
         else:
             # Compute the ensemble
-            self.ste, self.filtax = stefun(time, stim, self.spk, length)
+            self.ste, self.filtax = ft.getste(time, stim, self.spk, length)
 
-    def getsta(self, time=None, stim=None, length=None, useC=False):
+    def getsta(self, time=None, stim=None, length=None):
         '''
         
         Compute the spike-triggered average of the cell. The function 
@@ -203,7 +189,7 @@ class Cell:
         Form 2:
         -------
 
-        Usage: c.getsta(time, stim, length, useC=False)
+        Usage: c.getsta(time, stim, length)
 
         In the second form, the stimulus, time array, and desired filter
         length must be passed.
@@ -220,10 +206,6 @@ class Cell:
 
         length:
             Time into past (in seconds) over which to construct the STA.
-       
-        useC:
-            Boolean, describing whether to use the compiled C fastste module
-            to compute the average. Defaults to False.
 
         '''
         # Determine which form of the function is being called
@@ -245,7 +227,7 @@ class Cell:
                 raise ValueError
             
             # Compute the STA
-            self.sta, self.filtax = ft.getste(time, stim, self.spk, length)
+            self.sta, self.filtax = ft.getsta(time, stim, self.spk, length)
 
     def plot(self, time=True, space=True, ellipse=True):
         '''
