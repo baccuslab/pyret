@@ -12,22 +12,25 @@ import seaborn as sns
 import filtertools as ft
 from matplotlib import animation
 
-def raster(spk, cells=None, trange=None):
+def raster(spikes, triallength=None, fig=None):
     '''
     
-    Plot a raster of spike times over the given time
+    Plot a raster of spike times. The `triallength` keyword specifies the 
+    length of time for each trial, and the `spikes` array is split up into 
+    segments of that length. These groups are then plotted on top of one 
+    another, as if they are individual trials.
 
     Input
     -----
 
-    spk:
-        List of spike times for each cell
+    spikes:
+        An array of spike times to plot
 
-    cells:
-        List of which cells to plot (None == all)
+    triallength:
+        The length of each trial to stack, in seconds.
 
-    trange:
-        2-elem tuple giving time range (None = (min(spk), max(spk)))
+    fig:
+        The figure into which the raster is plotted.
 
     Output
     ------
@@ -37,53 +40,56 @@ def raster(spk, cells=None, trange=None):
 
     '''
 
-    # Parse input
-    if cells is None:
-        cells = range(0, len(spk))
+    # Parse time input
+    if triallength is None:
+        # Compute the time indices of the start and stop of the spikes
+        times = np.array([spikes.min(), spikes.max()])
     else:
-        cells = [c for c in cells if 0 < c <= len(spk)]
+        # Compute the time indices of each trial
+        times = np.array([np.array([0, triallength]) + triallength * i
+                for i in np.arange(np.ceil(spikes.max() / triallength))])
+        
+    # Make a figure
+    if not fig or type(fig) is not plt.Figure:
+        fig = plt.figure()
 
-    if trange is None:
-        trange = (min([s.min() for s in spk]), max([s.max() for s in spk]))
-    else:
-        trange = (max(trange[0], 0), min(trange[1], max([s.max() for s in spk])))
-
-    # Plot rasters for each cell
-    fig = plt.figure()
-    ncells = len(cells)
-    for cell in range(ncells):
-        spikes = spk[cell][np.logical_and(spk[cell] >= trange[0], spk[cell] < trange[1])]
-        plt.plot(spikes, (cell + 1) * np.ones(spikes.shape), color = 'k', marker = '.', linestyle = 'none')
+    # Plot each trial
+    ax = fig.add_subplot(111)
+    plt.hold(True)
+    for trial in range(times.shape[0]):
+        idx = np.bitwise_and(spikes > times[trial, 0], spikes <= times[trial, 1])
+        ax.plot(spikes[idx] - times[trial, 0], (trial + 1) * np.ones((idx.sum(),1)), 
+                color='k', linestyle='none', marker='.')
 
     # Labels etc
-    plt.title('spike rasters', fontdict={'fontsize':24})
+    plt.title('spike raster', fontdict={'fontsize':24})
     plt.xlabel('time (s)', fontdict={'fontsize':20})
-    plt.ylabel('cell #', fontdict={'fontsize':20})
-    plt.ylim(ymin = 0, ymax=ncells + 1)
+    plt.ylabel('trial #', fontdict={'fontsize':20})
+    plt.ylim(ymin = 0, ymax=times.shape[0] + 1)
     plt.show()
     plt.draw()
 
     return fig
 
-def psth(rates, tax, cells=None, trange=None):
+def psth(spikes, triallength=None, binsize=0.01, fig=None):
     '''
     
-    Plot psths for the given cells over the given time
+    Plot a PSTH from the given spike times.
 
     Input
     -----
 
-    rates:
-        List of firing rates for each cell
+    spikes:
+        An array of spike times
 
-    tax:
-        Time axis for firing rates
+    triallength:
+        The length of each trial to stack, in seconds
 
-    cells:
-        List of which cells to plot (None == all)
+    binsize:
+        The size of bins used in computing the PSTH
 
-    trange:
-        2-elem tuple giving time range (None == (min(tax), max(tax)))
+    fig:
+        Figure into which the psth should be plotted
 
     Output
     ------
@@ -93,34 +99,111 @@ def psth(rates, tax, cells=None, trange=None):
 
     '''
 
-    # Parse input
-    if cells is None:
-        cells = range(0, len(rates))
-    else:
-        cells = [c for c in cells if 0 < c <= len(rates)]
-    ncells = len(cells)
+    # Input-checking
+    if not triallength:
+        triallength = spikes.max()
 
-    if trange is None:
-        trange = (tax.min(), tax.max())
-    else:
-        trange = (max(trange[0], 0), min(trange[1], tax.max()))
+    # Compute the histogram bins to use
+    ntrials = int(np.ceil(spikes.max() / triallength))
+    basebins = np.arange(0, triallength + binsize, binsize)
+    tbins = np.tile(basebins, (ntrials, 1)) + (np.tile(np.arange(0, ntrials), (basebins.size, 1)).T * triallength)
+        
+    # Bin the spikes in each time bin
+    bspk = np.empty((tbins.shape[0], tbins.shape[1] - 1))
+    for trial in range(ntrials):
+        bspk[trial, :], _ = np.histogram(spikes, bins=tbins[trial, :])
 
-    # Compute plot indices
-    plotinds = np.logical_and(trange[0] <= tax, tax < trange[1])
+    # Compute the mean over each trial, and multiply by the binsize
+    fr = np.mean(bspk, axis=0) / binsize
 
-    # Compute number of subplots
-    n = round(np.sqrt(ncells))
-    nplots = (n, np.ceil(ncells / n))
+    # Make a figure
+    if not fig or type(fig) is not plt.Figure:
+        fig = plt.figure()
 
-    # Plot psths for each cell
-    fig = plt.figure()
-    for cell in range(ncells):
-        plt.subplot(nplots[0], nplots[1], cell + 1)
-        plt.plot(tax[plotinds], rates[cell][plotinds], color = 'k', marker = None, linestyle = '-')
+    # Plot the PSTH
+    ax = fig.add_subplot(111)
+    ax.plot(tbins[0, :-1], fr, color='k', marker=None, linestyle='-', linewidth=2)
 
-        # Labels etc
-        plt.title('cell {c} psth'.format(c = cell + 1), fontdict={'fontsize': 24})
-        plt.xlabel('time (s)', fontdict={'fontsize':20})
+    # Labels etc
+    plt.title('psth', fontdict={'fontsize':24})
+    plt.xlabel('time (s)', fontdict={'fontsize':20})
+    plt.ylabel('firing rate (Hz)', fontdict={'fontsize':20})
+    plt.show()
+    plt.draw()
+
+    return fig
+
+def rasterandpsth(spikes, triallength=None, binsize=0.01, fig=None):
+    '''
+
+    Plot a spike raster and a PSTH on the same set of axes.
+
+    Input
+    -----
+
+    spikes:
+        An array of spike times
+
+    triallength:
+        The length of each trial to stack, in seconds
+
+    binsize:
+        The size of bins used in computing the PSTH
+
+    fig:
+        Figure into which the psth should be plotted
+
+    Output
+    ------
+
+    fig:
+        Matplotlib figure handle
+
+    '''
+
+    # Input-checking
+    if not triallength:
+        triallength = spikes.max()
+
+    # Compute the histogram bins to use
+    ntrials = int(np.ceil(spikes.max() / triallength))
+    basebins = np.arange(0, triallength + binsize, binsize)
+    tbins = np.tile(basebins, (ntrials, 1)) + (np.tile(np.arange(0, ntrials), (basebins.size, 1)).T * triallength)
+
+    # Bin the spikes in each time bin
+    bspk = np.empty((tbins.shape[0], tbins.shape[1] - 1))
+    for trial in range(ntrials):
+        bspk[trial, :], _ = np.histogram(spikes, bins=tbins[trial, :])
+
+    # Compute the mean over each trial, and multiply by the binsize
+    fr = np.mean(bspk, axis=0) / binsize
+
+    # Make a figure
+    if not fig or type(fig) is not plt.Figure:
+        fig = plt.figure()
+
+    # Plot the PSTH
+    psthax = fig.add_subplot(111)
+    psthax.plot(tbins[0, :-1], fr, color='r', marker=None, linestyle='-', linewidth=2)
+    psthax.set_title('psth and raster', fontdict={'fontsize':24})
+    psthax.set_xlabel('time (s)', fontdict={'fontsize':20})
+    psthax.set_ylabel('firing rate (Hz)', color='r', fontdict={'fontsize':20})
+    sns.set_axes_style('nogrid', 'notebook')
+    for tick in psthax.get_yticklabels():
+        tick.set_color('r')
+
+    # Plot the raster
+    rastax = psthax.twinx()
+    sns.set_axes_style('nogrid', 'notebook')
+    plt.hold(True)
+    for trial in range(ntrials):
+        idx = np.bitwise_and(spikes > tbins[trial, 0], spikes <= tbins[trial, -1])
+        rastax.plot(spikes[idx] - tbins[trial, 0], trial * np.ones(spikes[idx].shape), color='k', marker='.', linestyle='none')
+    rastax.set_ylabel('trial #', color='k', fontdict={'fontsize':20})
+    for tick in psthax.get_yticklabels():
+        tick.set_color('k')
+
+    # Show the figure
     plt.show()
     plt.draw()
 
