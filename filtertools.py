@@ -386,3 +386,37 @@ def cutout(arr, idx, width=5):
     # Extract and return the reduced array
     return arr[:, rmesh, cmesh]
 
+def prinangles(u, v):
+    '''
+
+    Compute the principal angles between two subspaces. Useful for comparing 
+    subspaces returned via spike-triggered covariance, for example.
+
+    Input
+    -----
+
+    u, v:
+        The subspaces to compare. They should be of the same size.
+
+    Output
+    ------
+
+    ang:
+        The angles between each dimension of the subspaces
+
+    mag:
+        The magnitude of the overlap between each dimension of the subspace.
+
+    '''
+
+    # Orthogonalize each subspace
+    (Qu, Ru), (Qv, Rv) = np.linalg.qr(u), np.linalg.qr(v)
+
+    # Compute singular values of the inner product between the orthogonalized spaces
+    mag = np.linalg.svd(Qu.T.dot(Qv), compute_uv=False, full_matrices=False)
+
+    # Compute the angles between each dimension
+    ang = np.rad2deg(np.arccos(mag))
+
+    return ang, mag
+
