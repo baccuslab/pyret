@@ -73,7 +73,7 @@ def getste(time, stimulus, spikes, filterlength):
 
     # Reshape the STE and flip the time axis so that the time of the spike is at index 0
     ste = np.reshape(ste, (nzhist.size,) + stimulus.shape[:-1] + (filterlength,))
-    sta = np.take(sta, np.arange(filterlength - 1, 0, -1), axis=-1)
+    sta = np.take(sta, np.arange(filterlength - 1, -1, -1), axis=-1)
 
     # Return STE and the time axis
     return ste, tax
@@ -140,7 +140,7 @@ def getsta(time, stimulus, spikes, filterlength):
     
     # Reshape the STA and flip the time axis so that the time of the spike is at index 0
     sta = np.reshape(sta, stimulus.shape[:-1] + (filterlength,))
-    sta = np.take(sta, np.arange(filterlength - 1, 0, -1), axis=-1)
+    sta = np.take(sta, np.arange(filterlength - 1, -1, -1), axis=-1)
 
     # Return STA and the time axis
     return sta, tax
