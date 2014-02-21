@@ -71,8 +71,11 @@ def getste(time, stimulus, spikes, filterlength):
     # Construct a time axis to return
     tax = time[:filterlength] - time[0]
 
-    # Return reshaped STE and the time axis
+    # Reshape the STE and flip the time axis so that the time of the spike is at index 0
     ste = np.reshape(ste, (nzhist.size,) + stimulus.shape[:-1] + (filterlength,))
+    ste = ste[:, :, ::-1]
+
+    # Return STE and the time axis
     return ste, tax
 
 def getsta(time, stimulus, spikes, filterlength):
@@ -134,9 +137,12 @@ def getsta(time, stimulus, spikes, filterlength):
 
     # Construct a time axis to return
     tax = time[:filterlength] - time[0]
-
-    # Return reshaped STA and the time axis
+    
+    # Reshape the STA and flip the time axis so that the time of the spike is at index 0
     sta = np.reshape(sta, stimulus.shape[:-1] + (filterlength,))
+    sta = sta[:, :, ::-1]
+
+    # Return STA and the time axis
     return sta, tax
 
 def lowranksta(f, k=10):
