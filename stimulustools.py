@@ -125,3 +125,35 @@ def slicestim(stim, history, locations=None):
             slices[:, sidx] = stim[:, :, idx - history :idx].ravel()
 
     return slices
+
+def getcov(stim, history):
+    '''
+
+    Computes a stimulus covariance matrix
+    ** Warning: this is computationally expensive for large stimuli **
+
+    Input
+    -----
+
+    stim:
+        The spatiotemporal or temporal stimulus to slices. Should have shape
+        (n, n, t) or (t,).
+
+    history:
+        Integer number of time points to keep in each slice.
+
+    Output
+    ------
+
+    cov:
+        (n*n*t by n*n*t) Covariance matrix
+
+    covinv:
+        (n*n*t by n*n*t) Inverse covariance matrix (computed using the pseudoinverse)
+
+    '''
+
+    cov    = np.cov(slicestim(stim, history))
+    covinv = np.linalg.inv(cov)
+
+    return cov, covinv
