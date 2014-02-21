@@ -23,11 +23,10 @@ def getste(time, stimulus, spikes, filterlength):
         The time axis of the stimulus
 
     stimulus:
-        The stimulus array. The first dimension of the stimulus
-        should be the time axis (and be of the same length as
-        the `time` array), but no other restrictions are placed
-        on the shape of the array. In other words, it works for
-        temporal or spatiotemporal stimuli.
+        The stimulus array. The last dimension of the stimulus
+        array is assumed to be time, but no other restrictions
+        are placed on its shape. It works for purely temporal
+        and spatiotemporal stimuli.
 
     spikes:
         Array of spike times.
@@ -42,7 +41,7 @@ def getste(time, stimulus, spikes, filterlength):
     ste:
         The spike-triggered stimulus ensemble. The returned array
         has stimulus.ndim + 1 dimensions, and has a shape of
-        (nspikes, filterlength, stimulus.shape[0]).
+        (nspikes, stimulus.shape[:-1], filterlength).
 
     tax:
         The time axis of the ensemble. It is of length `filterlength`,
@@ -60,20 +59,20 @@ def getste(time, stimulus, spikes, filterlength):
     nzhist = nzhist[nzhist > filterlength]
 
     # Collapse any spatial dimensions of the stimulus array
-    cstim = stimulus.reshape(stimulus.shape[0], -1)
+    cstim = stimulus.reshape(-1, stimulus.shape[-1])
 
     # Preallocate STE array
-    ste = np.empty((nzhist.size, filterlength, cstim.shape[1]))
+    ste = np.empty((nzhist.size, cstim.shape[0], filterlength))
 
     # Add filterlength frames preceding each spike to the STE array
     for idx, val in enumerate(nzhist):
-        ste[idx, :, :] = hist[val] * cstim[val - filterlength : val, :]
+        ste[idx, :, :] = hist[val] * cstim[:, val - filterlength : val]
 
     # Construct a time axis to return
     tax = time[:filterlength] - time[0]
 
     # Return reshaped STE and the time axis
-    ste = np.reshape(ste, (nzhist.size, filterlength, stimulus.shape[1], -1))
+    ste = np.reshape(ste, (nzhist.size,) + stimulus.shape[:-1] + (filterlength,))
     return ste, tax
 
 def getsta(time, stimulus, spikes, filterlength):
@@ -88,11 +87,10 @@ def getsta(time, stimulus, spikes, filterlength):
         The time axis of the stimulus
 
     stimulus:
-        The stimulus array. The first dimension of the stimulus
-        should be the time axis (and be of the same length as
-        the `time` array), but no other restrictions are placed
-        on the shape of the array. In other words, it works for
-        temporal or spatiotemporal stimuli.
+        The stimulus array. The last dimension of the stimulus
+        array is assumed to be time, but no other restrictions
+        are placed on its shape. It works for purely temporal
+        and spatiotemporal stimuli.
 
     spikes:
         Array of spike times.
@@ -107,7 +105,7 @@ def getsta(time, stimulus, spikes, filterlength):
     sta:
         The spike-triggered average. The returned array has 
         stimulus.ndim + 1 dimensions, and has a shape of
-        (nspikes, stimulus.shape[0], filterlength).
+        (nspikes, stimulus.shape[:-1], filterlength).
 
     tax:
         The time axis of the ensemble. It is of length `filterlength`,
@@ -125,29 +123,28 @@ def getsta(time, stimulus, spikes, filterlength):
     nzhist = nzhist[nzhist > filterlength]
 
     # Collapse any spatial dimensions of the stimulus array
-    cstim = stimulus.reshape(stimulus.shape[0], -1)
+    cstim = stimulus.reshape(-1, stimulus.shape[-1])
 
     # Preallocate STA array
-    sta = np.empty((filterlength, cstim.shape[1]))
+    sta = np.empty((cstim.shape[0], filterlength))
 
     # Add filterlength frames preceding each spike to the running STA
     for idx in nzhist:
-        sta += hist[idx] * cstim[idx - filterlength : idx, :]
+        sta += hist[idx] * cstim[:, idx - filterlength : idx]
 
     # Construct a time axis to return
     tax = time[:filterlength] - time[0]
 
     # Return reshaped STA and the time axis
-    sta = np.reshape(sta, (filterlength, stimulus.shape[1], -1))
+    sta = np.reshape(sta, stimulus.shape[:-1] + (filterlength,))
     return sta, tax
 
 def lowranksta(f, k=10):
     '''
     
-    Decomposes a 3D spatiotemporal filter into the outer product 
-    of spatial and temporal components (via the SVD). This is useful,
-    for example, in computing the spatial and temporal kernels of a
-    spatiotemporal STA, or in denoising the STA.
+    Constructs a rank-k approximation to the given spatiotemporal filter.
+    This is useful for computing a spatial and temporal kernel of an STA,
+    or for denoising.
 
     Input
     -----
