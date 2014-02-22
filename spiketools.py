@@ -58,10 +58,10 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None):
 
     return bspk, tbins + binsize / 2
 
-def estfr(bspk, binsize=0.01, npts=7, sd=2):
+def estfr(bspk, binsize=0.01, npts=7, sd=2, mode='valid'):
     '''
     
-    Estimate the instantaneous firing rates from binned spike counts
+    Estimate the instantaneous firing rates from binned spike counts.
 
     Input
     -----
@@ -69,11 +69,17 @@ def estfr(bspk, binsize=0.01, npts=7, sd=2):
     bspk (ndarray):
         Array of binned spike counts (as from binspikes)
 
+    binsize (float):
+        Size of bins used to bin spikes.
+
     npts (int):
         Number of points in Gaussian filter used to smooth counts
 
     sd (int):
         SD (in points) of the Gaussian filter used to smooth counts
+
+    mode (string):
+        Mode of the convolution, one of 'valid', 'same', or 'full'.
 
     Output
     ------
@@ -85,5 +91,5 @@ def estfr(bspk, binsize=0.01, npts=7, sd=2):
     # Construct Gaussian filter
     filt = signal.gaussian(npts, sd)
 
-    # Filter  binned spiketimes
-    return signal.filtfilt(filt, 1, bspk) / binsize
+    # Filter binned spiketimes
+    return np.convolve(filt / filt.sum(), bspk, mode=mode)
