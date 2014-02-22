@@ -51,17 +51,24 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None):
 
     '''
 
-    # Check if actual time bins are specified
-    if time is not None:
-        return np.histogram(spk, bins=time)
+    # if time is not specified, create a time vector
+    if time is None:
 
-    # If not, use either tmax or the maximum spike time and the binsize
-    if not tmax:
-        tmax = spk.max()
-    tbins = np.arange(0, tmax, binsize)
-    bspk, _ = np.histogram(spk, bins=tbins)
+        # If a max time is not specified, set it to the time of the last spike
+        if not tmax:
+            tmax = np.ceil(spk.max())
 
-    return bspk, tbins[:-1] + 0.5*np.mean(np.diff(tbins))
+        # create the time vector
+        time = np.arange(0, tmax, binsize)
+
+    # bin spike times
+    bspk, _ = np.histogram(spk, bins=time)
+
+    # center the time bins
+    tax = time[:-1] + 0.5*np.mean(np.diff(time))
+
+    # returned binned spikes and cenetered time axis
+    return bspk, tax
 
 def estfr(bspk, binsize=0.01, npts=7, sd=2):
     '''
