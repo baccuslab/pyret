@@ -3,12 +3,17 @@ spiketools.py
 
 Tools for basic manipulation of spike trains
 
-(C) 2014 bnaecker, nirum
+(c) 2014 bnaecker, nirum
 '''
 
 import numpy as np
 from scipy.io import loadmat
 from scipy import signal
+
+try:
+    from peakdetect import peakdet
+except ImportError:
+    raise ImportError('You need to have the peakdetect module available on your python path.')
 
 def binspikes(spk, tmax=None, binsize=0.01, time=None):
     '''
@@ -54,9 +59,9 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None):
     if not tmax:
         tmax = spk.max()
     tbins = np.arange(0, tmax, binsize)
-    bspk, _ = np.histogram(cell, bins=tbins)
+    bspk, _ = np.histogram(spk, bins=tbins)
 
-    return bspk, tbins
+    return bspk, tbins[:-1] + 0.5*np.mean(np.diff(tbins))
 
 def estfr(bspk, binsize=0.01, npts=7, sd=2):
     '''
@@ -85,7 +90,7 @@ def estfr(bspk, binsize=0.01, npts=7, sd=2):
     filt = signal.gaussian(npts, sd)
 
     # Filter  binned spike times
-    return signal.lfilter(filt, 1, cell) / binsize
+    return signal.lfilter(filt, 1, bspk) / binsize
 
 class spikingevent:
     '''
@@ -210,4 +215,55 @@ class spikingevent:
 
         ax.plot(spikes[:,0], spikes[:,1], 'o', markersize=10, markercolor=color)
 
+def detectevents(spk, threshold):
+    '''
 
+    Detects spiking events given a PSTH and spike times for multiple trials
+    Usage: events = detectevents(spikes, threshold=(0.1, 0.005))
+
+    Input
+    -----
+    spk:
+        An (n by 2) array of spike times, indexed by trial / condition.
+        The first column is the set of spike times in the event and the second column is a list of corresponding trial/cell/condition indices for each spike.
+
+    Output
+    ------
+    events (list):
+        A list of 'spikingevent' objects, one for each firing event detected.
+        See the spikingevent class for more info.
+
+    '''
+
+    # find peaks in the PSTH
+    bspk, tax      = binspikes(spk[:,0], tmax=None, binsize=0.01)  # bin spikes
+    psth           = estfr(bspk, binsize=0.01)                     # smooth into a firing rate
+    maxtab, mintab = peakdet(psth, threshold[0], tax)              # find peaks in firing rate
+
+    # store spiking events in a list
+    events = list()
+
+    # join similar peaks, define events
+    for eventidx in range(maxtab.shape[0]):
+
+        # get putative start and stop indices of each spiking event, based on the firing rate
+        startIndices, = np.where( (psth <= threshold[1]) & (tax < maxtab[eventidx,0]) )
+        stopIndices,  = np.where( (psth <= threshold[1]) & (tax > maxtab[eventidx,0]) )
+
+        # find the start time, defined as the right most peak index
+        starttime = tax[0] if startIndices.size == 0 else tax[np.max(startIndices)]
+
+        # find the stop time, defined as the lest most peak index
+        stoptime = tax[-1] if  stopIndices.size == 0 else tax[np.min(stopIndices )]
+
+        # find spikes within this time interval (these make up the spiking event)
+        eventSpikes = spk[(spk[:,0] >= starttime) & (spk[:,0] < stoptime),:]
+
+        # create the spiking event
+        myEvent = spikingevent(starttime, stoptime, eventSpikes)
+
+        # only add it if it is a unique event
+        if not events or not (events[-1] == myEvent):
+            events.append(myEvent)
+
+    return events

@@ -3,7 +3,7 @@ sys.path.append('../')
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from helpers.peakdetect import peakdet
+from peakdetect import peakdet
 from helpers.psth import computePSTH
 
 """
