@@ -222,7 +222,7 @@ def decompose(sta):
 
     '''
     _, u, _, v = lowranksta(sta, k=1)
-    return u[:, 0].reshape(sta.shape[:2]), v[:, 0]
+    return u[:, 0].reshape(sta.shape[:2]), v[0, :]
 
 def _fit2Dgaussian(histogram, numSamples=1e4):
     ''' Fit 2D gaussian to empirical histogram '''
