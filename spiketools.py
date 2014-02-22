@@ -42,7 +42,7 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None):
         Binned spike times
 
     tax (ndarray):
-        The bins themselves.
+        The bin centers
 
     '''
 
@@ -54,9 +54,9 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None):
     if not tmax:
         tmax = spk.max()
     tbins   = np.arange(0, tmax, binsize)
-    bspk, _ = np.histogram(cell, bins=tbins)
+    bspk, _ = np.histogram(spk, bins=tbins)
 
-    return bspk, tbins
+    return bspk, tbins + binsize / 2
 
 def estfr(bspk, binsize=0.01, npts=7, sd=2):
     '''
@@ -86,4 +86,4 @@ def estfr(bspk, binsize=0.01, npts=7, sd=2):
     filt = signal.gaussian(npts, sd)
 
     # Filter  binned spiketimes
-    return signal.lfilter(filt, 1, cell) / binsize
+    return signal.filtfilt(filt, 1, bspk) / binsize
