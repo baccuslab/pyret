@@ -73,7 +73,7 @@ def getste(time, stimulus, spikes, filterlength):
 
     # Reshape the STE and flip the time axis so that the time of the spike is at index 0
     ste = np.reshape(ste, (nzhist.size,) + stimulus.shape[:-1] + (filterlength,))
-    sta = np.take(sta, np.arange(filterlength - 1, -1, -1), axis=-1)
+    ste = np.take(ste, np.arange(filterlength - 1, -1, -1), axis=-1)
 
     # Return STE and the time axis
     return ste, tax
@@ -134,6 +134,10 @@ def getsta(time, stimulus, spikes, filterlength):
     # Add filterlength frames preceding each spike to the running STA
     for idx in nzhist:
         sta += hist[idx] * cstim[:, idx - filterlength : idx]
+
+    # Mean-subtract and normalize as a vector
+    sta -= np.mean(sta)
+    sta /= np.linalg.norm(sta)
 
     # Construct a time axis to return
     tax = time[:filterlength] - time[0]
