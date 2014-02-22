@@ -129,11 +129,11 @@ def getsta(time, stimulus, spikes, filterlength):
     cstim = stimulus.reshape(-1, stimulus.shape[-1])
 
     # Preallocate STA array
-    sta = np.empty((cstim.shape[0], filterlength))
+    sta = np.zeros((cstim.shape[0], filterlength))
 
     # Add filterlength frames preceding each spike to the running STA
     for idx in nzhist:
-        sta += hist[idx] * cstim[:, idx - filterlength : idx]
+        sta += hist[idx] * cstim[:, idx - filterlength : idx].ravel()
 
     # Mean-subtract and normalize as a vector
     sta -= np.mean(sta)
@@ -256,8 +256,8 @@ def _im2hist(data, spatialSmoothing = 2.5):
     data_smooth = gaussian_filter(data, spatialSmoothing, order=0)
 
     # Mean subtract
-    mu               = np.median(data_smooth)
-    data_centered   -= mu
+    mu              = np.median(data_smooth)
+    data_centered   = data_smooth - mu
 
     # Figure out if it is an on or off profile
     if np.abs(np.max(data_centered)) < np.abs(np.min(data_centered)):

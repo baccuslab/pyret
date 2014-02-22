@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(name = 'pyret', 
-        version = '0.1',
+        version = '0.1.1',
         description = 'Tools for the analysis of neural data',
         author = 'Benjamin Naecker, Niru Maheshwaranathan',
         author_email = 'bnaecker@stanford.edu',
