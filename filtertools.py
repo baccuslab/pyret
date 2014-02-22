@@ -226,7 +226,7 @@ def _fit2Dgaussian(histogram, numSamples=1e4):
     # Indices
     x = np.linspace(0,1,histogram.shape[0])
     y = np.linspace(0,1,histogram.shape[1])
-    xx,yy = np.meshgrid(x,y)
+    xx, yy = np.meshgrid(x, y)
 
     # Draw samples
     indices = np.random.choice(np.flatnonzero(histogram+1), size=numSamples, replace=True, p=histogram.ravel())
@@ -243,7 +243,7 @@ def _fit2Dgaussian(histogram, numSamples=1e4):
     widths,vectors = np.linalg.eig(C)
     angle = np.arccos(vectors[0,0])
 
-    return center, widths, angle, xx, yy
+    return center, widths, angle
 
 def _im2hist(data, spatialSmoothing = 2.5):
     ''' Converts 2D image to histogram '''
@@ -269,7 +269,41 @@ def _im2hist(data, spatialSmoothing = 2.5):
 
     return pdf
 
-def getellipse(F, scale=1.5):
+def getellipseparams(staframe):
+    '''
+
+    Fit an ellipse to the given spatial receptive field, return parameters of the fit ellipse
+
+    Input
+    -----
+
+    staframe:
+        The spatial receptive field to which the ellipse should be fit
+
+    scale:
+        Scale factor for the ellipse
+
+    Output
+    ------
+
+    center:
+        the receptive field center (location stored as an (x,y) tuple)
+
+    widths:
+        two-element list of the size of each principal axis of the RF ellipse
+
+    theta:
+        angle of rotation of the ellipse from the vertical axis, in radians
+
+    '''
+
+    # Get ellipse parameters
+    histogram = _im2hist(staframe)
+    center, widths, theta, = _fit2Dgaussian(histogram, numSamples=1e5)
+
+    return center, widths, theta
+
+def getellipse(staframe, scale=1.5):
     '''
     
     Fit an ellipse to the given spatial receptive field
@@ -292,8 +326,7 @@ def getellipse(F, scale=1.5):
     '''
 
     # Get ellipse parameters
-    histogram = _im2hist(F)
-    center, widths, theta, xx, yy = _fit2Dgaussian(histogram, numSamples=1e5)
+    center, widths, theta = getellipseparams(staframe)
 
     # Generate ellipse
     ell = Ellipse(xy=center, width=scale*widths[0], height=scale*widths[1], angle=np.rad2deg(theta)+90)
@@ -422,4 +455,3 @@ def prinangles(u, v):
     ang = np.rad2deg(np.arccos(mag))
 
     return ang, mag
-
