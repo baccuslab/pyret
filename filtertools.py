@@ -133,7 +133,7 @@ def getsta(time, stimulus, spikes, filterlength):
 
     # Add filterlength frames preceding each spike to the running STA
     for idx in nzhist:
-        sta += hist[idx] * cstim[:, idx - filterlength : idx].ravel()
+        sta += hist[idx] * cstim[:, idx - filterlength : idx]
 
     # Mean-subtract and normalize as a vector
     sta -= np.mean(sta)
