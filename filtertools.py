@@ -19,31 +19,31 @@ def getste(time, stimulus, spikes, filterlength):
     Input
     -----
 
-    time:
+    time (ndarray):
         The time axis of the stimulus
 
-    stimulus:
+    stimulus (ndarray):
         The stimulus array. The last dimension of the stimulus
         array is assumed to be time, but no other restrictions
         are placed on its shape. It works for purely temporal
         and spatiotemporal stimuli.
 
-    spikes:
+    spikes (ndarray):
         Array of spike times.
 
-    filterlength:
-        Integer number of frames over which to construct the
+    filterlength (int):
+        Number of frames over which to construct the
         ensemble
 
     Output
     ------
 
-    ste:
+    ste (ndarray):
         The spike-triggered stimulus ensemble. The returned array
         has stimulus.ndim + 1 dimensions, and has a shape of
         (nspikes, stimulus.shape[:-1], filterlength).
 
-    tax:
+    tax (ndarray):
         The time axis of the ensemble. It is of length `filterlength`,
         with intervals given by the sample rate of the `time` input
         array.
@@ -86,31 +86,31 @@ def getsta(time, stimulus, spikes, filterlength):
     Input
     -----
 
-    time:
+    time (ndarray):
         The time axis of the stimulus
 
-    stimulus:
+    stimulus (ndarray):
         The stimulus array. The last dimension of the stimulus
         array is assumed to be time, but no other restrictions
         are placed on its shape. It works for purely temporal
         and spatiotemporal stimuli.
 
-    spikes:
+    spikes (ndarray):
         Array of spike times.
 
-    filterlength:
-        Integer number of frames over which to construct the
+    filterlength (int):
+        Number of frames over which to construct the
         ensemble
 
     Output
     ------
 
-    sta:
+    sta (ndarray):
         The spike-triggered average. The returned array has 
         stimulus.ndim + 1 dimensions, and has a shape of
         (nspikes, stimulus.shape[:-1], filterlength).
 
-    tax:
+    tax (ndarray):
         The time axis of the ensemble. It is of length `filterlength`,
         with intervals given by the sample rate of the `time` input
         array.
@@ -159,25 +159,25 @@ def lowranksta(f, k=10):
     Input
     -----
 
-    f:
+    f (ndarray):
         3-D filter to be separated
 
-    k:
+    k (int):
         number of components to keep (rank of the filter)
 
     Output
     ------
 
-    fk:
+    fk (ndarray):
         the rank-k filter
 
-    u:
+    u (ndarray):
         the top k spatial components  (each row is a component)
 
-    s:
+    s (ndarray):
         the top k singular values
 
-    u:
+    u (ndarray):
         the top k temporal components (each column is a component)
 
     '''
@@ -208,16 +208,16 @@ def decompose(sta):
     Input
     -----
 
-    sta:
+    sta (ndarray):
         The full 3-dimensional STA to be decomposed
 
     Output
     ------
 
-    s:
+    s (ndarray):
         The spatial kernel
 
-    t:
+    t (ndarray):
         The temporal kernel
 
     '''
@@ -228,24 +228,24 @@ def _fit2Dgaussian(histogram, numSamples=1e4):
     ''' Fit 2D gaussian to empirical histogram '''
 
     # Indices
-    x = np.linspace(0,1,histogram.shape[0])
-    y = np.linspace(0,1,histogram.shape[1])
-    xx, yy = np.meshgrid(x, y)
+    x       = np.linspace(0,1,histogram.shape[0])
+    y       = np.linspace(0,1,histogram.shape[1])
+    xx, yy  = np.meshgrid(x, y)
 
     # Draw samples
-    indices = np.random.choice(np.flatnonzero(histogram+1), size=numSamples, replace=True, p=histogram.ravel())
-    x_samples = xx.ravel()[indices]
-    y_samples = yy.ravel()[indices]
+    indices     = np.random.choice(np.flatnonzero(histogram+1), size=numSamples, replace=True, p=histogram.ravel())
+    x_samples   = xx.ravel()[indices]
+    y_samples   = yy.ravel()[indices]
 
     # Fit mean / covariance
-    samples = np.array((x_samples,y_samples))
-    centerIdx = np.unravel_index(np.argmax(histogram), histogram.shape)
-    center = (xx[centerIdx], yy[centerIdx])
-    C = np.cov(samples)
+    samples     = np.array((x_samples,y_samples))
+    centerIdx   = np.unravel_index(np.argmax(histogram), histogram.shape)
+    center      = (xx[centerIdx], yy[centerIdx])
+    C           = np.cov(samples)
 
     # Get width / angles
-    widths,vectors = np.linalg.eig(C)
-    angle = np.arccos(vectors[0,0])
+    widths,vectors  = np.linalg.eig(C)
+    angle           = np.arccos(vectors[0,0])
 
     return center, widths, angle
 
@@ -256,8 +256,8 @@ def _im2hist(data, spatialSmoothing = 2.5):
     data_smooth = gaussian_filter(data, spatialSmoothing, order=0)
 
     # Mean subtract
-    mu = np.median(data_smooth)
-    data_centered = data_smooth - mu
+    mu               = np.median(data_smooth)
+    data_centered   -= mu
 
     # Figure out if it is an on or off profile
     if np.abs(np.max(data_centered)) < np.abs(np.min(data_centered)):
@@ -281,29 +281,29 @@ def getellipseparams(staframe):
     Input
     -----
 
-    staframe:
+    staframe (ndarray):
         The spatial receptive field to which the ellipse should be fit
 
-    scale:
+    scale (float):
         Scale factor for the ellipse
 
     Output
     ------
 
-    center:
-        the receptive field center (location stored as an (x,y) tuple)
+    center (tuple of floats):
+        The receptive field center (location stored as an (x,y) tuple)
 
-    widths:
-        two-element list of the size of each principal axis of the RF ellipse
+    widths (list of floats):
+        Two-element list of the size of each principal axis of the RF ellipse
 
-    theta:
+    theta (float):
         angle of rotation of the ellipse from the vertical axis, in radians
 
     '''
 
     # Get ellipse parameters
-    histogram = _im2hist(staframe)
-    center, widths, theta, = _fit2Dgaussian(histogram, numSamples=1e5)
+    histogram               = _im2hist(staframe)
+    center, widths, theta,  = _fit2Dgaussian(histogram, numSamples=1e5)
 
     return center, widths, theta
 
@@ -341,6 +341,21 @@ def filterpeak(sta):
     '''
     
     Find the peak (single point in space/time) of a smoothed filter
+
+    Input
+    -----
+
+    sta (ndarray):
+        Filter of which to find the peak
+
+    Output
+    ------
+
+    idx (int):
+        Linear index of the maximal point
+
+    sidx (int), tidx (int):
+        Spatial and temporal indices of the maximal point
 
     '''
     # Smooth filter
@@ -389,21 +404,21 @@ def cutout(arr, idx, width=5):
     Input
     -----
 
-    arr:
+    arr (ndarray):
         Stimulus or filter array from which the chunk is cut out. The array
         should be shaped as (time, pix, pix).
 
-    idx:
+    idx (array_like):
         2D array-like, specifying the row and column indices of
         the center of the section to be cut out
 
-    width:
+    width (int):
         The size of the chunk to cut out from the start indices
 
     Output
     ------
 
-    cut:
+    cut (ndarray):
         The cut out section of the given stimulus or filter
 
     '''
@@ -435,16 +450,16 @@ def prinangles(u, v):
     Input
     -----
 
-    u, v:
+    u, v (ndarray's):
         The subspaces to compare. They should be of the same size.
 
     Output
     ------
 
-    ang:
+    ang (float):
         The angles between each dimension of the subspaces
 
-    mag:
+    mag (ndarray):
         The magnitude of the overlap between each dimension of the subspace.
 
     '''

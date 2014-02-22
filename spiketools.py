@@ -18,30 +18,30 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None):
     Input
     -----
 
-    spk:
+    spk (ndarray):
         Array of spike times
 	
     EITHER:
 
-        tmax:
+        tmax (float):
             Maximum bin time. Usually end of experiment, but could
             really be anything.
 
-        binsize:
+        binsize (float):
             Size of bins (in milliseconds).
 
     OR:
 
-        time:
+        time (ndarray):
             The array to use as the actual bins to np.histogram
 
     Output
     ------
 
-    bspk:
+    bspk (ndarray):
         Binned spike times
 
-    tax:
+    tax (ndarray):
         The bins themselves.
 
     '''
@@ -53,7 +53,7 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None):
     # If not, use either tmax or the maximum spike time and the binsize
     if not tmax:
         tmax = spk.max()
-    tbins = np.arange(0, tmax, binsize)
+    tbins   = np.arange(0, tmax, binsize)
     bspk, _ = np.histogram(cell, bins=tbins)
 
     return bspk, tbins
@@ -65,24 +65,25 @@ def estfr(bspk, binsize=0.01, npts=7, sd=2):
 
     Input
     -----
-    bspk:
+
+    bspk (ndarray):
         Array of binned spike counts (as from binspikes)
 
-    npts:
+    npts (int):
         Number of points in Gaussian filter used to smooth counts
 
-    sd:
+    sd (int):
         SD (in points) of the Gaussian filter used to smooth counts
 
     Output
     ------
 
-    rates:
+    rates (ndarray):
         Array of estimated instantaneous firing rate
 
     '''
     # Construct Gaussian filter
     filt = signal.gaussian(npts, sd)
 
-    # Filter  binned spike times
+    # Filter  binned spiketimes
     return signal.lfilter(filt, 1, cell) / binsize

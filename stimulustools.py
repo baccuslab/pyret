@@ -16,32 +16,32 @@ def upsamplestim(time, stim, upfact):
     Input
     -----
 
-    time:
+    time (ndarray):
         The time axis of the original stimulus.
 
-    stim:
+    stim (ndarray):
         The actual stimulus to be upsampled.
 
-    upfact:
+    upfact (int):
         The upsample factor.
 
     Output
 
-    time_us, stim_us:
+    time_us (ndarray), stim_us (ndarray):
         The upsampled time vector and stimulus array
 
     '''
 
     # Compute old and new sizes
-    oldsz = stim.shape
-    newsz = oldsz[:-1] + (upfact * oldsz[-1],)
+    oldsz   = stim.shape
+    newsz   = oldsz[:-1] + (upfact * oldsz[-1],)
 
     # Upsample the stimulus array
     stim_us = (stim.reshape((-1, 1)) * np.ones((1, upfact))).reshape(newsz)
 
     # Upsample the time vecctor
-    x = np.arange(0, upfact * time.size)
-    xp = np.arange(0, upfact * time.size, 2)
+    x       = np.arange(0, upfact * time.size)
+    xp      = np.arange(0, upfact * time.size, 2)
     time_us = np.interp(x, xp, time)
 
     return time_us, stim_us
@@ -54,19 +54,19 @@ def downsamplestim(time, stim, downfact):
     Input
     -----
 
-    time:
+    time (ndarray):
         The time axis of the original stimulus
 
-    stim:
+    stim (ndarray):
         The original stimulus array
 
-    downfact:
+    downfact (int):
         The factor by which the stimulus will be downsampled
 
     Output
     ------
 
-    time_ds, stim_ds:
+    time_ds (ndarray), stim_ds (ndarray):
         The downsampled time vector and stimulus array
 
     '''
@@ -87,21 +87,21 @@ def slicestim(stim, history, locations=None):
     Input
     -----
 
-    stim:
+    stim (ndarray):
         The spatiotemporal or temporal stimulus to slices. Should have shape
         (n, n, t) or (t,).
 
-    history:
+    history (int):
         Integer number of time points to keep in each slice.
 
-    locations [optional]:
+    locations (boolean) [optional]:
         Boolean array of temporal locations at which slices are taken. If unspecified,
         use all time points.
 
     Output
     ------
 
-    slices:
+    slices (ndarray):
         Array of stimulus slices, with all stimulus dimensions collapsed into one. 
         That is, it has shape (np.prod(stim.shape), `history`)
 
@@ -116,8 +116,8 @@ def slicestim(stim, history, locations=None):
         locations = np.ones(stim.shape[-1])
 
     # Preallocate array to hold all slices
-    slices = np.empty((history * np.prod(stim.shape[:2]), np.sum(locations[history:])))
-    sidx = 0
+    slices  = np.empty((history * np.prod(stim.shape[:2]), np.sum(locations[history:])))
+    sidx    = 0
 
     # Loop over locations (can't use np.take, since we need to keep `history`)
     for idx in range(history, locations.size):
@@ -135,20 +135,20 @@ def getcov(stim, history):
     Input
     -----
 
-    stim:
+    stim (ndarray):
         The spatiotemporal or temporal stimulus to slices. Should have shape
         (n, n, t) or (t,).
 
-    history:
+    history (int):
         Integer number of time points to keep in each slice.
 
     Output
     ------
 
-    cov:
+    cov (ndarray):
         (n*n*t by n*n*t) Covariance matrix
 
-    covinv:
+    covinv (ndarray):
         (n*n*t by n*n*t) Inverse covariance matrix (computed using the pseudoinverse)
 
     '''

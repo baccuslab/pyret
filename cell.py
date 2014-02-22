@@ -28,13 +28,13 @@ class Cell:
         These attributes provide information about the Cell object,
         such as its cell-type, etc.
 
-        celltype:
+        celltype (string):
             A string defining the cell type, e.g., 'on' or 'off'
 
-        notes:
+        notes (string):
             A string with any other notes you wish
 
-        uid:
+        uid (string):
             NotImplemented
 
         Spike data
@@ -43,25 +43,25 @@ class Cell:
         These data attributes are specific to actual neural data,
         such as spike-times, linear filters, etc
 
-        spk:
+        spk (ndarray):
             Spike-times
 
-        rate:
+        rate (ndarray):
             Instantaneous firing rate. # NotImplemented 
 
-        ste:
+        ste (ndarray):
             Spike-triggered stimulus ensemble
 
-        sta:
+        sta (ndarray):
             Spike-triggered average
 
-        staax:
+        staax (ndarray):
             Time axis for the STE/STA
 
-        nonlin:
+        nonlin (ndarray):
             A cell's nonlinearity
 
-        nonlinax:
+        nonlinax (ndarray):
             Axis (bins) for the nonlinearity
 
     Function attributes
@@ -133,7 +133,7 @@ class Cell:
         Input
         -----
 
-        spk:
+        spk (ndarray):
             NumPy array of spike times
 
         '''
@@ -149,16 +149,16 @@ class Cell:
         Input
         -----
 
-        time:
+        time (ndarray):
             Time array, defining the time axis of the stimulus
 
-        stim:
+        stim (ndarray):
             Stimulus array. first dimension should be the time
             axis of the stimulus, second should be all spatial 
             stimulus dimensions collapsed
 
-        length:
-            Time into the past (in seconds) over which to construct the STE.
+        length (int):
+            Time into the past (in frames) over which to construct the STE.
 
         '''
 
@@ -197,15 +197,15 @@ class Cell:
         Input
         -----
 
-        time:
+        time (ndarray):
             Time array, defining the time axis of the stimulus.
 
-        stim:
+        stim (ndarray):
             Stimulus array. First dimension should be time axis of the
             stimulus, and second should be all spatial dimensions collapsed
 
-        length:
-            Time into past (in seconds) over which to construct the STA.
+        length (int):
+            Time into past (in frames) over which to construct the STA.
 
         '''
         # Determine which form of the function is being called
@@ -242,13 +242,13 @@ class Cell:
         kwargs
         ------
 
-        time:
+        time (boolean):
             Plot the temporal kernel of the receptive field.
 
-        space:
+        space (boolean):
             Plot the spatial kernel of the receptive field.
 
-        ellipse:
+        ellipse (boolean):
             Plot a Gaussian ellipse fit to the cell's spatial receptive field.
 
         '''
@@ -263,8 +263,8 @@ class Cell:
         fig = plt.figure()
 
         # Make the right number of axes
-        naxes = sum([time, (space or ellipse)])
-        axlist = fig.add_subplot(naxes, 1, 1)
+        naxes   = sum([time, (space or ellipse)])
+        axlist  = fig.add_subplot(naxes, 1, 1)
 
         # Plot the temporal kernel
         if time:

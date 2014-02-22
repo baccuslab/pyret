@@ -23,19 +23,19 @@ def raster(spikes, triallength=None, fig=None):
     Input
     -----
 
-    spikes:
+    spikes (ndarray):
         An array of spike times to plot
 
-    triallength:
+    triallength (float):
         The length of each trial to stack, in seconds.
 
-    fig:
+    fig (matplotlib figure):
         The figure into which the raster is plotted.
 
     Output
     ------
 
-    fig:
+    fig (matplotlib figure):
         Matplotlib handle of the figure
 
     '''
@@ -79,22 +79,22 @@ def psth(spikes, triallength=None, binsize=0.01, fig=None):
     Input
     -----
 
-    spikes:
+    spikes (ndarray):
         An array of spike times
 
-    triallength:
+    triallength (float):
         The length of each trial to stack, in seconds
 
-    binsize:
+    binsize (float):
         The size of bins used in computing the PSTH
 
-    fig:
+    fig (matplotlib figure):
         Figure into which the psth should be plotted
 
     Output
     ------
 
-    fig:
+    fig (matplotlib figure):
         Matplotlib figure handle
 
     '''
@@ -104,9 +104,9 @@ def psth(spikes, triallength=None, binsize=0.01, fig=None):
         triallength = spikes.max()
 
     # Compute the histogram bins to use
-    ntrials = int(np.ceil(spikes.max() / triallength))
-    basebins = np.arange(0, triallength + binsize, binsize)
-    tbins = np.tile(basebins, (ntrials, 1)) + (np.tile(np.arange(0, ntrials), (basebins.size, 1)).T * triallength)
+    ntrials     = int(np.ceil(spikes.max() / triallength))
+    basebins    = np.arange(0, triallength + binsize, binsize)
+    tbins       = np.tile(basebins, (ntrials, 1)) + (np.tile(np.arange(0, ntrials), (basebins.size, 1)).T * triallength)
         
     # Bin the spikes in each time bin
     bspk = np.empty((tbins.shape[0], tbins.shape[1] - 1))
@@ -141,22 +141,22 @@ def rasterandpsth(spikes, triallength=None, binsize=0.01, fig=None):
     Input
     -----
 
-    spikes:
+    spikes (ndarray):
         An array of spike times
 
-    triallength:
+    triallength (float):
         The length of each trial to stack, in seconds
 
-    binsize:
+    binsize (float):
         The size of bins used in computing the PSTH
 
-    fig:
+    fig (matplotlib figure):
         Figure into which the psth should be plotted
 
     Output
     ------
 
-    fig:
+    fig (matplotlib figure):
         Matplotlib figure handle
 
     '''
@@ -166,9 +166,9 @@ def rasterandpsth(spikes, triallength=None, binsize=0.01, fig=None):
         triallength = spikes.max()
 
     # Compute the histogram bins to use
-    ntrials = int(np.ceil(spikes.max() / triallength))
-    basebins = np.arange(0, triallength + binsize, binsize)
-    tbins = np.tile(basebins, (ntrials, 1)) + (np.tile(np.arange(0, ntrials), (basebins.size, 1)).T * triallength)
+    ntrials     = int(np.ceil(spikes.max() / triallength))
+    basebins    = np.arange(0, triallength + binsize, binsize)
+    tbins       = np.tile(basebins, (ntrials, 1)) + (np.tile(np.arange(0, ntrials), (basebins.size, 1)).T * triallength)
 
     # Bin the spikes in each time bin
     bspk = np.empty((tbins.shape[0], tbins.shape[1] - 1))
@@ -217,13 +217,13 @@ def playsta(sta, repeat=True, frametime=100):
     Input
     -----
 
-    sta:
+    sta (ndarray):
         Spike-triggered average array, shaped as (npix, npix, nframes)
 
-    repeat [optional, default=True]:
+    repeat (boolean) [optional, default=True]:
         Whether or not to repeat the animation
 
-    frametime [optional, default=100]:
+    frametime (float) [optional, default=100]:
         Length of time each frame is displayed for (in milliseconds)
 
     Output
@@ -237,9 +237,9 @@ def playsta(sta, repeat=True, frametime=100):
     initialFrame = sta[:, :, 0]
 
     # Set up the figure
-    fig = plt.figure()
-    ax = plt.axes(xlim=(0, sta.shape[0]), ylim=(0, sta.shape[1]))
-    img = plt.imshow(initialFrame)
+    fig     = plt.figure()
+    ax      = plt.axes(xlim=(0, sta.shape[0]), ylim=(0, sta.shape[1]))
+    img     = plt.imshow(initialFrame)
 
     # Set up the colors
     maxval = np.ceil(np.absolute(sta).max())
@@ -272,16 +272,17 @@ def spatial(spatialFrame, ax=None):
     Input
     -----
 
-    spatialFrame:
+    spatialFrame (ndarray):
         The frame to plot, as an (n x n) matrix.
 
-    ax [optional]:
+    ax (matplotlib axes) [optional]:
         the axes on which to plot the data; defaults to creating a new figure
 
     Output
     ------
 
-    axes handle
+    ax (matplotlib axes):
+        Axes into which the frame is plotted
 
     '''
 
@@ -305,19 +306,20 @@ def temporal(time, temporalFilter, ax=None):
     Input
     -----
 
-    time:
+    time (ndarray):
         a time vector to plot against
 
-    temporalFilter:
+    temporalFilter (ndarray):
         the temporal filter to plot, has the same dimensions as time
 
-    ax [optional]:
+    ax (matplotlib axes) [optional]:
         the axes on which to plot the data; defaults to creating a new figure
 
     Output
     ------
 
-    axes handle
+    ax (matplotlib axes):
+        Axes into which the frame is plotted
 
     '''
 
@@ -338,19 +340,20 @@ def plotsta(time, sta, timeSlice=None):
     Input
     -----
 
-    time:
+    time (ndarray):
         a time vector to plot against
 
-    sta:
+    sta (ndarray):
         the filter to plot
 
-    timeslice [optional]:
+    timeslice (int) [optional]:
         the index of the spatial slice to plot
 
     Output
     ------
 
-    axes handle
+    ax (matplotlib axes):
+        Axes into which the STA is plotted
 
     '''
 
@@ -377,16 +380,16 @@ def ellipse(ell, ax=None):
     Input
     -----
 
-    ell:
-        A matplotlib.patches.Ellipse object
+    ell (matplotlibe.pathces.Ellipse object):
+        The ellipse to be plotted
 
-    ax [optional]:
+    ax (matplotlib axes) [optional]:
         The axes onto which the ellipse should be plotted. Defaults to a new figure
 
     Output
     ------
 
-    ax:
+    ax  (matplotlib axes):
         The axes onto which the ellipse is plotted
     
     '''
