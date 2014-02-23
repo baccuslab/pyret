@@ -107,22 +107,20 @@ def slicestim(stim, history, locations=None):
 
     '''
 
-    # Converty purely temporal stimuli into spatiotemporal
-    if stim.ndim == 1:
-        stim = stim.reshape(1, 1, -1)
+    # Collapse any spatial dimensions of the stimulus array
+    cstim = stim.reshape(-1, stim.shape[-1])
 
     # Compute spatial locations to take
     if locations is None:
-        locations = np.ones(stim.shape[-1])
+        locations = np.ones(cstim.shape[-1])
 
     # Preallocate array to hold all slices
-    slices  = np.empty((history * np.prod(stim.shape[:2]), np.sum(locations[history:])))
-    sidx    = 0
+    slices  = np.empty((history * cstim.shape[0], np.sum(locations[history:])))
 
     # Loop over locations (can't use np.take, since we need to keep `history`)
     for idx in range(history, locations.size):
         if locations[idx]:
-            slices[:, sidx] = stim[:, :, idx - history :idx].ravel()
+            slices[:, idx-history] = cstim[:, idx - history :idx].ravel()
 
     return slices
 
@@ -157,6 +155,10 @@ def getcov(stim, history, cutoff=0.1):
     '''
 
     cov    = np.cov(slicestim(stim, history))
-    covinv = np.linalg.pinv(cov, cutoff)
+    try:
+        covinv = np.linalg.pinv(cov, cutoff)
+    except np.linalg.LinAlgError:
+        print('Warning: could not compute the inverse covariance.')
+        covinv = None
 
     return cov, covinv
