@@ -126,7 +126,7 @@ def slicestim(stim, history, locations=None):
 
     return slices
 
-def getcov(stim, history):
+def getcov(stim, history, cutoff=0.1):
     '''
 
     Computes a stimulus covariance matrix
@@ -141,6 +141,9 @@ def getcov(stim, history):
 
     history (int):
         Integer number of time points to keep in each slice.
+    
+    cutoff (default=0.1):
+        The cutoff for small singular values in computing the inverse covariance matrix
 
     Output
     ------
@@ -154,6 +157,6 @@ def getcov(stim, history):
     '''
 
     cov    = np.cov(slicestim(stim, history))
-    covinv = np.linalg.inv(cov)
+    covinv = np.linalg.pinv(cov, cutoff)
 
     return cov, covinv
