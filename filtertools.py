@@ -298,6 +298,20 @@ def lowranksta(f, k=10):
     # Compute the rank-k filter
     fk = (u[:,:k].dot(np.diag(s[:k]).dot(v[:k,:]))).reshape(f.shape)
 
+    ### make sure the temporal kernels have the same sign:
+
+    # get out the temporal filter at the RF center
+    peakidx = filterpeak(f)[1]
+    tsta = f[peakidx[1], peakidx[0], :].reshape(-1,1)
+    tsta -= np.mean(tsta)
+
+    # project onto the temporal filters and keep the sign
+    signs = np.sign( (v-np.mean(v,axis=1)).dot(tsta) )
+
+    # flip signs according to this projection
+    v *= signs
+    u *= signs.T
+
     # Return the rank-k approximate filter, and the SVD components
     return fk, u, s, v
 
