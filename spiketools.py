@@ -70,21 +70,21 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None):
     # returned binned spikes and cenetered time axis
     return bspk, tax
 
-def estfr(bspk, binsize=0.01, npts=7, sd=2):
+def estfr(tax, bspk, sigma=0.01):
     '''
     
     Estimate the instantaneous firing rates from binned spike counts
 
     Input
     -----
+    tax:
+        Array of time points corresponding to bins (as from binspikes)
+
     bspk:
         Array of binned spike counts (as from binspikes)
 
-    npts:
-        Number of points in Gaussian filter used to smooth counts
-
-    sd:
-        SD (in points) of the Gaussian filter used to smooth counts
+    sigma:
+        The width of the Gaussian filter, in seconds
 
     Output
     ------
@@ -93,11 +93,18 @@ def estfr(bspk, binsize=0.01, npts=7, sd=2):
         Array of estimated instantaneous firing rate
 
     '''
-    # Construct Gaussian filter
-    filt = signal.gaussian(npts, sd)
+
+    # estimate binned spikes time step
+    dt = np.mean(np.diff(tax))
+
+    # Construct Gaussian filter, make sure it is normalized
+    tau  = np.arange(-5*sigma, 5*sigma, dt)
+    filt = np.exp(-0.5*(tau / sigma)**2)
+    filt = filt / np.sum(filt)
+    size = np.round(filt.size / 2)
 
     # Filter  binned spike times
-    return signal.lfilter(filt, 1, bspk) / binsize
+    return np.convolve(filt, bspk, mode='full')[size:size+tax.size]
 
 class spikingevent:
     '''
