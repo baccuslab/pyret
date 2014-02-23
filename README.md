@@ -1,6 +1,6 @@
 # pyret
 ## A Python package for messing with retinal data
-(C) 2014 Benjamin Naecker, Niru Maheshwaranthan
+(C) 2014 Benjamin Naecker, Niru Maheswaranthan
 
 Brief description
 -----------------
