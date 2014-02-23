@@ -15,7 +15,7 @@ try:
 except ImportError:
     raise ImportError('You need to have the peakdetect module available on your python path.')
 
-def binspikes(spk, tmax=None, binsize=0.01, time=None):
+def binspikes(spk, tmax=None, binsize=0.01, time=None, numTrials=1):
     '''
     
     Bin spike times at the given resolution. The function has two forms.
@@ -25,6 +25,9 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None):
 
     spk:
         Array of spike times
+
+    numTrials:
+        How many trials went into this binning. The output counts are normalized such that they represent # of spikes / trial.
 	
     EITHER:
 
@@ -68,7 +71,7 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None):
     tax = time[:-1] + 0.5*np.mean(np.diff(time))
 
     # returned binned spikes and cenetered time axis
-    return bspk, tax
+    return bspk / numTrials, tax
 
 def estfr(tax, bspk, sigma=0.01):
     '''
@@ -229,7 +232,7 @@ class spikingevent:
 
         ax.plot(spikes[:,0], spikes[:,1], 'o', markersize=10, markercolor=color)
 
-def detectevents(spk, threshold):
+def detectevents(spk, threshold=(0.3,0.05)):
     '''
 
     Detects spiking events given a PSTH and spike times for multiple trials
@@ -250,9 +253,9 @@ def detectevents(spk, threshold):
     '''
 
     # find peaks in the PSTH
-    bspk, tax      = binspikes(spk[:,0], tmax=None, binsize=0.01)  # bin spikes
-    psth           = estfr(bspk, binsize=0.01)                     # smooth into a firing rate
-    maxtab, mintab = peakdet(psth, threshold[0], tax)              # find peaks in firing rate
+    bspk, tax = binspikes(spk[:,0], binsize=0.01, numTrials=np.max(spk[:,1]))
+    psth      = estfr(tax, bspk, sigma=0.005)
+    maxtab, _ = peakdet(psth, threshold[0], tax)
 
     # store spiking events in a list
     events = list()
@@ -280,4 +283,4 @@ def detectevents(spk, threshold):
         if not events or not (events[-1] == myEvent):
             events.append(myEvent)
 
-    return events
+    return tax, psth, bspk, events
