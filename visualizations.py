@@ -10,14 +10,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import filtertools as ft
+from cell import Cell
 from matplotlib import animation
 
 def raster(spikes, triallength=None, fig=None):
     '''
-    
-    Plot a raster of spike times. The `triallength` keyword specifies the 
-    length of time for each trial, and the `spikes` array is split up into 
-    segments of that length. These groups are then plotted on top of one 
+
+    Plot a raster of spike times. The `triallength` keyword specifies the
+    length of time for each trial, and the `spikes` array is split up into
+    segments of that length. These groups are then plotted on top of one
     another, as if they are individual trials.
 
     Input
@@ -48,7 +49,7 @@ def raster(spikes, triallength=None, fig=None):
         # Compute the time indices of each trial
         times = np.array([np.array([0, triallength]) + triallength * i
                 for i in np.arange(np.ceil(spikes.max() / triallength))])
-        
+
     # Make a figure
     if not fig or type(fig) is not plt.Figure:
         fig = plt.figure()
@@ -58,7 +59,7 @@ def raster(spikes, triallength=None, fig=None):
     plt.hold(True)
     for trial in range(times.shape[0]):
         idx = np.bitwise_and(spikes > times[trial, 0], spikes <= times[trial, 1])
-        ax.plot(spikes[idx] - times[trial, 0], (trial + 1) * np.ones((idx.sum(),1)), 
+        ax.plot(spikes[idx] - times[trial, 0], (trial + 1) * np.ones((idx.sum(),1)),
                 color='k', linestyle='none', marker='.')
 
     # Labels etc
@@ -73,7 +74,7 @@ def raster(spikes, triallength=None, fig=None):
 
 def psth(spikes, triallength=None, binsize=0.01, fig=None):
     '''
-    
+
     Plot a PSTH from the given spike times.
 
     Input
@@ -107,7 +108,7 @@ def psth(spikes, triallength=None, binsize=0.01, fig=None):
     ntrials     = int(np.ceil(spikes.max() / triallength))
     basebins    = np.arange(0, triallength + binsize, binsize)
     tbins       = np.tile(basebins, (ntrials, 1)) + (np.tile(np.arange(0, ntrials), (basebins.size, 1)).T * triallength)
-        
+
     # Bin the spikes in each time bin
     bspk = np.empty((tbins.shape[0], tbins.shape[1] - 1))
     for trial in range(ntrials):
@@ -211,7 +212,7 @@ def rasterandpsth(spikes, triallength=None, binsize=0.01, fig=None):
 
 def playsta(sta, repeat=True, frametime=100):
     '''
-    
+
     Plays a spatiotemporal spike-triggered average as a movie
 
     Input
@@ -266,7 +267,7 @@ def playsta(sta, repeat=True, frametime=100):
 
 def spatial(spatialFrame, ax=None):
     '''
-	
+
     Plot a spatial filter on a given axes
 
     Input
@@ -300,7 +301,7 @@ def spatial(spatialFrame, ax=None):
 
 def temporal(time, temporalFilter, ax=None):
     '''
-	
+
     Plot a temporal filter on a given axes
 
     Input
@@ -334,7 +335,7 @@ def temporal(time, temporalFilter, ax=None):
 
 def plotsta(time, sta, timeSlice=None):
     '''
-	
+
     Plot a spatial and temporal filter
 
     Input
@@ -374,7 +375,7 @@ def plotsta(time, sta, timeSlice=None):
 
 def ellipse(ell, ax=None):
     '''
-    
+
     Plot the given ellipse, fit to the spatial receptive field of a cell
 
     Input
@@ -391,7 +392,7 @@ def ellipse(ell, ax=None):
 
     ax  (matplotlib axes):
         The axes onto which the ellipse is plotted
-    
+
     '''
 
     # Set some properties
@@ -405,6 +406,86 @@ def ellipse(ell, ax=None):
         ax = fig.add_subplot(111)
     ax.add_artist(ell)
 
+    plt.show()
+    plt.draw()
+    return ax
+
+def plotcells(cells, ax=None, boxdims=None, start=None):
+    '''
+
+    Plot the receptive fields
+
+    Input
+    -----
+
+    cells:
+        Either a list of Cell objects, or a list of spatiotemporal receptive fields
+
+    ax (matplotlib axes) [optional]:
+        The axes onto which the ellipse should be plotted. Defaults to a new figure
+
+    boxdims [optional, default: None]:
+        Dimensions of a box (to indicate the electrode array) to draw behind the cells.
+        Should be a tuple containing the (width,height) of the box.
+
+    start [optional, default: None]:
+        Location of the lower left corner of the box to draw. If None, the box is centered on the plot.
+        Only matters if 'boxdims' is not None.
+
+    Output
+    ------
+
+    ax  (matplotlib axes):
+        The axes onto which the ellipse is plotted
+
+    '''
+
+    # Create axes or add to given
+    if not ax:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+    # define the color palatte
+    colors = sns.color_palette("hls", len(cells))
+    np.random.shuffle(colors)
+
+    # for each cell
+    for idx, val in enumerate(cells):
+
+        # if a Cell object, get just the STA
+        sta = val.sta if isinstance(val, Cell) else val
+
+        # get the spatial profile
+        _, _, tidx = ft.filterpeak(sta)
+
+        # generate ellipse
+        ell = ft.getellipse(sta[:,:,tidx], scale=0.5)
+
+        # add it to the plot
+        ell.set_facecolor(colors[idx])
+        ell.set_edgecolor(colors[idx])
+        ell.set_linewidth(2)
+        ell.set_linestyle('solid')
+        ell.set_alpha(0.3)
+        ax.add_artist(ell)
+
+    # add a box to mark the array
+    if boxdims is not None:
+
+        if start is None:
+            start = (1-np.array(boxdims)) / 2.0
+
+        ax.add_patch(plt.Rectangle((start[0], start[1]), boxdims[0], boxdims[1], fill=False, edgecolor='Black', linestyle='dashed'))
+        plt.xlim(xmin=start[0]-0.1, xmax=start[0]+boxdims[0]+0.1)
+        plt.ylim(ymin=start[1]-0.1, ymax=start[1]+boxdims[1]+0.1)
+
+    sns.set_axes_style(style='nogrid', context='poster')
+    ax.set_aspect('equal')
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    plt.box('off')
+    plt.tight_layout()
     plt.show()
     plt.draw()
     return ax
