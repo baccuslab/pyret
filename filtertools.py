@@ -79,7 +79,7 @@ def getste(time, stimulus, spikes, filterlength):
     # Return STE and the time axis
     return ste, tax
 
-def getsta(time, stimulus, spikes, filterlength):
+def getsta(time, stimulus, spikes, filterlength, norm=True):
     '''
     
     Compute the spike-triggered average
@@ -102,6 +102,10 @@ def getsta(time, stimulus, spikes, filterlength):
     filterlength (int):
         Number of frames over which to construct the
         ensemble
+
+    norm (boolean):
+        Normalize the computed filter by mean-subtracting and normalizing
+        to a unit vector.
 
     Output
     ------
@@ -137,8 +141,9 @@ def getsta(time, stimulus, spikes, filterlength):
         sta += hist[idx] * cstim[:, idx - filterlength : idx]
 
     # Mean-subtract and normalize as a vector
-    sta -= np.mean(sta)
-    sta /= np.linalg.norm(sta)
+    if norm:
+        sta -= np.mean(sta)
+        sta /= np.linalg.norm(sta)
 
     # Construct a time axis to return
     tax = time[:filterlength] - time[0]
