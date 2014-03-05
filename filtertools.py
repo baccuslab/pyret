@@ -422,7 +422,7 @@ def getellipseparams(staframe):
 
     return center, widths, theta
 
-def getellipse(staframe, scale=1.5):
+def getellipse(staframe, scale=1.0):
     '''
     
     Fit an ellipse to the given spatial receptive field
@@ -448,7 +448,7 @@ def getellipse(staframe, scale=1.5):
     center, widths, theta = getellipseparams(staframe)
 
     # Generate ellipse
-    ell = Ellipse(xy=center, width=scale*widths[0], height=scale*widths[1], angle=np.rad2deg(theta)+90)
+    ell = Ellipse(xy=center, width=scale*widths[0], height=scale*widths[1], angle=np.rad2deg(theta)+45)
 
     return ell
 
