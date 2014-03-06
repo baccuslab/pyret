@@ -10,7 +10,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import filtertools as ft
-from cell import Cell
 from matplotlib import animation
 
 def raster(spikes, triallength=None, fig=None):
@@ -246,7 +245,6 @@ def playsta(sta, repeat=True, frametime=100):
     maxval = np.ceil(np.absolute(sta).max())
     img.set_cmap('gray')
     img.set_interpolation('nearest')
-    plt.colorbar()
 
     # Animation initialization function
     def init():
@@ -265,7 +263,7 @@ def playsta(sta, repeat=True, frametime=100):
     plt.show()
     plt.draw()
 
-def spatial(spatialFrame, ax=None):
+def spatial(spatialFrame, ax=None, clim=None):
     '''
 
     Plot a spatial filter on a given axes
@@ -279,6 +277,9 @@ def spatial(spatialFrame, ax=None):
     ax (matplotlib axes) [optional]:
         the axes on which to plot the data; defaults to creating a new figure
 
+    clim (tuple) [optional]:
+        the color range with which to scale the image. Defaults to [-maxval, maxval] where maxval is the max abs. value
+
     Output
     ------
 
@@ -290,10 +291,26 @@ def spatial(spatialFrame, ax=None):
     if not ax:
         ax = plt.figure().add_subplot(111)
 
-    img = ax.imshow(spatialFrame)
-    img.set_cmap('RdBu')
-    img.set_interpolation('nearest')
-    plt.colorbar()
+    # adjust color limits if necessary
+    if not clim:
+
+        # normalize
+        spatialFrame -= np.mean(spatialFrame)
+
+        # find max abs value
+        maxabs = np.max(np.abs(spatialFrame))
+
+        # set clim
+        clim = (-maxabs, maxabs)
+
+    # plot the spatial frame
+    img = ax.imshow(spatialFrame, cmap='bwr', interpolation='nearest')
+    img.set_clim(clim)
+    ax.set_title('Spatial RF')
+
+    # add colorbar
+    cbar = ax.get_figure().colorbar(img)
+
     plt.show()
     plt.draw()
 
@@ -419,7 +436,7 @@ def plotcells(cells, ax=None, boxdims=None, start=None):
     -----
 
     cells:
-        Either a list of Cell objects, or a list of spatiotemporal receptive fields
+        a list of spatiotemporal receptive fields
 
     ax (matplotlib axes) [optional]:
         The axes onto which the ellipse should be plotted. Defaults to a new figure
@@ -450,10 +467,7 @@ def plotcells(cells, ax=None, boxdims=None, start=None):
     np.random.shuffle(colors)
 
     # for each cell
-    for idx, val in enumerate(cells):
-
-        # if a Cell object, get just the STA
-        sta = val.sta if isinstance(val, Cell) else val
+    for idx, sta in enumerate(cells):
 
         # get the spatial profile
         _, _, tidx = ft.filterpeak(sta)
