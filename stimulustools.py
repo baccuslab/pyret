@@ -8,7 +8,7 @@ Tools for basic manipulation of stimulus arrays.
 
 import numpy as np
 
-def upsamplestim(time, stim, upfact):
+def upsamplestim(stim, upfact, time=None):
     '''
 
     Upsample the given stimulus by the given factor.
@@ -16,18 +16,18 @@ def upsamplestim(time, stim, upfact):
     Input
     -----
 
-    time (ndarray):
-        The time axis of the original stimulus.
-
     stim (ndarray):
         The actual stimulus to be upsampled.
 
     upfact (int):
         The upsample factor.
 
+    time (ndarray) [optional]:
+        The time axis of the original stimulus.
+
     Output
 
-    time_us (ndarray), stim_us (ndarray):
+    stim_us (ndarray), time_us (ndarray):
         The upsampled time vector and stimulus array
 
     '''
@@ -39,14 +39,18 @@ def upsamplestim(time, stim, upfact):
     # Upsample the stimulus array
     stim_us = (stim.reshape((-1, 1)) * np.ones((1, upfact))).reshape(newsz)
 
-    # Upsample the time vecctor
-    x       = np.arange(0, upfact * time.size)
-    xp      = np.arange(0, upfact * time.size, 2)
-    time_us = np.interp(x, xp, time)
+    # Upsample the time vecctor if given
+    if time is not None:
+        x       = np.arange(0, upfact * time.size)
+        xp      = np.arange(0, upfact * time.size, 2)
+        time_us = np.interp(x, xp, time)
 
-    return time_us, stim_us
+    else:
+        time_us = None
 
-def downsamplestim(time, stim, downfact):
+    return stim_us, time_us
+
+def downsamplestim(stim, downfact, time=None):
     '''
 
     Downsample the given stimulus by the given factor.
@@ -54,19 +58,19 @@ def downsamplestim(time, stim, downfact):
     Input
     -----
 
-    time (ndarray):
-        The time axis of the original stimulus
-
     stim (ndarray):
         The original stimulus array
 
     downfact (int):
         The factor by which the stimulus will be downsampled
 
+    time (ndarray) [optional]:
+        The time axis of the original stimulus
+
     Output
     ------
 
-    time_ds (ndarray), stim_ds (ndarray):
+    stim_ds (ndarray), time_ds (ndarray):
         The downsampled time vector and stimulus array
 
     '''
@@ -74,10 +78,10 @@ def downsamplestim(time, stim, downfact):
     # Downsample the stimulus array
     stim_ds = np.take(stim, np.arange(0, stim.shape[-1], downfact), axis=-1)
     
-    # Downsample the time vector
-    time_ds = time[::downfact]
+    # Downsample the time vector, if given
+    time_ds = time[::downfact] if time is not None else None
 
-    return time_ds, stim_ds
+    return stim_ds, time_ds
 
 def slicestim(stim, history, locations=None):
     '''
