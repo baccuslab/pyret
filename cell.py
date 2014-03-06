@@ -264,15 +264,19 @@ class Cell:
 
         # Make the right number of axes
         naxes   = sum([time, (space or ellipse)])
-        axlist  = fig.add_subplot(naxes, 1, 1)
+        axlist  = list()
 
         # Plot the temporal kernel
         if time:
-            viz.temporal(self.filtax, t, axlist[0])
+            ax = fig.add_subplot(naxes, 1, 1)
+            viz.temporal(self.filtax, t, ax)
+            axlist.append(ax)
 
         # Plot the spatial kernel
         if space:
-            viz.spatial(s, axlist[-1])
+            ax = fig.add_subplot(naxes, 1, 2)
+            viz.spatial(s, ax)
+            axlist.append(ax)
 
         # Plot the ellipse
         if ellipse:
@@ -281,7 +285,9 @@ class Cell:
                 self.ellipse = ft.getellipse(s)
 
             # Plot ellipse
-            viz.ellipse(self.ellipse, axlist[-1])
+            ax = fig.add_subplot(naxes, 1, 3)
+            viz.ellipse(self.ellipse, ax)
+            axlist.append(ax)
 
     def setnotes(self, notes):
         '''
