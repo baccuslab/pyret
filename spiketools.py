@@ -13,7 +13,7 @@ from scipy import signal
 try:
     from peakdetect import peakdet
 except ImportError:
-    raise ImportError('You need to have the peakdetect module available on your python path.')
+    raise ImportError('You need to have the peakdetect module available on your python path. Download it here: https://raw.github.com/nirum/python-utils/master/peakdetect.py')
 
 def binspikes(spk, tmax=None, binsize=0.01, time=None, numTrials=1):
     '''
