@@ -114,15 +114,18 @@ def slicestim(stim, history, locations=None):
     # Collapse any spatial dimensions of the stimulus array
     cstim = stim.reshape(-1, stim.shape[-1])
 
+    # cast history to int
+    history = int(history)
+
     # Compute spatial locations to take
     if locations is None:
         locations = np.ones(cstim.shape[-1])
 
     # Preallocate array to hold all slices
-    slices  = np.empty((history * cstim.shape[0], np.sum(locations[history:])))
+    slices = np.empty((int(history * cstim.shape[0]), int(np.sum(locations[history:]))))
 
     # Loop over locations (can't use np.take, since we need to keep `history`)
-    for idx in range(history, locations.size):
+    for idx in range(history, int(locations.size)):
         if locations[idx]:
             slices[:, idx-history] = cstim[:, idx - history :idx].ravel()
 
