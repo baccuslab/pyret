@@ -83,7 +83,7 @@ def downsamplestim(stim, downfact, time=None):
 
     return stim_ds, time_ds
 
-def slicestim(stim, history, locations=None):
+def slicestim(stim, history, locations=None, tproj=None):
     '''
 
     Slices a spatiotemporal stimulus array (over time) into overlapping frames.
@@ -122,12 +122,19 @@ def slicestim(stim, history, locations=None):
         locations = np.ones(cstim.shape[-1])
 
     # Preallocate array to hold all slices
-    slices = np.empty((int(history * cstim.shape[0]), int(np.sum(locations[history:]))))
+    if tproj is None:
+        slices = np.empty((int(history * cstim.shape[0]), int(np.sum(locations[history:]))))
+    else:
+        slices = np.empty((cstim.shape[0], int(np.sum(locations[history:]))))
 
     # Loop over locations (can't use np.take, since we need to keep `history`)
     for idx in range(history, int(locations.size)):
         if locations[idx]:
-            slices[:, idx-history] = cstim[:, idx - history :idx].ravel()
+            if tproj is None:
+                slices[:, idx-history] = cstim[:, idx - history :idx].ravel()
+            else:
+                # integrate out temporal variable
+                slices[:, idx-history] = cstim[:, idx-history:idx].dot(tproj)
 
     return slices
 
