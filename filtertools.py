@@ -14,7 +14,7 @@ from stimulustools import getcov
 
 def getste(time, stimulus, spikes, filterlength):
     '''
-    
+
     Construct the spike-triggered ensemble
 
     Input
@@ -81,7 +81,7 @@ def getste(time, stimulus, spikes, filterlength):
 
 def getsta(time, stimulus, spikes, filterlength, norm=True):
     '''
-    
+
     Compute the spike-triggered average
 
     Input
@@ -111,7 +111,7 @@ def getsta(time, stimulus, spikes, filterlength, norm=True):
     ------
 
     sta (ndarray):
-        The spike-triggered average. The returned array has 
+        The spike-triggered average. The returned array has
         stimulus.ndim + 1 dimensions, and has a shape of
         (nspikes, stimulus.shape[:-1], filterlength).
 
@@ -147,7 +147,7 @@ def getsta(time, stimulus, spikes, filterlength, norm=True):
 
     # Construct a time axis to return
     tax = time[:filterlength] - time[0]
-    
+
     # Reshape the STA and flip the time axis so that the time of the spike is at index 0
     sta = np.reshape(sta, stimulus.shape[:-1] + (filterlength,))
     sta = np.take(sta, np.arange(filterlength - 1, -1, -1), axis=-1)
@@ -156,7 +156,7 @@ def getsta(time, stimulus, spikes, filterlength, norm=True):
     return sta, tax
 
 def getstc(time, stimulus, spikes, filterlength):
-    '''    
+    '''
     Compute the spike-triggered covariance
 
     Usage: U, sigma, stimcov, spkcov, tax = getstc(time, stimulus, spikes, filterlength)
@@ -198,6 +198,9 @@ def getstc(time, stimulus, spikes, filterlength):
 
     spkcov (ndarray):
         The (d by d) spike-triggered covariance matrix.
+
+    sta (ndarray):
+        The spike-triggered average
 
     tax (ndarray):
         The time axis of the ensemble. It is of length `filterlength`,
@@ -251,13 +254,13 @@ def getstc(time, stimulus, spikes, filterlength):
         print('Warning: eigendecomposition did not converge. You may have limited data.')
         eigvals = None
         eigvecs = None
-    
+
     # Return values, flipped such that time of a spike is at time 0
     return eigvecs, eigvals, np.flipud(stimcov), np.flipud(spkcov), sta, tax
 
 def lowranksta(f, k=10):
     '''
-    
+
     Constructs a rank-k approximation to the given spatiotemporal filter.
     This is useful for computing a spatial and temporal kernel of an STA,
     or for denoising.
@@ -322,7 +325,7 @@ def lowranksta(f, k=10):
 
 def decompose(sta):
     '''
-    
+
     Decomposes a spatiotemporal STA into a spatial and temporal kernel
 
     Input
@@ -429,7 +432,7 @@ def getellipseparams(staframe):
 
 def getellipse(staframe, scale=1.0):
     '''
-    
+
     Fit an ellipse to the given spatial receptive field
 
     Input
@@ -459,7 +462,7 @@ def getellipse(staframe, scale=1.0):
 
 def filterpeak(sta):
     '''
-    
+
     Find the peak (single point in space/time) of a smoothed filter
 
     Input
@@ -493,7 +496,7 @@ def filterpeak(sta):
 
 def smoothfilter(f, spacesig=0.5, timesig=1):
     '''
-    
+
     Smooths a 3D spatiotemporal linear filter using a multi-dimensional
     Gaussian filter with the given properties.
 
@@ -502,7 +505,7 @@ def smoothfilter(f, spacesig=0.5, timesig=1):
 
     f:
         3D filter to be smoothed
-    
+
     spacesig, timesig:
         The spatial and temporal standard deviations of the Gaussian
         filter used to smooth the given filter
@@ -512,13 +515,13 @@ def smoothfilter(f, spacesig=0.5, timesig=1):
 
     fsmooth:
         The smoothed filter, with the same shape as the input
-    
+
     '''
     return gaussian_filter(f, (spacesig, spacesig, timesig), order=0)
 
 def cutout(arr, idx, width=5):
     '''
-    
+
     Cut out a chunk of the given stimulus or filter
 
     Input
@@ -564,7 +567,7 @@ def cutout(arr, idx, width=5):
 def prinangles(u, v):
     '''
 
-    Compute the principal angles between two subspaces. Useful for comparing 
+    Compute the principal angles between two subspaces. Useful for comparing
     subspaces returned via spike-triggered covariance, for example.
 
     Input
