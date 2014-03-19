@@ -14,6 +14,10 @@ The package describes a Cell class, which contains data and functionality associ
 with individual cells recorded during an experiment. The class is described in detail 
 below.
 
+Demo
+----
+For a demo of how to do analysis using `pyret`, check out the notebook in teh `demo/` folder.
+
 Submodule overview
 ------------------
 
