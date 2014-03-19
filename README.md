@@ -16,7 +16,7 @@ below.
 
 Demo
 ----
-For a demo of how to do analysis using `pyret`, check out the notebook in teh `demo/` folder.
+For a demo of how to do analysis using `pyret`, check out the html file and corresponding ipython notebook in the `demo/` folder.
 
 Submodule overview
 ------------------
