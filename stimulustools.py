@@ -187,8 +187,17 @@ def getcov(stim, history, phi=None, cutoff=0.1):
     mean = np.zeros(cstim.shape[0] * phi.shape[1])
     cov = np.zeros((cstim.shape[0] * phi.shape[1], cstim.shape[0]*phi.shape[1]))
 
+    # pick some indices to go through
+    indices = np.arange(history,cstim.shape[1])
+    numpts  = np.min(( cstim.shape[0]*phi.shape[1]*10, indices.size ))
+    np.random.shuffle(indices)
+
     # loop over temporal indices
-    for idx in range(history,cstim.shape[1]):
+    for j in range(numpts):
+
+        # pick which index to use
+        idx = indices[j]
+        print('[%i of %i]' % (j,numpts))
 
         # get this stimulus slice, projected onto the basis set phi
         stimslice = cstim[:, idx - history : idx].dot(phi).reshape(-1,1)
