@@ -555,14 +555,14 @@ def cutout(arr, idx, width=5):
     col = np.arange(idx[1] - width, idx[1] + width + 1)
 
     # Make sure the indices are within the bounds of the given array
-    row = row[(row >= 0) & (row < arr.shape[-2])]
-    col = col[(col >= 0) & (col < arr.shape[-1])]
+    row = row[(row >= 0) & (row < arr.shape[0])]
+    col = col[(col >= 0) & (col < arr.shape[1])]
 
     # Mesh the indices
     rmesh, cmesh = np.meshgrid(row, col)
 
     # Extract and return the reduced array
-    return arr[:, rmesh, cmesh]
+    return arr[rmesh, cmesh, :]
 
 def prinangles(u, v):
     '''
