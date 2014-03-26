@@ -138,7 +138,7 @@ def slicestim(stim, history, locations=None, tproj=None):
 
     return slices
 
-def getcov(stim, history, cutoff=0.1):
+def getcov(stim, history, phi=None, cutoff=0.1):
     '''
 
     Computes a stimulus covariance matrix
@@ -157,6 +157,11 @@ def getcov(stim, history, cutoff=0.1):
     cutoff (default=0.1):
         The cutoff for small singular values in computing the inverse covariance matrix
 
+    phi (ndarray):
+        Temporal basis set to use. Must have # of rows (first dimension) equal to history.
+        Each extracted stimulus slice is projected onto this basis set, which reduces the size
+        of the corresponding covariance matrix to store.
+
     Output
     ------
 
@@ -168,7 +173,40 @@ def getcov(stim, history, cutoff=0.1):
 
     '''
 
-    cov    = np.cov(slicestim(stim, history))
+    # temporal basis (if not given, use the identity matrix)
+    if phi is None:
+        phi = np.eye(history)
+
+    if phi.shape[0] != history:
+        raise ValueError('The first dimension of the basis set phi must equal history')
+
+    # Collapse any spatial dimensions of the stimulus array
+    cstim = stim.reshape(-1, stim.shape[-1])
+
+    # store mean + covariance matrix
+    mean = np.zeros(cstim.shape[0] * phi.shape[1])
+    cov = np.zeros((cstim.shape[0] * phi.shape[1], cstim.shape[0]*phi.shape[1]))
+
+    # loop over temporal indices
+    for idx in range(history,cstim.shape[1]):
+
+        # get this stimulus slice, projected onto the basis set phi
+        stimslice = cstim[:, idx - history : idx].dot(phi).reshape(-1,1)
+
+        # update the mean
+        mean += np.squeeze(stimslice)
+
+        # add it to the covariance matrix
+        cov += stimslice.dot(stimslice.T)
+
+    # normalize and compute the mean outer product
+    mean = mean / (cstim.shape[1] - history)
+    mean_op = mean.reshape(-1,1).dot(mean.reshape(1,-1))
+
+    # mean-subtract and normalize the STC by the number of points
+    cov = (cov / (cstim.shape[1]-history)) - mean_op
+
+    # compute the inverse covariance
     try:
         covinv = np.linalg.pinv(cov, cutoff)
     except np.linalg.LinAlgError:
