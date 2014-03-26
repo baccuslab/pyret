@@ -546,7 +546,7 @@ def cutout(arr, idx, width=5):
 
     arr (ndarray):
         Stimulus or filter array from which the chunk is cut out. The array
-        should be shaped as (time, pix, pix).
+        should be shaped as (pix, pix, time).
 
     idx (array_like):
         2D array-like, specifying the row and column indices of
@@ -565,7 +565,7 @@ def cutout(arr, idx, width=5):
 
     # Check idx is a 2-elem array-like
     if len(idx) != 2:
-        raise ValueError
+        raise ValueError('idx must be a 2-element array')
 
     # Find the indices
     row = np.arange(idx[0] - width, idx[0] + width + 1)
