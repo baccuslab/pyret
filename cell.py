@@ -6,11 +6,11 @@ Definition of the Cell class.
 (C) 2014 bnaecker, nirum
 '''
 
-import numpy as np
-import matplotlib.pyplot as plt
-import filtertools as ft
-import spiketools as spk
-import visualizations as viz
+import numpy as _np
+import matplotlib.pyplot as _plt
+from . import filtertools as _ft
+from . import spiketools as _spk
+from . import visualizations as _viz
 
 class Cell:
     '''
@@ -168,7 +168,7 @@ class Cell:
             raise AttributeError
         else:
             # Compute the ensemble
-            self.ste, self.filtax = ft.getste(time, stim, self.spk, length)
+            self.ste, self.filtax = _ft.getste(time, stim, self.spk, length)
 
     def getsta(self, time=None, stim=None, length=None):
         '''
@@ -217,7 +217,7 @@ class Cell:
                 raise AttributeError
             
             # STE exists, compute its average across the first dimension
-            self.sta = np.mean(self.ste, axis=0)
+            self.sta = _np.mean(self.ste, axis=0)
 
         else:
             # Second form of the argument, ensure all arguments given
@@ -227,7 +227,7 @@ class Cell:
                 raise ValueError
             
             # Compute the STA
-            self.sta, self.filtax = ft.getsta(time, stim, self.spk, length)
+            self.sta, self.filtax = _ft.getsta(time, stim, self.spk, length)
 
     def plot(self, time=True, space=True, ellipse=True):
         '''
@@ -257,10 +257,10 @@ class Cell:
             return
 
         # Compute spatial and temporal kernels
-        s, t = ft.decompose(self.sta)
+        s, t = _ft.decompose(self.sta)
 
         # Make a figure
-        fig = plt.figure()
+        fig = _plt.figure()
 
         # Make the right number of axes
         naxes   = sum([time, (space or ellipse)])
@@ -269,24 +269,24 @@ class Cell:
         # Plot the temporal kernel
         if time:
             ax = fig.add_subplot(naxes, 1, 1)
-            viz.temporal(self.filtax, t, ax)
+            _viz.temporal(self.filtax, t, ax)
             axlist.append(ax)
 
         # Plot the spatial kernel
         if space:
             ax = fig.add_subplot(naxes, 1, 2)
-            viz.spatial(s, ax)
+            _viz.spatial(s, ax)
             axlist.append(ax)
 
         # Plot the ellipse
         if ellipse:
             if not self.ellipse:
                 # Compute ellipse
-                self.ellipse = ft.getellipse(s)
+                self.ellipse = _ft.getellipse(s)
 
             # Plot ellipse
             ax = fig.add_subplot(naxes, 1, 3)
-            viz.ellipse(self.ellipse, ax)
+            _viz.ellipse(self.ellipse, ax)
             axlist.append(ax)
 
     def setnotes(self, notes):
