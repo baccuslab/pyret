@@ -117,31 +117,43 @@ def slicestim(stim, history, locations=None, tproj=None):
     # Collapse any spatial dimensions of the stimulus array
     cstim = stim.reshape(-1, stim.shape[-1])
 
-    # cast history to int
+    # Check history is an int
+    if history != int(history):
+        raise ValueError('"history" must be an integer')
     history = int(history)
 
     # Compute spatial locations to take
     if locations is None:
         locations = np.ones(cstim.shape[-1])
+    
+    # Don't include first `history` frames regardless
+    locations[:history] = False
 
-    # Preallocate array to hold all slices
+    # Construct full stimulus slice array
     if tproj is None:
-        slices = np.empty((int(history        * cstim.shape[0]), int(np.sum(locations[history:]))))
+
+        # Preallocate
+        slices = np.empty((int(history * cstim.shape[0]), int(np.sum(locations[history:]))))
+
+        # Loop over requested time points
+        for idx in np.where(locations)[0]:
+            slices[:, idx-history] = cstim[:, idx - history :idx].ravel()
+
+    # Construct projected stimulus slice array
     else:
+
+        # Preallocate
         slices = np.empty((int(tproj.shape[1] * cstim.shape[0]), int(np.sum(locations[history:]))))
 
-    # Loop over locations (can't use np.take, since we need to keep `history`)
-    for idx in range(history, int(locations.size)):
-        if locations[idx]:
-            if tproj is None:
-                slices[:, idx-history] = cstim[:, idx - history :idx].ravel()
-            else:
-                # integrate out temporal variable
-                slices[:, idx-history] = (cstim[:, idx-history:idx].dot(tproj)).ravel()
+        # Loop over requested time points
+        for idx in np.where(locations)[0]:
+
+            # Project onto temporal basis
+            slices[:, idx-history] = (cstim[:, idx-history:idx].dot(tproj)).ravel()
 
     return slices
 
-def getcov(stim, history, phi=None, cutoff=0.1):
+def getcov(stim, history, tproj=None, cutoff=0.1):
     '''
 
     Computes a stimulus covariance matrix
@@ -160,7 +172,7 @@ def getcov(stim, history, phi=None, cutoff=0.1):
     cutoff (default=0.1):
         The cutoff for small singular values in computing the inverse covariance matrix
 
-    phi (ndarray):
+    tproj (ndarray):
         Temporal basis set to use. Must have # of rows (first dimension) equal to history.
         Each extracted stimulus slice is projected onto this basis set, which reduces the size
         of the corresponding covariance matrix to store.
@@ -177,22 +189,22 @@ def getcov(stim, history, phi=None, cutoff=0.1):
     '''
 
     # temporal basis (if not given, use the identity matrix)
-    if phi is None:
-        phi = np.eye(history)
+    if tproj is None:
+        tproj = np.eye(history)
 
-    if phi.shape[0] != history:
-        raise ValueError('The first dimension of the basis set phi must equal history')
+    if tproj.shape[0] != history:
+        raise ValueError('The first dimension of the basis set tproj must equal history')
 
     # Collapse any spatial dimensions of the stimulus array
     cstim = stim.reshape(-1, stim.shape[-1])
 
     # store mean + covariance matrix
-    mean = np.zeros(cstim.shape[0] * phi.shape[1])
-    cov = np.zeros((cstim.shape[0] * phi.shape[1], cstim.shape[0]*phi.shape[1]))
+    mean = np.zeros(cstim.shape[0] * tproj.shape[1])
+    cov = np.zeros((cstim.shape[0] * tproj.shape[1], cstim.shape[0]*tproj.shape[1]))
 
     # pick some indices to go through
     indices = np.arange(history,cstim.shape[1])
-    numpts  = np.min(( cstim.shape[0]*phi.shape[1]*10, indices.size ))
+    numpts  = np.min(( cstim.shape[0]*tproj.shape[1]*10, indices.size ))
     np.random.shuffle(indices)
 
     # loop over temporal indices
@@ -202,8 +214,8 @@ def getcov(stim, history, phi=None, cutoff=0.1):
         idx = indices[j]
         print('[%i of %i]' % (j,numpts))
 
-        # get this stimulus slice, projected onto the basis set phi
-        stimslice = cstim[:, idx - history : idx].dot(phi).reshape(-1,1)
+        # get this stimulus slice, projected onto the basis set tproj
+        stimslice = cstim[:, idx - history : idx].dot(tproj).reshape(-1,1)
 
         # update the mean
         mean += np.squeeze(stimslice)

@@ -155,7 +155,7 @@ def getsta(time, stimulus, spikes, filterlength, norm=True):
     # Return STA and the time axis
     return sta, tax
 
-def getstc(time, stimulus, spikes, filterlength, phi=None):
+def getstc(time, stimulus, spikes, filterlength, tproj=None):
     '''
     Compute the spike-triggered covariance
 
@@ -180,7 +180,7 @@ def getstc(time, stimulus, spikes, filterlength, phi=None):
         Number of frames over which to construct the
         ensemble
 
-    phi [optional] (ndarray):
+    tproj [optional] (ndarray):
         Temporal basis set to use. Must have # of rows (first dimension) equal to filterlength.
         Each extracted stimulus slice is projected onto this basis set, which reduces the size
         of the corresponding covariance matrix to store. This basis can be chosen to be some smooth
@@ -216,11 +216,11 @@ def getstc(time, stimulus, spikes, filterlength, phi=None):
     '''
 
     # temporal basis (if not given, use the identity matrix)
-    if phi is None:
-        phi = np.eye(filterlength)
+    if tproj is None:
+        tproj = np.eye(filterlength)
 
-    if phi.shape[0] != filterlength:
-        raise ValueError('The first dimension of the basis set phi must equal filterlength')
+    if tproj.shape[0] != filterlength:
+        raise ValueError('The first dimension of the basis set tproj must equal filterlength')
 
     # Bin spikes
     (hist, bins) = np.histogram(spikes, time)
@@ -234,8 +234,8 @@ def getstc(time, stimulus, spikes, filterlength, phi=None):
     cstim = stimulus.reshape(-1, stimulus.shape[-1])
 
     # Preallocate STA array and STC matrix
-    sta = np.zeros((cstim.shape[0] * phi.shape[1], 1))
-    spkcov = np.zeros((cstim.shape[0] * phi.shape[1], cstim.shape[0]*phi.shape[1]))
+    sta = np.zeros((cstim.shape[0] * tproj.shape[1], 1))
+    spkcov = np.zeros((cstim.shape[0] * tproj.shape[1], cstim.shape[0]*tproj.shape[1]))
 
     # Add the outerproduct of stimulus slices to the STC, keep track of the STA
     for idx in nzhist:
@@ -243,7 +243,7 @@ def getstc(time, stimulus, spikes, filterlength, phi=None):
         print('[%i of %i]' % (idx,nzhist[-1]))
 
         # get the stimulus slice
-        stimslice = (hist[idx] * cstim[:, idx - filterlength : idx]).dot(phi).reshape(-1,1)
+        stimslice = (hist[idx] * cstim[:, idx - filterlength : idx]).dot(tproj).reshape(-1,1)
 
         # update the spike-triggered average
         sta += stimslice
@@ -262,7 +262,7 @@ def getstc(time, stimulus, spikes, filterlength, phi=None):
     spkcov = (spkcov / nzhist.size) - sta_op
 
     # get the stimulus covariance matrix
-    stimcov, _ = getcov(stimulus, filterlength, phi=phi)
+    stimcov, _ = getcov(stimulus, filterlength, tproj=tproj)
 
     # estimate eigenvalues and eigenvectors of the normalized STC matrix
     try:
