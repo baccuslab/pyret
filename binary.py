@@ -57,7 +57,7 @@ def readbin(fname, chanlist=None):
         chunk_size  = hdr['nchannels'] * hdr['blksize'] * uint.itemsize
         
         # Preallocate return array
-        data = _np.empty((len(chanlist), hdr['nsamples']))
+        data = _np.empty((hdr['nsamples'], hdr['nsamples']))
 
         # Loop over requested channels
         for chan in range(len(chanlist)):
@@ -72,7 +72,7 @@ def readbin(fname, chanlist=None):
                 fid.seek(hdr['hdrsize'] + block * chunk_size + chanoffset)
 
                 # Read the data
-                data[chan, block * hdr['blksize'] : (block + 1) * hdr['blksize']] = \
+                data[block * hdr['blksize'] : (block + 1) * hdr['blksize'], chan] = \
                         _np.fromfile(fid, dtype=uint, count=hdr['blksize'])
 
     # Scale and offset
