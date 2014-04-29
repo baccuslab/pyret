@@ -42,8 +42,8 @@ def upsamplestim(stim, upfact, time=None):
     # Upsample the time vecctor if given
     if time is not None:
         x       = np.arange(0, upfact * time.size)
-        xp      = np.arange(0, upfact * time.size, 2)
-        time_us = np.interp(x, xp, time)
+        xp      = np.arange(0, upfact * time.size, upfact)
+        time_us = np.interp(x, xp, np.squeeze(time))
 
     else:
         time_us = None
@@ -102,6 +102,9 @@ def slicestim(stim, history, locations=None, tproj=None):
         Boolean array of temporal locations at which slices are taken. If unspecified,
         use all time points.
 
+    tproj (ndarray) [optional]:
+        Matrix of temporal filters to project stimuli onto
+
     Output
     ------
 
@@ -123,9 +126,9 @@ def slicestim(stim, history, locations=None, tproj=None):
 
     # Preallocate array to hold all slices
     if tproj is None:
-        slices = np.empty((int(history * cstim.shape[0]), int(np.sum(locations[history:]))))
+        slices = np.empty((int(history        * cstim.shape[0]), int(np.sum(locations[history:]))))
     else:
-        slices = np.empty((cstim.shape[0], int(np.sum(locations[history:]))))
+        slices = np.empty((int(tproj.shape[1] * cstim.shape[0]), int(np.sum(locations[history:]))))
 
     # Loop over locations (can't use np.take, since we need to keep `history`)
     for idx in range(history, int(locations.size)):
@@ -134,7 +137,7 @@ def slicestim(stim, history, locations=None, tproj=None):
                 slices[:, idx-history] = cstim[:, idx - history :idx].ravel()
             else:
                 # integrate out temporal variable
-                slices[:, idx-history] = cstim[:, idx-history:idx].dot(tproj)
+                slices[:, idx-history] = (cstim[:, idx-history:idx].dot(tproj)).ravel()
 
     return slices
 
