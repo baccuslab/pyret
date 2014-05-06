@@ -42,8 +42,8 @@ def upsamplestim(stim, upfact, time=None):
     # Upsample the time vecctor if given
     if time is not None:
         x       = np.arange(0, upfact * time.size)
-        xp      = np.arange(0, upfact * time.size, 2)
-        time_us = np.interp(x, xp, time)
+        xp      = np.arange(0, upfact * time.size, upfact)
+        time_us = np.interp(x, xp, np.squeeze(time))
 
     else:
         time_us = None
@@ -102,6 +102,9 @@ def slicestim(stim, history, locations=None, tproj=None):
         Boolean array of temporal locations at which slices are taken. If unspecified,
         use all time points.
 
+    tproj (ndarray) [optional]:
+        Matrix of temporal filters to project stimuli onto
+
     Output
     ------
 
@@ -123,9 +126,9 @@ def slicestim(stim, history, locations=None, tproj=None):
 
     # Preallocate array to hold all slices
     if tproj is None:
-        slices = np.empty((int(history * cstim.shape[0]), int(np.sum(locations[history:]))))
+        slices = np.empty((int(history        * cstim.shape[0]), int(np.sum(locations[history:]))))
     else:
-        slices = np.empty((cstim.shape[0], int(np.sum(locations[history:]))))
+        slices = np.empty((int(tproj.shape[1] * cstim.shape[0]), int(np.sum(locations[history:]))))
 
     # Loop over locations (can't use np.take, since we need to keep `history`)
     for idx in range(history, int(locations.size)):
@@ -134,11 +137,11 @@ def slicestim(stim, history, locations=None, tproj=None):
                 slices[:, idx-history] = cstim[:, idx - history :idx].ravel()
             else:
                 # integrate out temporal variable
-                slices[:, idx-history] = cstim[:, idx-history:idx].dot(tproj)
+                slices[:, idx-history] = (cstim[:, idx-history:idx].dot(tproj)).ravel()
 
     return slices
 
-def getcov(stim, history, cutoff=0.1):
+def getcov(stim, history, phi=None, cutoff=0.1):
     '''
 
     Computes a stimulus covariance matrix
@@ -157,6 +160,11 @@ def getcov(stim, history, cutoff=0.1):
     cutoff (default=0.1):
         The cutoff for small singular values in computing the inverse covariance matrix
 
+    phi (ndarray):
+        Temporal basis set to use. Must have # of rows (first dimension) equal to history.
+        Each extracted stimulus slice is projected onto this basis set, which reduces the size
+        of the corresponding covariance matrix to store.
+
     Output
     ------
 
@@ -168,7 +176,49 @@ def getcov(stim, history, cutoff=0.1):
 
     '''
 
-    cov    = np.cov(slicestim(stim, history))
+    # temporal basis (if not given, use the identity matrix)
+    if phi is None:
+        phi = np.eye(history)
+
+    if phi.shape[0] != history:
+        raise ValueError('The first dimension of the basis set phi must equal history')
+
+    # Collapse any spatial dimensions of the stimulus array
+    cstim = stim.reshape(-1, stim.shape[-1])
+
+    # store mean + covariance matrix
+    mean = np.zeros(cstim.shape[0] * phi.shape[1])
+    cov = np.zeros((cstim.shape[0] * phi.shape[1], cstim.shape[0]*phi.shape[1]))
+
+    # pick some indices to go through
+    indices = np.arange(history,cstim.shape[1])
+    numpts  = np.min(( cstim.shape[0]*phi.shape[1]*10, indices.size ))
+    np.random.shuffle(indices)
+
+    # loop over temporal indices
+    for j in range(numpts):
+
+        # pick which index to use
+        idx = indices[j]
+        print('[%i of %i]' % (j,numpts))
+
+        # get this stimulus slice, projected onto the basis set phi
+        stimslice = cstim[:, idx - history : idx].dot(phi).reshape(-1,1)
+
+        # update the mean
+        mean += np.squeeze(stimslice)
+
+        # add it to the covariance matrix
+        cov += stimslice.dot(stimslice.T)
+
+    # normalize and compute the mean outer product
+    mean = mean / (cstim.shape[1] - history)
+    mean_op = mean.reshape(-1,1).dot(mean.reshape(1,-1))
+
+    # mean-subtract and normalize the STC by the number of points
+    cov = (cov / (cstim.shape[1]-history)) - mean_op
+
+    # compute the inverse covariance
     try:
         covinv = np.linalg.pinv(cov, cutoff)
     except np.linalg.LinAlgError:

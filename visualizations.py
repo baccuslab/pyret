@@ -350,6 +350,30 @@ def temporal(time, temporalFilter, ax=None):
 
     return ax
 
+def plotsta1D(sta, ax=None):
+    '''
+
+    Plot a 1D spatiotemporal filter (e.g. from a bars experiment)
+
+    '''
+
+    # normalize
+    stan = (sta - np.mean(sta)) / np.var(sta)
+
+    if not ax:
+        fig = plt.figure()
+        sns.set_style('white')
+        ax = fig.add_subplot(111)
+
+    im = ax.imshow(stan)
+    ax.set_aspect('equal')
+    ax.axes.get_yaxis().set_visible(False)
+    ax.axes.get_xaxis().set_visible(False)
+    im.set_clim(-5,5)
+    im.set_cmap('RdBu')
+    plt.show()
+    plt.draw()
+
 def plotsta(time, sta, timeSlice=None):
     '''
 
