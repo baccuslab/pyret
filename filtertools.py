@@ -6,11 +6,10 @@ Tools for computation of basic linear filters
 (C) 2014 bnaecker, nirum
 '''
 
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse
-from scipy.ndimage.filters import gaussian_filter
-from stimulustools import getcov
+import numpy as _np
+from matplotlib.patches import Ellipse as _Ellipse
+from scipy.ndimage.filters import gaussian_filter as _gaussian_filter 
+from .stimulustools import getcov as _getcov
 
 def getste(time, stimulus, spikes, filterlength):
     '''
@@ -52,18 +51,18 @@ def getste(time, stimulus, spikes, filterlength):
     '''
 
     # Bin spikes
-    (hist, bins) = np.histogram(spikes, time)
+    (hist, bins) = _np.histogram(spikes, time)
 
     # Get indices of non-zero firing, truncating spikes earlier
     # than `filterlength` frames
-    nzhist = np.where(hist > 0)[0]
+    nzhist = _np.where(hist > 0)[0]
     nzhist = nzhist[nzhist > filterlength]
 
     # Collapse any spatial dimensions of the stimulus array
     cstim = stimulus.reshape(-1, stimulus.shape[-1])
 
     # Preallocate STE array
-    ste = np.empty((nzhist.size, cstim.shape[0], filterlength))
+    ste = _np.empty((nzhist.size, cstim.shape[0], filterlength))
 
     # Add filterlength frames preceding each spike to the STE array
     for idx, val in enumerate(nzhist):
@@ -73,8 +72,8 @@ def getste(time, stimulus, spikes, filterlength):
     tax = time[:filterlength] - time[0]
 
     # Reshape the STE and flip the time axis so that the time of the spike is at index 0
-    ste = np.reshape(ste, (nzhist.size,) + stimulus.shape[:-1] + (filterlength,))
-    ste = np.take(ste, np.arange(filterlength - 1, -1, -1), axis=-1)
+    ste = _np.reshape(ste, (nzhist.size,) + stimulus.shape[:-1] + (filterlength,))
+    ste = _np.take(ste, _np.arange(filterlength - 1, -1, -1), axis=-1)
 
     # Return STE and the time axis
     return ste, tax
@@ -123,18 +122,18 @@ def getsta(time, stimulus, spikes, filterlength, norm=True):
     '''
 
     # Bin spikes
-    (hist, bins) = np.histogram(spikes, time)
+    (hist, bins) = _np.histogram(spikes, time)
 
     # Get indices of non-zero firing, truncating spikes earlier
     # than `filterlength` frames
-    nzhist = np.where(hist > 0)[0]
+    nzhist = _np.where(hist > 0)[0]
     nzhist = nzhist[nzhist > filterlength]
 
     # Collapse any spatial dimensions of the stimulus array
     cstim = stimulus.reshape(-1, stimulus.shape[-1])
 
     # Preallocate STA array
-    sta = np.zeros((cstim.shape[0], filterlength))
+    sta = _np.zeros((cstim.shape[0], filterlength))
 
     # Add filterlength frames preceding each spike to the running STA
     for idx in nzhist:
@@ -142,20 +141,20 @@ def getsta(time, stimulus, spikes, filterlength, norm=True):
 
     # Mean-subtract and normalize as a vector
     if norm:
-        sta -= np.mean(sta)
-        sta /= np.linalg.norm(sta)
+        sta -= _np.mean(sta)
+        sta /= _np.linalg.norm(sta)
 
     # Construct a time axis to return
     tax = time[:filterlength] - time[0]
 
     # Reshape the STA and flip the time axis so that the time of the spike is at index 0
-    sta = np.reshape(sta, stimulus.shape[:-1] + (filterlength,))
-    sta = np.take(sta, np.arange(filterlength - 1, -1, -1), axis=-1)
+    sta = _np.reshape(sta, stimulus.shape[:-1] + (filterlength,))
+    sta = _np.take(sta, _np.arange(filterlength - 1, -1, -1), axis=-1)
 
     # Return STA and the time axis
     return sta, tax
 
-def getstc(time, stimulus, spikes, filterlength, phi=None):
+def getstc(time, stimulus, spikes, filterlength, tproj=None):
     '''
     Compute the spike-triggered covariance
 
@@ -180,7 +179,7 @@ def getstc(time, stimulus, spikes, filterlength, phi=None):
         Number of frames over which to construct the
         ensemble
 
-    phi [optional] (ndarray):
+    tproj [optional] (ndarray):
         Temporal basis set to use. Must have # of rows (first dimension) equal to filterlength.
         Each extracted stimulus slice is projected onto this basis set, which reduces the size
         of the corresponding covariance matrix to store. This basis can be chosen to be some smooth
@@ -216,26 +215,26 @@ def getstc(time, stimulus, spikes, filterlength, phi=None):
     '''
 
     # temporal basis (if not given, use the identity matrix)
-    if phi is None:
-        phi = np.eye(filterlength)
+    if tproj is None:
+        tproj = np.eye(filterlength)
 
-    if phi.shape[0] != filterlength:
-        raise ValueError('The first dimension of the basis set phi must equal filterlength')
+    if tproj.shape[0] != filterlength:
+        raise ValueError('The first dimension of the basis set tproj must equal filterlength')
 
     # Bin spikes
-    (hist, bins) = np.histogram(spikes, time)
+    (hist, bins) = _np.histogram(spikes, time)
 
     # Get indices of non-zero firing, truncating spikes earlier
     # than `filterlength` frames
-    nzhist = np.where(hist > 0)[0]
+    nzhist = _np.where(hist > 0)[0]
     nzhist = nzhist[nzhist > filterlength]
 
     # Collapse any spatial dimensions of the stimulus array
     cstim = stimulus.reshape(-1, stimulus.shape[-1])
 
     # Preallocate STA array and STC matrix
-    sta = np.zeros((cstim.shape[0] * phi.shape[1], 1))
-    spkcov = np.zeros((cstim.shape[0] * phi.shape[1], cstim.shape[0]*phi.shape[1]))
+    sta = _np.zeros((cstim.shape[0] * tproj.shape[1], 1))
+    spkcov = _np.zeros((cstim.shape[0] * tproj.shape[1], cstim.shape[0]*tproj.shape[1]))
 
     # Add the outerproduct of stimulus slices to the STC, keep track of the STA
     for idx in nzhist:
@@ -243,7 +242,7 @@ def getstc(time, stimulus, spikes, filterlength, phi=None):
         print('[%i of %i]' % (idx,nzhist[-1]))
 
         # get the stimulus slice
-        stimslice = (hist[idx] * cstim[:, idx - filterlength : idx]).dot(phi).reshape(-1,1)
+        stimslice = (hist[idx] * cstim[:, idx - filterlength : idx]).dot(tproj).reshape(-1,1)
 
         # update the spike-triggered average
         sta += stimslice
@@ -262,17 +261,17 @@ def getstc(time, stimulus, spikes, filterlength, phi=None):
     spkcov = (spkcov / nzhist.size) - sta_op
 
     # get the stimulus covariance matrix
-    stimcov, _ = getcov(stimulus, filterlength, phi=phi)
+    stimcov, _ = _getcov(stimulus, filterlength, tproj=tproj)
 
     # estimate eigenvalues and eigenvectors of the normalized STC matrix
     try:
-        eigvals, eigvecs = np.linalg.eig(spkcov - stimcov)
+        eigvals, eigvecs = _np.linalg.eig(spkcov - stimcov)
     except np.linalg.LinAlgError:
-        print('Warning: eigendecomposition did not converge. You may have limited data.')
+        print('Warning: eigendecomposition did not converge, eigenvectors/values will be None. You may not have enough data.')
         eigvals = None
         eigvecs = None
 
-    # Return values, flipped such that time of a spike is at time 0
+    # Return values
     return eigvecs, eigvals, stimcov, spkcov, sta, tax
 
 def lowranksta(f, k=10):
@@ -310,7 +309,7 @@ def lowranksta(f, k=10):
 
     # Compute the SVD of the full filter
     try:
-        u, s, v = np.linalg.svd(f.reshape(-1, f.shape[-1]) - np.mean(f), full_matrices=False)
+        u, s, v = _np.linalg.svd(f.reshape(-1, f.shape[-1]) - _np.mean(f), full_matrices=False)
     except LinAlgError:
         print('The SVD did not converge for the given spatiotemporal filter')
         print('The data is likely too noisy to compute a rank-{0} approximation'.format(k))
@@ -318,20 +317,20 @@ def lowranksta(f, k=10):
         return None, None, None, None
 
     # Keep the top k components
-    k = np.min([k, s.size])
+    k = _np.min([k, s.size])
 
     # Compute the rank-k filter
-    fk = (u[:,:k].dot(np.diag(s[:k]).dot(v[:k,:]))).reshape(f.shape)
+    fk = (u[:,:k].dot(_np.diag(s[:k]).dot(v[:k,:]))).reshape(f.shape)
 
     ### make sure the temporal kernels have the same sign:
 
     # get out the temporal filter at the RF center
     peakidx = filterpeak(f)[1]
     tsta = f[peakidx[1], peakidx[0], :].reshape(-1,1)
-    tsta -= np.mean(tsta)
+    tsta -= _np.mean(tsta)
 
     # project onto the temporal filters and keep the sign
-    signs = np.sign( (v-np.mean(v,axis=1)).dot(tsta) )
+    signs = _np.sign( (v-_np.mean(v,axis=1)).dot(tsta) )
 
     # flip signs according to this projection
     v *= signs
@@ -368,24 +367,24 @@ def _fit2Dgaussian(histogram, numSamples=1e4):
     ''' Fit 2D gaussian to empirical histogram '''
 
     # Indices
-    x       = np.linspace(0,1,histogram.shape[0])
-    y       = np.linspace(0,1,histogram.shape[1])
-    xx, yy  = np.meshgrid(x, y)
+    x       = _np.linspace(0,1,histogram.shape[0])
+    y       = _np.linspace(0,1,histogram.shape[1])
+    xx, yy  = _np.meshgrid(x, y)
 
     # Draw samples
-    indices     = np.random.choice(np.flatnonzero(histogram+1), size=numSamples, replace=True, p=histogram.ravel())
+    indices     = _np.random.choice(_np.flatnonzero(histogram+1), size=numSamples, replace=True, p=histogram.ravel())
     x_samples   = xx.ravel()[indices]
     y_samples   = yy.ravel()[indices]
 
     # Fit mean / covariance
-    samples     = np.array((x_samples,y_samples))
-    centerIdx   = np.unravel_index(np.argmax(histogram), histogram.shape)
+    samples     = _np.array((x_samples,y_samples))
+    centerIdx   = _np.unravel_index(_np.argmax(histogram), histogram.shape)
     center      = (xx[centerIdx], yy[centerIdx])
-    C           = np.cov(samples)
+    C           = _np.cov(samples)
 
     # Get width / angles
-    widths,vectors  = np.linalg.eig(C)
-    angle           = np.arccos(vectors[0,0])
+    widths,vectors  = _np.linalg.eig(C)
+    angle           = _np.arccos(vectors[0,0])
 
     return center, widths, angle
 
@@ -393,23 +392,23 @@ def _im2hist(data, spatialSmoothing = 2.5):
     ''' Converts 2D image to histogram '''
 
     # Smooth the data
-    data_smooth = gaussian_filter(data, spatialSmoothing, order=0)
+    data_smooth = _gaussian_filter(data, spatialSmoothing, order=0)
 
     # Mean subtract
-    mu              = np.median(data_smooth)
+    mu              = _np.median(data_smooth)
     data_centered   = data_smooth - mu
 
     # Figure out if it is an on or off profile
-    if np.abs(np.max(data_centered)) < np.abs(np.min(data_centered)):
+    if _np.abs(_np.max(data_centered)) < _np.abs(_np.min(data_centered)):
 
         # flip from 'off' to 'on'
         data_centered *= -1;
 
     # Min-subtract
-    data_centered -= np.min(data_centered)
+    data_centered -= _np.min(data_centered)
 
     # Normalize to a PDF
-    pdf = data_centered / np.sum(data_centered)
+    pdf = data_centered / _np.sum(data_centered)
 
     return pdf
 
@@ -473,7 +472,7 @@ def getellipse(staframe, scale=1.0):
     center, widths, theta = getellipseparams(staframe)
 
     # Generate ellipse
-    ell = Ellipse(xy=center, width=scale*widths[0], height=scale*widths[1], angle=np.rad2deg(theta)+45)
+    ell = _Ellipse(xy=center, width=scale*widths[0], height=scale*widths[1], angle=_np.rad2deg(theta)+45)
 
     return ell
 
@@ -502,10 +501,10 @@ def filterpeak(sta):
     fs = smoothfilter(sta, spacesig=0.7, timesig=1)
 
     # Find the index of the maximal point
-    idx = np.unravel_index(np.abs(fs).argmax(), fs.shape)
+    idx = _np.unravel_index(_np.abs(fs).argmax(), fs.shape)
 
     # Split into spatial/temporal indices
-    sidx = np.roll(idx[:2], 1)
+    sidx = _np.roll(idx[:2], 1)
     tidx = idx[-1]
 
     # Return the indices
@@ -534,7 +533,7 @@ def smoothfilter(f, spacesig=0.5, timesig=1):
         The smoothed filter, with the same shape as the input
 
     '''
-    return gaussian_filter(f, (spacesig, spacesig, timesig), order=0)
+    return _gaussian_filter(f, (spacesig, spacesig, timesig), order=0)
 
 def cutout(arr, idx, width=5):
     '''
@@ -568,15 +567,15 @@ def cutout(arr, idx, width=5):
         raise ValueError('idx must be a 2-element array')
 
     # Find the indices
-    row = np.arange(idx[0] - width, idx[0] + width + 1)
-    col = np.arange(idx[1] - width, idx[1] + width + 1)
+    row = _np.arange(idx[0] - width, idx[0] + width + 1)
+    col = _np.arange(idx[1] - width, idx[1] + width + 1)
 
     # Make sure the indices are within the bounds of the given array
     row = row[(row >= 0) & (row < arr.shape[0])]
     col = col[(col >= 0) & (col < arr.shape[1])]
 
     # Mesh the indices
-    rmesh, cmesh = np.meshgrid(row, col)
+    rmesh, cmesh = _np.meshgrid(row, col)
 
     # Extract and return the reduced array
     return arr[rmesh, cmesh, :]
@@ -605,12 +604,12 @@ def prinangles(u, v):
     '''
 
     # Orthogonalize each subspace
-    (Qu, Ru), (Qv, Rv) = np.linalg.qr(u), np.linalg.qr(v)
+    (Qu, Ru), (Qv, Rv) = _np.linalg.qr(u), _np.linalg.qr(v)
 
     # Compute singular values of the inner product between the orthogonalized spaces
-    mag = np.linalg.svd(Qu.T.dot(Qv), compute_uv=False, full_matrices=False)
+    mag = _np.linalg.svd(Qu.T.dot(Qv), compute_uv=False, full_matrices=False)
 
     # Compute the angles between each dimension
-    ang = np.rad2deg(np.arccos(mag))
+    ang = _np.rad2deg(_np.arccos(mag))
 
     return ang, mag

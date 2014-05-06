@@ -6,9 +6,9 @@ Tools for basic manipulation of spike trains
 (c) 2014 bnaecker, nirum
 '''
 
-import numpy as np
-from scipy.io import loadmat
-from scipy import signal
+import numpy as _np
+from scipy.io import loadmat as _loadmat
+from scipy import signal as _signal
 
 try:
     from peakdetect import peakdet
