@@ -59,16 +59,16 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None, numTrials=1):
 
         # If a max time is not specified, set it to the time of the last spike
         if not tmax:
-            tmax = np.ceil(spk.max())
+            tmax = _np.ceil(spk.max())
 
         # create the time vector
-        time = np.arange(0, tmax, binsize)
+        time = _np.arange(0, tmax, binsize)
 
     # bin spike times
-    bspk, _ = np.histogram(spk, bins=time)
+    bspk, _ = _np.histogram(spk, bins=time)
 
     # center the time bins
-    tax = time[:-1] + 0.5*np.mean(np.diff(time))
+    tax = time[:-1] + 0.5*_np.mean(_np.diff(time))
 
     # returned binned spikes and cenetered time axis
     return bspk / numTrials, tax
@@ -101,16 +101,16 @@ def estfr(tax, bspk, sigma=0.01):
     '''
 
     # estimate binned spikes time step
-    dt = np.mean(np.diff(tax))
+    dt = _np.mean(_np.diff(tax))
 
     # Construct Gaussian filter, make sure it is normalized
-    tau  = np.arange(-5*sigma, 5*sigma, dt)
-    filt = np.exp(-0.5*(tau / sigma)**2)
-    filt = filt / np.sum(filt)
-    size = np.round(filt.size / 2)
+    tau  = _np.arange(-5*sigma, 5*sigma, dt)
+    filt = _np.exp(-0.5*(tau / sigma)**2)
+    filt = filt / _np.sum(filt)
+    size = _np.round(filt.size / 2)
 
     # Filter  binned spike times
-    return np.convolve(filt, bspk, mode='full')[size:size+tax.size]
+    return _np.convolve(filt, bspk, mode='full')[size:size+tax.size]
 
 class spikingevent:
     '''
@@ -158,7 +158,7 @@ class spikingevent:
         Usage: counts = spkevent.trialCounts()
 
         '''
-        counts, _ = np.histogram(self.spikes[:,1], bins=np.arange(np.min(self.spikes[:,1]), np.max(self.spikes[:,1])))
+        counts, _ = _np.histogram(self.spikes[:,1], bins=_np.arange(_np.min(self.spikes[:,1]), _np.max(self.spikes[:,1])))
         return counts
 
     def eventStats(self):
@@ -172,7 +172,7 @@ class spikingevent:
         # count number of spikes per trial
         counts = self.eventCounts()
 
-        return np.mean(counts), np.std(counts)
+        return _np.mean(counts), _np.std(counts)
 
     def ttfs(self):
         '''
@@ -181,7 +181,7 @@ class spikingevent:
         Usage: times = spkevent.ttfs()
 
         '''
-        (trials, indices) = np.unique(self.spikes[:,1], return_index=True)
+        (trials, indices) = _np.unique(self.spikes[:,1], return_index=True)
         return self.spikes[indices,0]
     
     def jitter(self):
@@ -191,7 +191,7 @@ class spikingevent:
         Usage: sigma = spkevent.jitter()
 
         '''
-        return np.std(self.ttfs())
+        return _np.std(self.ttfs())
 
     def sort(self):
         '''
@@ -202,10 +202,10 @@ class spikingevent:
         '''
 
         # get first spike in each trial
-        _, trialIndices = np.unique(self.spikes[:,1], return_index=True)
+        _, trialIndices = _np.unique(self.spikes[:,1], return_index=True)
 
         # sort by time of first spike
-        sortedIndices = np.argsort(self.spikes[trialIndices, 0])
+        sortedIndices = _np.argsort(self.spikes[trialIndices, 0])
 
         # get reassigned trials
         sortedtrials = self.spikes[trialIndices[sortedIndices], 1]
@@ -256,7 +256,7 @@ def detectevents(spk, threshold=(0.3,0.05)):
     '''
 
     # find peaks in the PSTH
-    bspk, tax = binspikes(spk[:,0], binsize=0.01, numTrials=np.max(spk[:,1]))
+    bspk, tax = binspikes(spk[:,0], binsize=0.01, numTrials=_np.max(spk[:,1]))
     psth      = estfr(tax, bspk, sigma=0.005)
     maxtab, _ = peakdet(psth, threshold[0], tax)
 
@@ -267,14 +267,14 @@ def detectevents(spk, threshold=(0.3,0.05)):
     for eventidx in range(maxtab.shape[0]):
 
         # get putative start and stop indices of each spiking event, based on the firing rate
-        startIndices, = np.where( (psth <= threshold[1]) & (tax < maxtab[eventidx,0]) )
-        stopIndices,  = np.where( (psth <= threshold[1]) & (tax > maxtab[eventidx,0]) )
+        startIndices, = _np.where( (psth <= threshold[1]) & (tax < maxtab[eventidx,0]) )
+        stopIndices,  = _np.where( (psth <= threshold[1]) & (tax > maxtab[eventidx,0]) )
 
         # find the start time, defined as the right most peak index
-        starttime = tax[0] if startIndices.size == 0 else tax[np.max(startIndices)]
+        starttime = tax[0] if startIndices.size == 0 else tax[_np.max(startIndices)]
 
         # find the stop time, defined as the lest most peak index
-        stoptime = tax[-1] if  stopIndices.size == 0 else tax[np.min(stopIndices )]
+        stoptime = tax[-1] if  stopIndices.size == 0 else tax[_np.min(stopIndices )]
 
         # find spikes within this time interval (these make up the spiking event)
         eventSpikes = spk[(spk[:,0] >= starttime) & (spk[:,0] < stoptime),:]

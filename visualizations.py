@@ -358,21 +358,22 @@ def plotsta1D(sta, ax=None):
     '''
 
     # normalize
-    stan = (sta - np.mean(sta)) / np.var(sta)
+    stan = (sta - _np.mean(sta)) / _np.var(sta)
+    lim = _np.max(_np.abs(stan))
 
     if not ax:
-        fig = plt.figure()
-        sns.set_style('white')
+        fig = _plt.figure()
+        _sns.set_style('white')
         ax = fig.add_subplot(111)
 
     im = ax.imshow(stan)
     ax.set_aspect('equal')
     ax.axes.get_yaxis().set_visible(False)
     ax.axes.get_xaxis().set_visible(False)
-    im.set_clim(-5,5)
+    im.set_clim(-lim,lim)
     im.set_cmap('RdBu')
-    plt.show()
-    plt.draw()
+    _plt.show()
+    _plt.draw()
 
 def plotsta(time, sta, timeSlice=None):
     '''
