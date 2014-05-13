@@ -12,7 +12,7 @@ from scipy.ndimage.filters import gaussian_filter as _gaussian_filter
 from scipy.linalg.blas import get_blas_funcs
 from .stimulustools import getcov as _getcov
 
-def getste(time, stimulus, spikes, filterlength):
+def getste(time, stimulus, spikes, filterlength, tproj=None):
     '''
 
     Construct the spike-triggered ensemble
@@ -65,19 +65,30 @@ def getste(time, stimulus, spikes, filterlength):
     # Preallocate STE array
     ste = _np.empty((nzhist.size, cstim.shape[0], filterlength))
 
+    if tproj is not None:
+        steproj = _np.empty((nzhist.size, cstim.shape[0], filterlength))
+    else:
+        steproj = None
+
     # Add filterlength frames preceding each spike to the STE array
     for idx, val in enumerate(nzhist):
-        ste[idx, :, :] = hist[val] * cstim[:, val - filterlength : val]
+
+        # raw STE
+        ste[idx, :, :] = hist[val] * cstim[:, val - filterlength : val].dot(tproj).dot(tproj.T)
+
+        # projected STE
+        if tproj is not None:
+            steproj[idx, :, :] = hist[val] * cstim[:, val - filterlength : val].dot(tproj).dot(tproj.T)
 
     # Construct a time axis to return
     tax = time[:filterlength] - time[0]
 
     # Reshape the STE and flip the time axis so that the time of the spike is at index 0
-    ste = _np.reshape(ste, (nzhist.size,) + stimulus.shape[:-1] + (filterlength,))
-    ste = _np.take(ste, _np.arange(filterlength - 1, -1, -1), axis=-1)
+    #ste = _np.reshape(ste, (nzhist.size,) + stimulus.shape[:-1] + (filterlength,))
+    #ste = _np.take(ste, _np.arange(filterlength - 1, -1, -1), axis=-1)
 
     # Return STE and the time axis
-    return ste, tax
+    return ste, steproj, tax
 
 def getsta(time, stimulus, spikes, filterlength, norm=True):
     '''
@@ -264,10 +275,10 @@ def getstc(time, stimulus, spikes, filterlength, tproj=None):
             sta += stimslice
 
             # update the spike-triggered covariance
-            spkcov += stimslice.dot(stimslice.T)
+            #spkcov += stimslice.dot(stimslice.T)
 
             # add it to the covariance matrix (using low-level BLAS operation)
-            #blas_ger_fnc(hist[idx], stimslice, stimslice, a=spkcov.T, overwrite_a=True)
+            blas_ger_fnc(hist[idx], stimslice, stimslice, a=spkcov.T, overwrite_a=True)
 
         # Construct a time axis to return
         tax = time[:filterlength] - time[0]

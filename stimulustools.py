@@ -210,7 +210,8 @@ def getcov(stim, history, tproj=None):
 
         # pick which index to use
         idx = indices[j]
-        #print('[%i of %i]' % (j,numpts))
+        if _np.mod(j,100) == 0:
+            print('[%i of %i]' % (j,numpts))
 
         # get this stimulus slice, projected onto the basis set tproj
         stimslice = cstim[:, idx - history : idx].dot(tproj).reshape(-1,1)
