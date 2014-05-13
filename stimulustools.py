@@ -222,10 +222,10 @@ def getcov(stim, history, tproj=None):
         blas_ger_fnc(1, stimslice, stimslice, a=cov.T, overwrite_a=True)
 
     # normalize and compute the mean outer product
-    mean = mean / (cstim.shape[1] - history)
+    mean = mean / numpts
     mean_op = mean.reshape(-1,1).dot(mean.reshape(1,-1))
 
     # mean-subtract and normalize the STC by the number of points
-    cov = (cov / (cstim.shape[1]-history)) - mean_op
+    cov = (cov / (numpts-1)) - mean_op
 
     return cov

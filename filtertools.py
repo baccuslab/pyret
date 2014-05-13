@@ -9,6 +9,7 @@ Tools for computation of basic linear filters
 import numpy as _np
 from matplotlib.patches import Ellipse as _Ellipse
 from scipy.ndimage.filters import gaussian_filter as _gaussian_filter 
+from scipy.linalg.blas import get_blas_funcs
 from .stimulustools import getcov as _getcov
 
 def getste(time, stimulus, spikes, filterlength):
@@ -219,7 +220,7 @@ def getstc(time, stimulus, spikes, filterlength, tproj=None):
 
     # temporal basis (if not given, use the identity matrix)
     if tproj is None:
-        tproj = np.eye(filterlength)
+        tproj = _np.eye(filterlength)
 
     if tproj.shape[0] != filterlength:
         raise ValueError('The first dimension of the basis set tproj must equal filterlength')
@@ -232,6 +233,8 @@ def getstc(time, stimulus, spikes, filterlength, tproj=None):
 
     # for each cell's spike times
     for spk in spikes:
+
+        print('[Cell %i of %i]' % (len(cells)+1,len(spikes)))
 
         # Bin spikes
         (hist, bins) = _np.histogram(spk, time)
@@ -248,10 +251,11 @@ def getstc(time, stimulus, spikes, filterlength, tproj=None):
         sta = _np.zeros((cstim.shape[0] * tproj.shape[1], 1))
         spkcov = _np.zeros((cstim.shape[0] * tproj.shape[1], cstim.shape[0]*tproj.shape[1]))
 
+        # get blas function
+        blas_ger_fnc = get_blas_funcs(('ger',), (spkcov,))[0]
+
         # Add the outerproduct of stimulus slices to the STC, keep track of the STA
         for idx in nzhist:
-
-            print('[%i of %i]' % (idx,nzhist[-1]))
 
             # get the stimulus slice
             stimslice = (hist[idx] * cstim[:, idx - filterlength : idx]).dot(tproj).reshape(-1,1)
@@ -262,25 +266,29 @@ def getstc(time, stimulus, spikes, filterlength, tproj=None):
             # update the spike-triggered covariance
             spkcov += stimslice.dot(stimslice.T)
 
+            # add it to the covariance matrix (using low-level BLAS operation)
+            #blas_ger_fnc(hist[idx], stimslice, stimslice, a=spkcov.T, overwrite_a=True)
+
         # Construct a time axis to return
         tax = time[:filterlength] - time[0]
 
         # normalize and compute the STA outer product
-        sta = sta / nzhist.size
+        sta = sta / float(nzhist.size)
         sta_op = sta.dot(sta.T)
 
         # mean-subtract and normalize the STC by the number of samples
-        spkcov = (spkcov / nzhist.size) - sta_op
+        spkcov = spkcov / (float(nzhist.size)-1) - sta_op
 
         # estimate eigenvalues and eigenvectors of the normalized STC matrix
         try:
             eigvals, eigvecs = _np.linalg.eig(spkcov - stimcov)
-        except np.linalg.LinAlgError:
+        except _np.linalg.LinAlgError:
             print('Warning: eigendecomposition did not converge, eigenvectors/values will be None. You may not have enough data.')
             eigvals = None
             eigvecs = None
 
-        # store
+        # store results
+        cells.append({'sta': sta, 'eigvals': eigvals, 'eigvecs': eigvecs, 'spkcov': spkcov})
 
     # Return values
     return cells, tax, stimcov
