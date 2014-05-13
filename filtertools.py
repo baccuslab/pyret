@@ -158,7 +158,7 @@ def getstc(time, stimulus, spikes, filterlength, tproj=None):
     '''
     Compute the spike-triggered covariance
 
-    Usage: U, sigma, stimcov, spkcov, tax = getstc(time, stimulus, spikes, filterlength)
+    Usage: cells, tax, stimcov = getstc(time, stimulus, spikes, filterlength, tproj=None)
 
     Input
     -----
@@ -172,8 +172,8 @@ def getstc(time, stimulus, spikes, filterlength, tproj=None):
         are placed on its shape. It works for purely temporal
         and spatiotemporal stimuli.
 
-    spikes (ndarray):
-        Array of spike times.
+    spikes (list of ndarrays):
+        List of arrays of spike times, one for each cell
 
     filterlength (int):
         Number of frames over which to construct the
@@ -192,20 +192,23 @@ def getstc(time, stimulus, spikes, filterlength, tproj=None):
           d = stimulus.shape[:-1] * filterlength
           (the dimensionality of the spatiotemporal filter)
 
-    U (ndarray):
-        The (d x d) set of eigenvectors of the normalized STC matrix, each column is a separate eigenvector
+    cells (list):
+        contains the following for each cell
 
-    sigma (ndarray):
-        The corresponding set of d eigenvalues of the normalized STC matrix
+        eigvecs (ndarray):
+            The (d x d) set of eigenvectors of the normalized STC matrix, each column is a separate eigenvector
+
+        eigvals (ndarray):
+            The corresponding set of d eigenvalues of the normalized STC matrix
+
+        spkcov (ndarray):
+            The (d x d) spike-triggered covariance matrix.
+
+        sta (ndarray):
+            The spike-triggered average
 
     stimcov (ndarray):
         The (d by d) stimulus covariance matrix
-
-    spkcov (ndarray):
-        The (d by d) spike-triggered covariance matrix.
-
-    sta (ndarray):
-        The spike-triggered average
 
     tax (ndarray):
         The time axis of the ensemble. It is of length `filterlength`,
@@ -221,58 +224,66 @@ def getstc(time, stimulus, spikes, filterlength, tproj=None):
     if tproj.shape[0] != filterlength:
         raise ValueError('The first dimension of the basis set tproj must equal filterlength')
 
-    # Bin spikes
-    (hist, bins) = _np.histogram(spikes, time)
-
-    # Get indices of non-zero firing, truncating spikes earlier
-    # than `filterlength` frames
-    nzhist = _np.where(hist > 0)[0]
-    nzhist = nzhist[nzhist > filterlength]
-
-    # Collapse any spatial dimensions of the stimulus array
-    cstim = stimulus.reshape(-1, stimulus.shape[-1])
-
-    # Preallocate STA array and STC matrix
-    sta = _np.zeros((cstim.shape[0] * tproj.shape[1], 1))
-    spkcov = _np.zeros((cstim.shape[0] * tproj.shape[1], cstim.shape[0]*tproj.shape[1]))
-
-    # Add the outerproduct of stimulus slices to the STC, keep track of the STA
-    for idx in nzhist:
-
-        print('[%i of %i]' % (idx,nzhist[-1]))
-
-        # get the stimulus slice
-        stimslice = (hist[idx] * cstim[:, idx - filterlength : idx]).dot(tproj).reshape(-1,1)
-
-        # update the spike-triggered average
-        sta += stimslice
-
-        # update the spike-triggered covariance
-        spkcov += stimslice.dot(stimslice.T)
-
-    # Construct a time axis to return
-    tax = time[:filterlength] - time[0]
-
-    # normalize and compute the STA outer product
-    sta = sta / nzhist.size
-    sta_op = sta.dot(sta.T)
-
-    # mean-subtract and normalize the STC by the number of samples
-    spkcov = (spkcov / nzhist.size) - sta_op
-
     # get the stimulus covariance matrix
-    stimcov, _ = _getcov(stimulus, filterlength, tproj=tproj)
+    stimcov = _getcov(stimulus, filterlength, tproj=tproj)
 
-    # estimate eigenvalues and eigenvectors of the normalized STC matrix
-    try:
-        eigvals, eigvecs = _np.linalg.eig(spkcov - stimcov)
-    except np.linalg.LinAlgError:
-        print('Warning: eigendecomposition did not converge, eigenvectors/values will be None. You may not have enough data.')
-        eigvals = None
-        eigvecs = None
+    # store information about cells in a list
+    cells = list()
+
+    # for each cell's spike times
+    for spk in spikes:
+
+        # Bin spikes
+        (hist, bins) = _np.histogram(spk, time)
+
+        # Get indices of non-zero firing, truncating spikes earlier
+        # than `filterlength` frames
+        nzhist = _np.where(hist > 0)[0]
+        nzhist = nzhist[nzhist > filterlength]
+
+        # Collapse any spatial dimensions of the stimulus array
+        cstim = stimulus.reshape(-1, stimulus.shape[-1])
+
+        # Preallocate STA array and STC matrix
+        sta = _np.zeros((cstim.shape[0] * tproj.shape[1], 1))
+        spkcov = _np.zeros((cstim.shape[0] * tproj.shape[1], cstim.shape[0]*tproj.shape[1]))
+
+        # Add the outerproduct of stimulus slices to the STC, keep track of the STA
+        for idx in nzhist:
+
+            print('[%i of %i]' % (idx,nzhist[-1]))
+
+            # get the stimulus slice
+            stimslice = (hist[idx] * cstim[:, idx - filterlength : idx]).dot(tproj).reshape(-1,1)
+
+            # update the spike-triggered average
+            sta += stimslice
+
+            # update the spike-triggered covariance
+            spkcov += stimslice.dot(stimslice.T)
+
+        # Construct a time axis to return
+        tax = time[:filterlength] - time[0]
+
+        # normalize and compute the STA outer product
+        sta = sta / nzhist.size
+        sta_op = sta.dot(sta.T)
+
+        # mean-subtract and normalize the STC by the number of samples
+        spkcov = (spkcov / nzhist.size) - sta_op
+
+        # estimate eigenvalues and eigenvectors of the normalized STC matrix
+        try:
+            eigvals, eigvecs = _np.linalg.eig(spkcov - stimcov)
+        except np.linalg.LinAlgError:
+            print('Warning: eigendecomposition did not converge, eigenvectors/values will be None. You may not have enough data.')
+            eigvals = None
+            eigvecs = None
+
+        # store
 
     # Return values
-    return eigvecs, eigvals, stimcov, spkcov, sta, tax
+    return cells, tax, stimcov
 
 def lowranksta(f, k=10):
     '''

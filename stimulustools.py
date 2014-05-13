@@ -6,7 +6,8 @@ Tools for basic manipulation of stimulus arrays.
 (C) 2014 bnaecker, nirum
 '''
 
-import numpy as np
+import numpy as _np
+from scipy.linalg.blas import get_blas_funcs
 
 def upsamplestim(stim, upfact, time=None):
     '''
@@ -37,13 +38,13 @@ def upsamplestim(stim, upfact, time=None):
     newsz   = oldsz[:-1] + (upfact * oldsz[-1],)
 
     # Upsample the stimulus array
-    stim_us = (stim.reshape((-1, 1)) * np.ones((1, upfact))).reshape(newsz)
+    stim_us = (stim.reshape((-1, 1)) * _np.ones((1, upfact))).reshape(newsz)
 
     # Upsample the time vecctor if given
     if time is not None:
-        x       = np.arange(0, upfact * time.size)
-        xp      = np.arange(0, upfact * time.size, upfact)
-        time_us = np.interp(x, xp, np.squeeze(time))
+        x       = _np.arange(0, upfact * time.size)
+        xp      = _np.arange(0, upfact * time.size, upfact)
+        time_us = _np.interp(x, xp, _np.squeeze(time))
 
     else:
         time_us = None
@@ -76,7 +77,7 @@ def downsamplestim(stim, downfact, time=None):
     '''
 
     # Downsample the stimulus array
-    stim_ds = np.take(stim, np.arange(0, stim.shape[-1], downfact), axis=-1)
+    stim_ds = _np.take(stim, _np.arange(0, stim.shape[-1], downfact), axis=-1)
     
     # Downsample the time vector, if given
     time_ds = time[::downfact] if time is not None else None
@@ -124,7 +125,7 @@ def slicestim(stim, history, locations=None, tproj=None):
 
     # Compute spatial locations to take
     if locations is None:
-        locations = np.ones(cstim.shape[-1])
+        locations = _np.ones(cstim.shape[-1])
     
     # Don't include first `history` frames regardless
     locations[:history] = False
@@ -133,27 +134,27 @@ def slicestim(stim, history, locations=None, tproj=None):
     if tproj is None:
 
         # Preallocate
-        slices = np.empty((int(history * cstim.shape[0]), int(np.sum(locations[history:]))))
+        slices = _np.empty((int(history * cstim.shape[0]), int(_np.sum(locations[history:]))))
 
         # Loop over requested time points
-        for idx in np.where(locations)[0]:
+        for idx in _np.where(locations)[0]:
             slices[:, idx-history] = cstim[:, idx - history :idx].ravel()
 
     # Construct projected stimulus slice array
     else:
 
         # Preallocate
-        slices = np.empty((int(tproj.shape[1] * cstim.shape[0]), int(np.sum(locations[history:]))))
+        slices = _np.empty((int(tproj.shape[1] * cstim.shape[0]), int(_np.sum(locations[history:]))))
 
         # Loop over requested time points
-        for idx in np.where(locations)[0]:
+        for idx in _np.where(locations)[0]:
 
             # Project onto temporal basis
             slices[:, idx-history] = (cstim[:, idx-history:idx].dot(tproj)).ravel()
 
     return slices
 
-def getcov(stim, history, tproj=None, cutoff=0.1):
+def getcov(stim, history, tproj=None):
     '''
 
     Computes a stimulus covariance matrix
@@ -169,9 +170,6 @@ def getcov(stim, history, tproj=None, cutoff=0.1):
     history (int):
         Integer number of time points to keep in each slice.
     
-    cutoff (default=0.1):
-        The cutoff for small singular values in computing the inverse covariance matrix
-
     tproj (ndarray):
         Temporal basis set to use. Must have # of rows (first dimension) equal to history.
         Each extracted stimulus slice is projected onto this basis set, which reduces the size
@@ -183,14 +181,11 @@ def getcov(stim, history, tproj=None, cutoff=0.1):
     cov (ndarray):
         (n*n*t by n*n*t) Covariance matrix
 
-    covinv (ndarray):
-        (n*n*t by n*n*t) Inverse covariance matrix (computed using the pseudoinverse)
-
     '''
 
     # temporal basis (if not given, use the identity matrix)
     if tproj is None:
-        tproj = np.eye(history)
+        tproj = _np.eye(history)
 
     if tproj.shape[0] != history:
         raise ValueError('The first dimension of the basis set tproj must equal history')
@@ -199,29 +194,32 @@ def getcov(stim, history, tproj=None, cutoff=0.1):
     cstim = stim.reshape(-1, stim.shape[-1])
 
     # store mean + covariance matrix
-    mean = np.zeros(cstim.shape[0] * tproj.shape[1])
-    cov = np.zeros((cstim.shape[0] * tproj.shape[1], cstim.shape[0]*tproj.shape[1]))
+    mean = _np.zeros(cstim.shape[0] * tproj.shape[1])
+    cov = _np.zeros((cstim.shape[0] * tproj.shape[1], cstim.shape[0]*tproj.shape[1]))
 
     # pick some indices to go through
-    indices = np.arange(history,cstim.shape[1])
-    numpts  = np.min(( cstim.shape[0]*tproj.shape[1]*10, indices.size ))
-    np.random.shuffle(indices)
+    indices = _np.arange(history,cstim.shape[1])
+    numpts  = _np.min(( cstim.shape[0]*tproj.shape[1]*10, indices.size ))
+    _np.random.shuffle(indices)
+
+    # get blas function
+    blas_ger_fnc = get_blas_funcs(('ger',), (cov,))[0]
 
     # loop over temporal indices
     for j in range(numpts):
 
         # pick which index to use
         idx = indices[j]
-        print('[%i of %i]' % (j,numpts))
+        #print('[%i of %i]' % (j,numpts))
 
         # get this stimulus slice, projected onto the basis set tproj
         stimslice = cstim[:, idx - history : idx].dot(tproj).reshape(-1,1)
 
         # update the mean
-        mean += np.squeeze(stimslice)
+        mean += _np.squeeze(stimslice)
 
-        # add it to the covariance matrix
-        cov += stimslice.dot(stimslice.T)
+        # add it to the covariance matrix (using low-level BLAS operation)
+        blas_ger_fnc(1, stimslice, stimslice, a=cov.T, overwrite_a=True)
 
     # normalize and compute the mean outer product
     mean = mean / (cstim.shape[1] - history)
@@ -230,11 +228,4 @@ def getcov(stim, history, tproj=None, cutoff=0.1):
     # mean-subtract and normalize the STC by the number of points
     cov = (cov / (cstim.shape[1]-history)) - mean_op
 
-    # compute the inverse covariance
-    try:
-        covinv = np.linalg.pinv(cov, cutoff)
-    except np.linalg.LinAlgError:
-        print('Warning: could not compute the inverse covariance.')
-        covinv = None
-
-    return cov, covinv
+    return cov
