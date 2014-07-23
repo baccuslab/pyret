@@ -46,6 +46,11 @@ def upsamplestim(stim, upfact, time=None):
         xp      = _np.arange(0, upfact * time.size, upfact)
         time_us = _np.interp(x, xp, _np.squeeze(time))
 
+        # Check that last timestamp is valid. np.interp does no
+        # extrapolation, which may be necessary for the last 
+        # timepoint, given the method above
+        if time_us[-2] == time_us[-1]:
+            time_us[-1] += _np.diff(time_us).mean()
     else:
         time_us = None
 
