@@ -62,7 +62,7 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None, numTrials=1):
             tmax = _np.ceil(spk.max())
 
         # create the time vector
-        time = _np.arange(0, tmax, binsize)
+        time = _np.arange(0, tmax+binsize, binsize)
 
     # bin spike times
     bspk, _ = _np.histogram(spk, bins=time)
@@ -110,7 +110,7 @@ def estfr(tax, bspk, sigma=0.01):
     size = _np.round(filt.size / 2)
 
     # Filter  binned spike times
-    return _np.convolve(filt, bspk, mode='full')[size:size+tax.size]
+    return _np.convolve(filt, bspk, mode='full')[size:size+tax.size] / dt
 
 class spikingevent:
     '''
