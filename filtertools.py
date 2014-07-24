@@ -94,7 +94,7 @@ def getste(time, stimulus, spikes, filterlength, tproj=None):
         for idx, val in enumerate(nzhist):
             
             # Raw STE
-            ste[idx, :, :] = hist[val] * cstim[:, val - filterlength : val]
+            ste[idx, :, :] = cstim[:, val - filterlength : val]
 
             # Projected STE
             steproj[idx, :, :] = ste[idx, :, :].dot(tproj).dot(tproj.T)
@@ -108,7 +108,7 @@ def getste(time, stimulus, spikes, filterlength, tproj=None):
         for idx, val in enumerate(nzhist):
 
             # Raw STE only
-            ste[idx, :, :] = hist[val] * cstim[:, val - filterlength : val]
+            ste[idx, :, :] = cstim[:, val - filterlength : val]
 
     # Construct a time axis to return
     tax = time[:filterlength] - time[0]
