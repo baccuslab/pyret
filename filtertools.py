@@ -198,7 +198,7 @@ def getsta(time, stimulus, spikes, filterlength, norm=True):
         sta /= _np.linalg.norm(sta)
 
     # Construct a time axis to return
-    tax = -1 * _np.fliplr(time[:filterlength] - time[0])
+    tax = -1 * _np.flipud(time[:filterlength] - time[0])
 
     # Reshape the STA and flip the time axis so that the time of the spike is at index 0
     sta = _np.reshape(sta, stimulus.shape[:-1] + (filterlength,))
