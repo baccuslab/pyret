@@ -33,21 +33,36 @@ def getste(time, stimulus, spikes, filterlength, tproj=None):
         Array of spike times.
 
     filterlength (int):
-        Number of frames over which to construct the
-        ensemble
+        Number of frames over which to construct the ensemble.
+
+    tproj (ndarray) [None]:
+        A basis onto which the raw ensemble is projected. This is
+        useful for smoothing or reducing the size/dimensionality of
+        the ensemble.
 
     Output
     ------
 
     ste (ndarray):
-        The spike-triggered stimulus ensemble. The returned array
-        has stimulus.ndim + 1 dimensions, and has a shape of
-        (nspikes, stimulus.shape[:-1], filterlength).
+        The spike-triggered stimulus ensemble. The returned array is
+        reshaped from the input `stimulus` array, such that all spatial
+        dimensions are collapsed. The array has shape 
+        (nspikes, n_spatial_dims, filterlength).
+
+    steproj (ndarray):
+        The spike-triggered stimulus ensemble, projected onto the 
+        basis defined by `tproj`. If `tproj` is None (the default), the
+        return value here is None.
 
     tax (ndarray):
         The time axis of the ensemble. It is of length `filterlength`,
         with intervals given by the sample rate of the `time` input
         array.
+
+    Raises
+    ------
+
+    A ValueError is raised if there are no spikes within the requested `time`.
 
     '''
 
@@ -59,33 +74,44 @@ def getste(time, stimulus, spikes, filterlength, tproj=None):
     nzhist = _np.where(hist > 0)[0]
     nzhist = nzhist[nzhist > filterlength]
 
+    # Check that there are any such spikes
+    if not _np.any(nzhist):
+        raise ValueError('There are no spikes during the requested time')
+
     # Collapse any spatial dimensions of the stimulus array
     cstim = stimulus.reshape(-1, stimulus.shape[-1])
 
     # Preallocate STE array
     ste = _np.empty((nzhist.size, cstim.shape[0], filterlength))
 
+    # Compute the STE, and optionally the projection onto tproj
     if tproj is not None:
+
+        # Preallocate the projection array
         steproj = _np.empty((nzhist.size, cstim.shape[0], filterlength))
+
+        # Loop over spikes, adding filterlength frames preceding each spike
+        for idx, val in enumerate(nzhist):
+            
+            # Raw STE
+            ste[idx, :, :] = cstim[:, val - filterlength : val]
+
+            # Projected STE
+            steproj[idx, :, :] = ste[idx, :, :].dot(tproj).dot(tproj.T)
+
     else:
+
+        # Projected STE is None
         steproj = None
 
-    # Add filterlength frames preceding each spike to the STE array
-    for idx, val in enumerate(nzhist):
+        # Loop over spikes, adding filterlength frames preceding each spike
+        for idx, val in enumerate(nzhist):
 
-        # raw STE
-        ste[idx, :, :] = cstim[:, val - filterlength : val]
-
-        # projected STE
-        if tproj is not None:
-            steproj[idx, :, :] = cstim[:, val - filterlength : val].dot(tproj).dot(tproj.T)
+            # Raw STE only
+            ste[idx, :, :] = cstim[:, val - filterlength : val]
 
     # Construct a time axis to return
     tax = time[:filterlength] - time[0]
-
-    # Reshape the STE and flip the time axis so that the time of the spike is at index 0
-    #ste = _np.reshape(ste, (nzhist.size,) + stimulus.shape[:-1] + (filterlength,))
-    #ste = _np.take(ste, _np.arange(filterlength - 1, -1, -1), axis=-1)
 
     # Return STE and the time axis
     return ste, steproj, tax
@@ -131,6 +157,15 @@ def getsta(time, stimulus, spikes, filterlength, norm=True):
         with intervals given by the sample rate of the `time` input
         array.
 
+    Raises
+    ------
+
+    If no spikes occurred during the given `time` array, a UserWarning
+    is raised, and the returned STA is an array of zeros with the desired
+    shape (stimulus.shape[:-1], filterlength). This allows the
+    STA to play nicely with later functions using it, for example, adding
+    multiple STAs together. 
+
     '''
 
     # Bin spikes
@@ -140,6 +175,12 @@ def getsta(time, stimulus, spikes, filterlength, norm=True):
     # than `filterlength` frames
     nzhist = _np.where(hist > 0)[0]
     nzhist = nzhist[nzhist > filterlength]
+
+    # Check if there are no spikes during this time
+    if not _np.any(nzhist):
+        import warnings as _wrn
+        _wrn.warn('There are no spikes during the requested time')
+        return _np.zeros(stimulus.shape[:-1] + (filterlength,)), time[:filterlength] - time[0]
 
     # Collapse any spatial dimensions of the stimulus array
     cstim = stimulus.reshape(-1, stimulus.shape[-1])
