@@ -9,7 +9,7 @@ Tools for visualizing data from retinal experiments.
 import numpy as _np
 import matplotlib.pyplot as _plt
 import seaborn as _sns
-from . import filtertools as _ft
+from pyret import filtertools as _ft
 from matplotlib import animation as _animation
 
 def raster(spikes, triallength=None, fig=None):

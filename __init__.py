@@ -8,10 +8,10 @@ __all__ = [
         'nonlinearities']
 __version__ = '0.1.1'
 
-from . import binary
-from . import spiketools
-from . import filtertools
-from . import stimulustools
-from . import visualizations
-from . import cell
-#from . import nonlinearities
+from pyret import binary
+from pyret import spiketools
+from pyret import filtertools
+from pyret import stimulustools
+from pyret import visualizations
+from pyret import cell
+#from pyret import nonlinearities

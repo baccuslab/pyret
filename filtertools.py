@@ -8,8 +8,8 @@ Tools for computation of basic linear filters
 
 import numpy as _np
 from matplotlib.patches import Ellipse as _Ellipse
-from scipy.ndimage.filters import gaussian_filter as _gaussian_filter 
-from .stimulustools import getcov as _getcov
+from scipy.ndimage.filters import gaussian_filter as _gaussian_filter
+from stimulustools import getcov as _getcov
 
 def getste(time, stimulus, spikes, filterlength):
     '''
@@ -78,7 +78,7 @@ def getste(time, stimulus, spikes, filterlength):
     # Return STE and the time axis
     return ste, tax
 
-def getsta(time, stimulus, spikes, filterlength, norm=True):
+def getsta(spikes, time, stimulus, filterlength, norm=True):
     '''
 
     Compute the spike-triggered average
