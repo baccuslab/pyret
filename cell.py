@@ -8,9 +8,9 @@ Definition of the Cell class.
 
 import numpy as _np
 import matplotlib.pyplot as _plt
-from . import filtertools as _ft
-from . import spiketools as _spk
-from . import visualizations as _viz
+from pyret import filtertools as _ft
+from pyret import spiketools as _spk
+from pyret import visualizations as _viz
 
 class Cell:
     '''
