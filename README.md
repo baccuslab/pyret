@@ -20,7 +20,7 @@ For a demo of how to do analysis using `pyret`, check out the html file and corr
 
 Testing
 -------
-Testing is done via the [https://nose.readthedocs.org/en/latest/](`nose`) package. Once installed (e.g. with `pip install nose`) then simply run `nosetests -v` at the top level directory to run the tests. Test functions are located in the `tests/` folder.
+Testing is done via the [nose](https://nose.readthedocs.org/en/latest/) package. Once installed (e.g. with `pip install nose`) then simply run `nosetests -v` at the top level directory to run the tests. Test functions are located in the `tests/` folder.
 
 Submodule overview
 ------------------
