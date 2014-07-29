@@ -180,7 +180,8 @@ def getsta(time, stimulus, spikes, filterlength, norm=True):
     if not _np.any(nzhist):
         import warnings as _wrn
         _wrn.warn('There are no spikes during the requested time')
-        return _np.zeros(stimulus.shape[:-1] + (filterlength,)), time[:filterlength] - time[0]
+        return (_np.zeros(stimulus.shape[:-1] + (filterlength,)), 
+                time[:filterlength] - time[filterlength - 1])
 
     # Collapse any spatial dimensions of the stimulus array
     cstim = stimulus.reshape(-1, stimulus.shape[-1])
@@ -198,7 +199,7 @@ def getsta(time, stimulus, spikes, filterlength, norm=True):
         sta /= _np.linalg.norm(sta)
 
     # Construct a time axis to return
-    tax = -1 * _np.flipud(time[:filterlength] - time[0])
+    tax = time[:filterlength] - time[filterlength - 1]
 
     # Reshape the STA and flip the time axis so that the time of the spike is at index 0
     sta = _np.reshape(sta, stimulus.shape[:-1] + (filterlength,))
