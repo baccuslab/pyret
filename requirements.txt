@@ -1,4 +1,2 @@
 scipy>=0.13
 numpy>=1.8
-maplotlib==1.4
-seaborn==0.3.1
