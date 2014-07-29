@@ -1,0 +1,5 @@
+pyret
+scipy>=0.13
+numpy>=1.9
+maplotlib==1.4
+seaborn==0.3.1
