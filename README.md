@@ -18,6 +18,10 @@ Demo
 ----
 For a demo of how to do analysis using `pyret`, check out the html file and corresponding ipython notebook in the `demo/` folder.
 
+Testing
+-------
+Testing is done via the [https://nose.readthedocs.org/en/latest/](`nose`) package. Once installed (e.g. with `pip install nose`) then simply run `nosetests -v` at the top level directory to run the tests. Test functions are located in the `tests/` folder.
+
 Submodule overview
 ------------------
 
