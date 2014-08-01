@@ -57,7 +57,7 @@ def readbin(fname, chanlist=None):
         chunk_size  = hdr['nchannels'] * hdr['blksize'] * uint.itemsize
         
         # Preallocate return array
-        data = _np.empty((hdr['nsamples'], hdr['nchannels']))
+        data = _np.empty((hdr['nsamples'], len(chanlist)))
 
         # Loop over requested channels
         for chan in range(len(chanlist)):
