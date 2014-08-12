@@ -198,6 +198,10 @@ def getsta(time, stimulus, spikes, filterlength, norm=True):
         sta -= _np.mean(sta)
         sta /= _np.linalg.norm(sta)
 
+    # otherwise, normalize by dividing by the number of spikes
+    else:
+        sta /= _np.sum(hist[nzhist])
+
     # Construct a time axis to return
     tax = time[:filterlength] - time[filterlength - 1]
 
