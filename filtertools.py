@@ -349,7 +349,7 @@ def getstc(time, stimulus, spikes, filterlength, tproj=None):
     # Return values
     return cells, tax, stimcov
 
-def lowranksta(f, k=10):
+def lowranksta(f_orig, k=10):
     '''
 
     Constructs a rank-k approximation to the given spatiotemporal filter.
@@ -381,6 +381,9 @@ def lowranksta(f, k=10):
         the top k temporal components (each column is a component)
 
     '''
+
+    # work with a copy of the filter (prevents corrupting the input)
+    f = f_orig.copy()
 
     # Compute the SVD of the full filter
     try:
