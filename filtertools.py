@@ -10,7 +10,7 @@ import numpy as _np
 from matplotlib.patches import Ellipse as _Ellipse
 from scipy.ndimage.filters import gaussian_filter as _gaussian_filter 
 from scipy.linalg.blas import get_blas_funcs
-from .stimulustools import getcov as _getcov
+from stimulustools import getcov as _getcov
 
 def getste(time, stimulus, spikes, filterlength, tproj=None):
     '''
@@ -116,7 +116,7 @@ def getste(time, stimulus, spikes, filterlength, tproj=None):
     # Return STE and the time axis
     return ste, steproj, tax
 
-def getsta(time, stimulus, spikes, filterlength, norm=True):
+def getsta(time, stimulus, spikes, filterlength, norm=True, returnFlag=0):
     '''
 
     Compute the spike-triggered average
@@ -143,6 +143,10 @@ def getsta(time, stimulus, spikes, filterlength, norm=True):
     norm (boolean):
         Normalize the computed filter by mean-subtracting and normalizing
         to a unit vector.
+
+    returnFlag:     0, return both sta and its time axis
+                    1, return only the sta
+                    2, return only the time axis
 
     Output
     ------
@@ -180,31 +184,37 @@ def getsta(time, stimulus, spikes, filterlength, norm=True):
     if not _np.any(nzhist):
         import warnings as _wrn
         _wrn.warn('There are no spikes during the requested time')
-        return _np.zeros(stimulus.shape[:-1] + (filterlength,)), time[:filterlength] - time[0]
+        sta = _np.zeros(stimulus.shape[:-1] + (filterlength,))
 
-    # Collapse any spatial dimensions of the stimulus array
-    cstim = stimulus.reshape(-1, stimulus.shape[-1])
+    else:
+        # Collapse any spatial dimensions of the stimulus array
+        cstim = stimulus.reshape(-1, stimulus.shape[-1])
 
-    # Preallocate STA array
-    sta = _np.zeros((cstim.shape[0], filterlength))
+        # Preallocate STA array
+        sta = _np.zeros((cstim.shape[0], filterlength))
 
-    # Add filterlength frames preceding each spike to the running STA
-    for idx in nzhist:
-        sta += hist[idx] * cstim[:, idx - filterlength : idx]
+        # Add filterlength frames preceding each spike to the running STA
+        for idx in nzhist:
+            sta += hist[idx] * cstim[:, idx - filterlength : idx]
 
-    # Mean-subtract and normalize as a vector
-    if norm:
-        sta -= _np.mean(sta)
-        sta /= _np.linalg.norm(sta)
+        # Mean-subtract and normalize as a vector
+        if norm:
+            sta -= _np.mean(sta)
+            sta /= _np.linalg.norm(sta)
+
+        # Reshape the STA and flip the time axis so that the time of the spike is at index 0
+        sta = _np.reshape(sta, stimulus.shape[:-1] + (filterlength,))
 
     # Construct a time axis to return
     tax = -1 * _np.flipud(time[:filterlength] - time[0])
-
-    # Reshape the STA and flip the time axis so that the time of the spike is at index 0
-    sta = _np.reshape(sta, stimulus.shape[:-1] + (filterlength,))
-
-    # Return STA and the time axis
-    return sta, tax
+    
+    # Return STA and/or time axis depending on returnFlag
+    if returnFlag == 0:
+        return sta, tax
+    elif returnFlag == 1:
+        return sta
+    elif returnFlag == 2:
+        return tax
 
 def getstc(time, stimulus, spikes, filterlength, tproj=None):
     '''
