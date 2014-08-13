@@ -1,4 +1,6 @@
 # pyret
+![pyret logo](https://raw.githubusercontent.com/baccuslab/pyret/dev/logo.png?token=904854__eyJzY29wZSI6IlJhd0Jsb2I6YmFjY3VzbGFiL3B5cmV0L2Rldi9sb2dvLnBuZyIsImV4cGlyZXMiOjE0MDg1Nzg2OTZ9--973fe76a2dce2d2ed5a65b679865053ca50197ff)
+
 ## A Python package for analyzing retinal data
 (C) 2014 Benjamin Naecker, Niru Maheswaranthan
 
