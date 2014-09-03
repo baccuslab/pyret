@@ -75,8 +75,8 @@ def getste(time, stimulus, spikes, filterlength, tproj=None):
     nzhist = nzhist[nzhist > filterlength]
 
     # Check that there are any such spikes
-    if not _np.any(nzhist):
-        raise ValueError('There are no spikes during the requested time')
+    #if not _np.any(nzhist):
+        #raise ValueError('There are no spikes during the requested time')
 
     # Collapse any spatial dimensions of the stimulus array
     cstim = stimulus.reshape(-1, stimulus.shape[-1])
