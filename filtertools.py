@@ -187,7 +187,7 @@ def getsta(time, stimulus, spikes, filterlength, norm=True, return_flag=0):
     if not _np.any(nzhist):
         import warnings as _wrn
         _wrn.warn('There are no spikes during the requested time')
-        sta = _np.zeros(stimulus.shape[:-1] + (filterlength,)
+        sta = _np.zeros(stimulus.shape[:-1] + (filterlength,))
         tax = time[:filterlength] - time[filterlength - 1]
 
     else:
