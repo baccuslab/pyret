@@ -7,6 +7,7 @@ Tools for basic manipulation of spike trains
 '''
 
 import numpy as _np
+import matplotlib.pyplot as _plt
 from scipy.io import loadmat as _loadmat
 from scipy import signal as _signal
 
@@ -231,9 +232,9 @@ class spikingevent:
             spikes = self.spikes
 
         if not ax:
-            ax = plt.figure().add_subplot(111)
+            ax = _plt.figure().add_subplot(111)
 
-        ax.plot(spikes[:,0], spikes[:,1], 'o', markersize=10, markercolor=color)
+        ax.plot(spikes[:,0], spikes[:,1], 'o', markersize=6, markerfacecolor=color)
 
 def detectevents(spk, threshold=(0.3,0.05)):
     '''
