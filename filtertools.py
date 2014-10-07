@@ -465,7 +465,7 @@ def _fit2Dgaussian(histogram, numSamples=1e4):
     xx, yy  = _np.meshgrid(x, y)
 
     # Draw samples
-    indices     = _np.random.choice(_np.flatnonzero(histogram+1), size=numSamples, replace=True, p=histogram.ravel())
+    indices     = _np.random.choice(_np.flatnonzero(histogram+1), size=int(numSamples), replace=True, p=histogram.ravel())
     x_samples   = xx.ravel()[indices]
     y_samples   = yy.ravel()[indices]
 
