@@ -246,22 +246,16 @@ def playsta(sta, repeat=True, frametime=100):
     img.set_cmap('gray')
     img.set_interpolation('nearest')
 
-    # Animation initialization function
-    def init():
-        img.set_data(initialFrame)
-        return img
-
     # Animation function (called sequentially)
     def animate(i):
         ax.set_title('Frame {0:#d}'.format(i + 1))
         img.set_data(sta[:, :, i])
-        return img
 
     # Call the animator
-    anim = _animation.FuncAnimation(fig, animate,
-                _np.arange(sta.shape[-1]), init_func=init, interval=frametime, repeat=repeat)
+    anim = _animation.FuncAnimation(fig, animate, _np.arange(sta.shape[-1]), interval=frametime, repeat=repeat)
     _plt.show()
     _plt.draw()
+    return anim
 
 def spatial(spatialFrame, ax=None, clim=None):
     '''
@@ -452,7 +446,7 @@ def ellipse(ell, ax=None):
     _plt.draw()
     return ax
 
-def plotcells(cells, ax=None, boxdims=None, start=None):
+def plotcells(cells, ax=None, boxdims=None, start=None, scale=0.25):
     '''
 
     Plot the receptive fields
@@ -492,13 +486,14 @@ def plotcells(cells, ax=None, boxdims=None, start=None):
     _np.random.shuffle(colors)
 
     # for each cell
+    ellipses = list()
     for idx, sta in enumerate(cells):
 
         # get the spatial profile
         _, _, tidx = _ft.filterpeak(sta)
 
         # generate ellipse
-        ell = _ft.getellipse(sta[:,:,tidx], scale=0.5)
+        ell = _ft.getellipse(sta[:,:,tidx], scale=scale)
 
         # add it to the plot
         ell.set_facecolor(colors[idx])
@@ -507,18 +502,17 @@ def plotcells(cells, ax=None, boxdims=None, start=None):
         ell.set_linestyle('solid')
         ell.set_alpha(0.3)
         ax.add_artist(ell)
+        ellipses.append(ell)
 
     # add a box to mark the array
-    if boxdims is not None:
+    if start is None:
+        start = (1-_np.array(boxdims)) / 2.0
 
-        if start is None:
-            start = (1-_np.array(boxdims)) / 2.0
+    ax.add_patch(_plt.Rectangle((start[0], start[1]), boxdims[0], boxdims[1], fill=False, edgecolor='Black', linestyle='dashed'))
+    _plt.xlim(xmin=start[0], xmax=start[0]+boxdims[0])
+    _plt.ylim(ymin=start[1], ymax=start[1]+boxdims[1])
 
-        ax.add_patch(_plt.Rectangle((start[0], start[1]), boxdims[0], boxdims[1], fill=False, edgecolor='Black', linestyle='dashed'))
-        _plt.xlim(xmin=start[0]-0.1, xmax=start[0]+boxdims[0]+0.1)
-        _plt.ylim(ymin=start[1]-0.1, ymax=start[1]+boxdims[1]+0.1)
-
-    _sns.set_axes_style(style='nogrid', context='poster')
+    _sns.set_style('nogrid')
     ax.set_aspect('equal')
     ax.set_xticks([])
     ax.set_yticks([])
@@ -527,4 +521,37 @@ def plotcells(cells, ax=None, boxdims=None, start=None):
     _plt.tight_layout()
     _plt.show()
     _plt.draw()
-    return ax
+    return ax, ellipses
+
+def playrates(rates, patches, palette='gray', numLevels=255, time=None, repeat=True, frametime=100):
+    '''
+    Plays a movie of the firing rate for N cells by updating the given patches (matplotlib handles)
+    (useful in conjunction with the output of plotcells)
+
+    Input
+    -----
+    rates: an (N, T) matrix of firing rates
+    patches: a list of N matplotlib patch elements. The facecolor of these patches is altered according to the rates values
+    '''
+
+    # approximate necessary colormap
+    colors = _sns.color_palette(palette, numLevels);
+    rscale = _np.round( (numLevels-1) * (rates - rates.min()) / (rates.max() - rates.min()) ).astype('int');
+
+    # set up
+    fig = _plt.gcf()
+    ax = _plt.gca()
+    if time is None:
+        time = _np.arange(rscale.shape[1])
+
+    # Animation function (called sequentially)
+    def animate(t):
+        for i in range(rscale.shape[0]):
+            patches[i].set_facecolor(colors[rscale[i,t]])
+        ax.set_title('Time: %0.2f seconds' % (time[t]), fontsize=20)
+
+    # Call the animator
+    anim = _animation.FuncAnimation(fig, animate, _np.arange(rscale.shape[1]), interval=frametime, repeat=repeat)
+    _plt.show()
+    _plt.draw()
+    return anim
