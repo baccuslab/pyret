@@ -307,6 +307,7 @@ def spatial(spatialFrame, ax=None, clim=None):
     img = ax.imshow(spatialFrame, cmap='bwr', interpolation='nearest')
     img.set_clim(clim)
     ax.set_title('Spatial RF')
+    ax.set_aspect('equal')
 
     # add colorbar
     cbar = ax.get_figure().colorbar(img)
