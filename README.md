@@ -1,8 +1,10 @@
 # pyret
-![pyret logo](https://raw.githubusercontent.com/baccuslab/pyret/dev/logo.png?token=904854__eyJzY29wZSI6IlJhd0Jsb2I6YmFjY3VzbGFiL3B5cmV0L2Rldi9sb2dvLnBuZyIsImV4cGlyZXMiOjE0MDg1Nzg2OTZ9--973fe76a2dce2d2ed5a65b679865053ca50197ff)
 
 ### A Python package for analyzing retinal data
 Benjamin Naecker, Niru Maheswaranthan, Pablo Jadzinsky
+
+![receptive field](https://cloud.githubusercontent.com/assets/904854/5329965/f91ee8e2-7d81-11e4-873f-d4253165bce9.png)
+![spikes](https://cloud.githubusercontent.com/assets/904854/5329966/f91f8090-7d81-11e4-92ea-746a659ea285.png)
 
 Brief description
 -----------------
@@ -22,12 +24,10 @@ For a demo of how to do analysis using `pyret`, check out the html file and corr
 
 Testing
 -------
-Testing is done via the [nose](https://nose.readthedocs.org/en/latest/) package. Once installed (e.g. with `pip install nose`) then simply run `nosetests -v` at the top level directory to run the tests. Test functions are located in the `tests/` folder.
+Testing is done via [nose](https://nose.readthedocs.org/en/latest/). Once installed (e.g. with `pip install nose`) then simply run `nosetests -v` at the top level directory to run the tests. Test functions are located in the `tests/` folder.
 
 Submodule overview
 ------------------
-
-[**binary**](#binary)		-- reading binary recording files, useful for checking the photodiode
 
 [**spiketools**](#spk)		-- basic manipulation of spike-times, including binning & smoothing
 
@@ -37,33 +37,15 @@ Submodule overview
 
 [**visualization**](#viz)	-- visualization methods
 
+[**binary**](#binary)		-- reading binary recording files, useful for checking the photodiode
+
 Classes overview
 ----------------
 
-[**Cell**](#cell)			-- individual cell
+[**Cell**](#cell)			-- individual cell (under development)
 
 Submodules in detail
 --------------------
-
-<h3 id="binary">binary</h3>
-<hr>
-Tools for reading Igor binary files, particularly for interacting with the photodiode.
-
-`readbinhdr(fname)`
-Read the header from the file `fname`
-
-`readbin(fname, chan=0)`
-Read the channel `chan` from the file `fname`
-
-<h3 id="spk">spiketools</h3>
-<hr>
-Tools for manipulating spike-time arrays.
-
-`binspikes(spk, binsize=0.01)`
-Bin spike times at the given resolution
-
-`estfr(bspk, npts=9, sd=2)`
-Estimate firing rate by smoothing binned spikes
 
 <h3 id="sta">filtertools</h3>
 <hr>
@@ -120,10 +102,31 @@ Plot the given temporal filter
 `spatial(spatialfilter, ax=None)`
 Plot the given spatial filter
 
+<h3 id="binary">binary</h3>
+<hr>
+Tools for reading Igor binary files, particularly for interacting with the photodiode.
+_Note: these tools are somewhat Baccus lab specific_
+
+`readbinhdr(fname)`
+Read the header from the file `fname`
+
+`readbin(fname, chan=0)`
+Read the channel `chan` from the file `fname`
+
+<h3 id="spk">spiketools</h3>
+<hr>
+Tools for manipulating spike-time arrays.
+
+`binspikes(spk, binsize=0.01)`
+Bin spike times at the given resolution
+
+`estfr(bspk, npts=9, sd=2)`
+Estimate firing rate by smoothing binned spikes
+
 <h2 id="cell">Cell class</h2>
 <h4>Constructor</h4>
 `c = cell.Cell(spk=None)`
-Construct a Cell object, optionally giving the spike times for the cell
+Construct a Cell object, optionally giving the spike times for the cell (under development)
 
 <h4>Data</h4>
 
