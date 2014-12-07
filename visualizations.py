@@ -188,13 +188,13 @@ def rasterandpsth(spikes, triallength=None, binsize=0.01, fig=None):
     psthax.set_title('psth and raster', fontdict={'fontsize':24})
     psthax.set_xlabel('time (s)', fontdict={'fontsize':20})
     psthax.set_ylabel('firing rate (Hz)', color='r', fontdict={'fontsize':20})
-    _sns.set(style='nogrid', context='notebook')
+    _sns.set(style='white', context='notebook')
     for tick in psthax.get_yticklabels():
         tick.set_color('r')
 
     # Plot the raster
     rastax = psthax.twinx()
-    _sns.set(style='nogrid', context='notebook')
+    _sns.set(style='white', context='notebook')
     _plt.hold(True)
     for trial in range(ntrials):
         idx = _np.bitwise_and(spikes > tbins[trial, 0], spikes <= tbins[trial, -1])
@@ -307,6 +307,7 @@ def spatial(spatialFrame, ax=None, clim=None):
     img = ax.imshow(spatialFrame, cmap='bwr', interpolation='nearest')
     img.set_clim(clim)
     ax.set_title('Spatial RF')
+    ax.set_aspect('equal')
 
     # add colorbar
     cbar = ax.get_figure().colorbar(img)
@@ -452,7 +453,7 @@ def ellipse(ell, ax=None):
     _plt.draw()
     return ax
 
-def plotcells(cells, ax=None, boxdims=None, start=None):
+def plotcells(cells, ax=None, boxdims=None, start=None, scale=1):
     '''
 
     Plot the receptive fields
@@ -498,7 +499,7 @@ def plotcells(cells, ax=None, boxdims=None, start=None):
         _, _, tidx = _ft.filterpeak(sta)
 
         # generate ellipse
-        ell = _ft.getellipse(sta[:,:,tidx], scale=0.5)
+        ell = _ft.getellipse(sta[:,:,tidx], scale=scale)
 
         # add it to the plot
         ell.set_facecolor(colors[idx])
@@ -518,7 +519,7 @@ def plotcells(cells, ax=None, boxdims=None, start=None):
         _plt.xlim(xmin=start[0]-0.1, xmax=start[0]+boxdims[0]+0.1)
         _plt.ylim(ymin=start[1]-0.1, ymax=start[1]+boxdims[1]+0.1)
 
-    _sns.set(style='nogrid', context='poster')
+    _sns.set(style='whitegrid', context='poster')
     ax.set_aspect('equal')
     ax.set_xticks([])
     ax.set_yticks([])
