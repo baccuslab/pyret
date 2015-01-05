@@ -360,7 +360,7 @@ def plotsta1D(sta, ax=None):
 
     # normalize
     stan = (sta - _np.mean(sta)) / _np.var(sta)
-    lim = _np.max(_np.abs(stan))
+    lim = _np.max(_np.abs(stan))*1.2
 
     if not ax:
         fig = _plt.figure()
@@ -372,7 +372,7 @@ def plotsta1D(sta, ax=None):
     ax.axes.get_yaxis().set_visible(False)
     ax.axes.get_xaxis().set_visible(False)
     im.set_clim(-lim,lim)
-    im.set_cmap('RdBu')
+    im.set_cmap('seismic')
     _plt.show()
     _plt.draw()
 
