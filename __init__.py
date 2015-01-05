@@ -12,10 +12,6 @@ Modules
     visualizations  - Tools for plotting receptive fields, filters, etc.
     nonlinearities  - Methods for estimating nonlinearities
 
-Classes
--------
-    cell            - An object to hold a cell's data (in development)
-
 For more information, see the accompanying README.md
 """
 
@@ -25,7 +21,6 @@ __all__ = [
         'filtertools', 
         'stimulustools', 
         'visualizations', 
-        'cell', 
         'nonlinearities']
 __version__ = '0.1.1'
 
