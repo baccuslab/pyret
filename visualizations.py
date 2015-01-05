@@ -188,13 +188,13 @@ def rasterandpsth(spikes, triallength=None, binsize=0.01, fig=None):
     psthax.set_title('psth and raster', fontdict={'fontsize':24})
     psthax.set_xlabel('time (s)', fontdict={'fontsize':20})
     psthax.set_ylabel('firing rate (Hz)', color='r', fontdict={'fontsize':20})
-    _sns.set_axes_style('nogrid', 'notebook')
+    _sns.set(style='white', context='notebook')
     for tick in psthax.get_yticklabels():
         tick.set_color('r')
 
     # Plot the raster
     rastax = psthax.twinx()
-    _sns.set_axes_style('nogrid', 'notebook')
+    _sns.set(style='white', context='notebook')
     _plt.hold(True)
     for trial in range(ntrials):
         idx = _np.bitwise_and(spikes > tbins[trial, 0], spikes <= tbins[trial, -1])
@@ -301,6 +301,7 @@ def spatial(spatialFrame, ax=None, clim=None):
     img = ax.imshow(spatialFrame, cmap='bwr', interpolation='nearest')
     img.set_clim(clim)
     ax.set_title('Spatial RF')
+    ax.set_aspect('equal')
 
     # add colorbar
     cbar = ax.get_figure().colorbar(img)
@@ -353,11 +354,11 @@ def plotsta1D(sta, ax=None):
 
     # normalize
     stan = (sta - _np.mean(sta)) / _np.var(sta)
-    lim = _np.max(_np.abs(stan))
+    lim = _np.max(_np.abs(stan))*1.2
 
     if not ax:
         fig = _plt.figure()
-        _sns.set_style('white')
+        _sns.set(style='white')
         ax = fig.add_subplot(111)
 
     im = ax.imshow(stan)
@@ -365,7 +366,7 @@ def plotsta1D(sta, ax=None):
     ax.axes.get_yaxis().set_visible(False)
     ax.axes.get_xaxis().set_visible(False)
     im.set_clim(-lim,lim)
-    im.set_cmap('RdBu')
+    im.set_cmap('seismic')
     _plt.show()
     _plt.draw()
 

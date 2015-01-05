@@ -615,9 +615,11 @@ def smoothfilter(f, spacesig=0.5, timesig=1):
     f:
         3D filter to be smoothed
 
-    spacesig, timesig:
-        The spatial and temporal standard deviations of the Gaussian
-        filter used to smooth the given filter
+    spacesig:
+        The standard deviation of the spatial Gaussian smoothing kernel
+
+    timesig:
+        The standard deviation of the temporal Gaussian smoothing kernel
 
     Output
     ------

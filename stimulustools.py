@@ -159,7 +159,7 @@ def slicestim(stim, history, locations=None, tproj=None):
 
     return slices
 
-def getcov(stim, history, tproj=None):
+def getcov(stim, history, tproj=None, verbose=False):
     '''
 
     Computes a stimulus covariance matrix
@@ -175,10 +175,13 @@ def getcov(stim, history, tproj=None):
     history (int):
         Integer number of time points to keep in each slice.
     
-    tproj (ndarray):
+    tproj (ndarray) [None]:
         Temporal basis set to use. Must have # of rows (first dimension) equal to history.
         Each extracted stimulus slice is projected onto this basis set, which reduces the size
         of the corresponding covariance matrix to store.
+
+    verbose (bool) [False]:
+        If True, print out progress of the computation.
 
     Output
     ------
@@ -215,8 +218,9 @@ def getcov(stim, history, tproj=None):
 
         # pick which index to use
         idx = indices[j]
-        if _np.mod(j,100) == 0:
-            print('[%i of %i]' % (j,numpts))
+        if verbose:
+            if _np.mod(j,100) == 0:
+                print('[%i of %i]' % (j,numpts))
 
         # get this stimulus slice, projected onto the basis set tproj
         stimslice = cstim[:, idx - history : idx].dot(tproj).reshape(-1,1)
