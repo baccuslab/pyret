@@ -1,0 +1,651 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyret.visualizations &mdash; pyret 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pyret 0.1.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">pyret 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyret.visualizations</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">visualizations.py</span>
+
+<span class="sd">Tools for visualizing data from retinal experiments.</span>
+
+<span class="sd">(C) 2014 bnaecker, nirum</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">_np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">_plt</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="kn">as</span> <span class="nn">_sns</span>
+<span class="kn">from</span> <span class="nn">pyret</span> <span class="kn">import</span> <span class="n">filtertools</span> <span class="k">as</span> <span class="n">_ft</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">animation</span> <span class="k">as</span> <span class="n">_animation</span>
+
+<div class="viewcode-block" id="raster"><a class="viewcode-back" href="../../pyret.html#pyret.visualizations.raster">[docs]</a><span class="k">def</span> <span class="nf">raster</span><span class="p">(</span><span class="n">spikes</span><span class="p">,</span> <span class="n">triallength</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fig</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    Plot a raster of spike times. The `triallength` keyword specifies the</span>
+<span class="sd">    length of time for each trial, and the `spikes` array is split up into</span>
+<span class="sd">    segments of that length. These groups are then plotted on top of one</span>
+<span class="sd">    another, as if they are individual trials.</span>
+
+<span class="sd">    Input</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    spikes (ndarray):</span>
+<span class="sd">        An array of spike times to plot</span>
+
+<span class="sd">    triallength (float):</span>
+<span class="sd">        The length of each trial to stack, in seconds.</span>
+
+<span class="sd">    fig (matplotlib figure):</span>
+<span class="sd">        The figure into which the raster is plotted.</span>
+
+<span class="sd">    Output</span>
+<span class="sd">    ------</span>
+
+<span class="sd">    fig (matplotlib figure):</span>
+<span class="sd">        Matplotlib handle of the figure</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c"># Parse time input</span>
+    <span class="k">if</span> <span class="n">triallength</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c"># Compute the time indices of the start and stop of the spikes</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">spikes</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">spikes</span><span class="o">.</span><span class="n">max</span><span class="p">()])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># Compute the time indices of each trial</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">triallength</span><span class="p">])</span> <span class="o">+</span> <span class="n">triallength</span> <span class="o">*</span> <span class="n">i</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">_np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">spikes</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="n">triallength</span><span class="p">))])</span>
+
+    <span class="c"># Make a figure</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fig</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">_plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">_plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+
+    <span class="c"># Plot each trial</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">hold</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">trial</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">times</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">bitwise_and</span><span class="p">(</span><span class="n">spikes</span> <span class="o">&gt;</span> <span class="n">times</span><span class="p">[</span><span class="n">trial</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">spikes</span> <span class="o">&lt;=</span> <span class="n">times</span><span class="p">[</span><span class="n">trial</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">spikes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">times</span><span class="p">[</span><span class="n">trial</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">trial</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">_np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">idx</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span><span class="mi">1</span><span class="p">)),</span>
+                <span class="n">color</span><span class="o">=</span><span class="s">&#39;k&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+
+    <span class="c"># Labels etc</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;spike raster&#39;</span><span class="p">,</span> <span class="n">fontdict</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;fontsize&#39;</span><span class="p">:</span><span class="mi">24</span><span class="p">})</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;time (s)&#39;</span><span class="p">,</span> <span class="n">fontdict</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;fontsize&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">})</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;trial #&#39;</span><span class="p">,</span> <span class="n">fontdict</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;fontsize&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">})</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="n">ymin</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ymax</span><span class="o">=</span><span class="n">times</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span>
+</div>
+<div class="viewcode-block" id="psth"><a class="viewcode-back" href="../../pyret.html#pyret.visualizations.psth">[docs]</a><span class="k">def</span> <span class="nf">psth</span><span class="p">(</span><span class="n">spikes</span><span class="p">,</span> <span class="n">triallength</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">fig</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    Plot a PSTH from the given spike times.</span>
+
+<span class="sd">    Input</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    spikes (ndarray):</span>
+<span class="sd">        An array of spike times</span>
+
+<span class="sd">    triallength (float):</span>
+<span class="sd">        The length of each trial to stack, in seconds</span>
+
+<span class="sd">    binsize (float):</span>
+<span class="sd">        The size of bins used in computing the PSTH</span>
+
+<span class="sd">    fig (matplotlib figure):</span>
+<span class="sd">        Figure into which the psth should be plotted</span>
+
+<span class="sd">    Output</span>
+<span class="sd">    ------</span>
+
+<span class="sd">    fig (matplotlib figure):</span>
+<span class="sd">        Matplotlib figure handle</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c"># Input-checking</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">triallength</span><span class="p">:</span>
+        <span class="n">triallength</span> <span class="o">=</span> <span class="n">spikes</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+    <span class="c"># Compute the histogram bins to use</span>
+    <span class="n">ntrials</span>     <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">spikes</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="n">triallength</span><span class="p">))</span>
+    <span class="n">basebins</span>    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">triallength</span> <span class="o">+</span> <span class="n">binsize</span><span class="p">,</span> <span class="n">binsize</span><span class="p">)</span>
+    <span class="n">tbins</span>       <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">basebins</span><span class="p">,</span> <span class="p">(</span><span class="n">ntrials</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ntrials</span><span class="p">),</span> <span class="p">(</span><span class="n">basebins</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">triallength</span><span class="p">)</span>
+
+    <span class="c"># Bin the spikes in each time bin</span>
+    <span class="n">bspk</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">tbins</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tbins</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">trial</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ntrials</span><span class="p">):</span>
+        <span class="n">bspk</span><span class="p">[</span><span class="n">trial</span><span class="p">,</span> <span class="p">:],</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">spikes</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">tbins</span><span class="p">[</span><span class="n">trial</span><span class="p">,</span> <span class="p">:])</span>
+
+    <span class="c"># Compute the mean over each trial, and multiply by the binsize</span>
+    <span class="n">fr</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">bspk</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">binsize</span>
+
+    <span class="c"># Make a figure</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fig</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">_plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">_plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+
+    <span class="c"># Plot the PSTH</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tbins</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">fr</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;k&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">&#39;-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c"># Labels etc</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&#39;psth&#39;</span><span class="p">,</span> <span class="n">fontdict</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;fontsize&#39;</span><span class="p">:</span><span class="mi">24</span><span class="p">})</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;time (s)&#39;</span><span class="p">,</span> <span class="n">fontdict</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;fontsize&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">})</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;firing rate (Hz)&#39;</span><span class="p">,</span> <span class="n">fontdict</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;fontsize&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">})</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span>
+</div>
+<div class="viewcode-block" id="rasterandpsth"><a class="viewcode-back" href="../../pyret.html#pyret.visualizations.rasterandpsth">[docs]</a><span class="k">def</span> <span class="nf">rasterandpsth</span><span class="p">(</span><span class="n">spikes</span><span class="p">,</span> <span class="n">triallength</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">binsize</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">fig</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    Plot a spike raster and a PSTH on the same set of axes.</span>
+
+<span class="sd">    Input</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    spikes (ndarray):</span>
+<span class="sd">        An array of spike times</span>
+
+<span class="sd">    triallength (float):</span>
+<span class="sd">        The length of each trial to stack, in seconds</span>
+
+<span class="sd">    binsize (float):</span>
+<span class="sd">        The size of bins used in computing the PSTH</span>
+
+<span class="sd">    fig (matplotlib figure):</span>
+<span class="sd">        Figure into which the psth should be plotted</span>
+
+<span class="sd">    Output</span>
+<span class="sd">    ------</span>
+
+<span class="sd">    fig (matplotlib figure):</span>
+<span class="sd">        Matplotlib figure handle</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c"># Input-checking</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">triallength</span><span class="p">:</span>
+        <span class="n">triallength</span> <span class="o">=</span> <span class="n">spikes</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+    <span class="c"># Compute the histogram bins to use</span>
+    <span class="n">ntrials</span>     <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">spikes</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="n">triallength</span><span class="p">))</span>
+    <span class="n">basebins</span>    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">triallength</span> <span class="o">+</span> <span class="n">binsize</span><span class="p">,</span> <span class="n">binsize</span><span class="p">)</span>
+    <span class="n">tbins</span>       <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">basebins</span><span class="p">,</span> <span class="p">(</span><span class="n">ntrials</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ntrials</span><span class="p">),</span> <span class="p">(</span><span class="n">basebins</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">triallength</span><span class="p">)</span>
+
+    <span class="c"># Bin the spikes in each time bin</span>
+    <span class="n">bspk</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">tbins</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tbins</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">trial</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ntrials</span><span class="p">):</span>
+        <span class="n">bspk</span><span class="p">[</span><span class="n">trial</span><span class="p">,</span> <span class="p">:],</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">spikes</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">tbins</span><span class="p">[</span><span class="n">trial</span><span class="p">,</span> <span class="p">:])</span>
+
+    <span class="c"># Compute the mean over each trial, and multiply by the binsize</span>
+    <span class="n">fr</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">bspk</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">binsize</span>
+
+    <span class="c"># Make a figure</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fig</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">_plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">_plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+
+    <span class="c"># Plot the PSTH</span>
+    <span class="n">psthax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+    <span class="n">psthax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tbins</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">fr</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">&#39;-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">psthax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s">&#39;psth and raster&#39;</span><span class="p">,</span> <span class="n">fontdict</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;fontsize&#39;</span><span class="p">:</span><span class="mi">24</span><span class="p">})</span>
+    <span class="n">psthax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s">&#39;time (s)&#39;</span><span class="p">,</span> <span class="n">fontdict</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;fontsize&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">})</span>
+    <span class="n">psthax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">&#39;firing rate (Hz)&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;r&#39;</span><span class="p">,</span> <span class="n">fontdict</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;fontsize&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">})</span>
+    <span class="n">_sns</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s">&#39;white&#39;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s">&#39;notebook&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">tick</span> <span class="ow">in</span> <span class="n">psthax</span><span class="o">.</span><span class="n">get_yticklabels</span><span class="p">():</span>
+        <span class="n">tick</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
+
+    <span class="c"># Plot the raster</span>
+    <span class="n">rastax</span> <span class="o">=</span> <span class="n">psthax</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+    <span class="n">_sns</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s">&#39;white&#39;</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s">&#39;notebook&#39;</span><span class="p">)</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">hold</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">trial</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ntrials</span><span class="p">):</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">bitwise_and</span><span class="p">(</span><span class="n">spikes</span> <span class="o">&gt;</span> <span class="n">tbins</span><span class="p">[</span><span class="n">trial</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">spikes</span> <span class="o">&lt;=</span> <span class="n">tbins</span><span class="p">[</span><span class="n">trial</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">rastax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">spikes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">tbins</span><span class="p">[</span><span class="n">trial</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">trial</span> <span class="o">*</span> <span class="n">_np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">spikes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;k&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s">&#39;.&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">)</span>
+    <span class="n">rastax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">&#39;trial #&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;k&#39;</span><span class="p">,</span> <span class="n">fontdict</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;fontsize&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">})</span>
+    <span class="k">for</span> <span class="n">tick</span> <span class="ow">in</span> <span class="n">psthax</span><span class="o">.</span><span class="n">get_yticklabels</span><span class="p">():</span>
+        <span class="n">tick</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s">&#39;k&#39;</span><span class="p">)</span>
+
+    <span class="c"># Show the figure</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span>
+</div>
+<div class="viewcode-block" id="playsta"><a class="viewcode-back" href="../../pyret.html#pyret.visualizations.playsta">[docs]</a><span class="k">def</span> <span class="nf">playsta</span><span class="p">(</span><span class="n">sta</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">frametime</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    Plays a spatiotemporal spike-triggered average as a movie</span>
+
+<span class="sd">    Input</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    sta (ndarray):</span>
+<span class="sd">        Spike-triggered average array, shaped as (npix, npix, nframes)</span>
+
+<span class="sd">    repeat (boolean) [optional, default=True]:</span>
+<span class="sd">        Whether or not to repeat the animation</span>
+
+<span class="sd">    frametime (float) [optional, default=100]:</span>
+<span class="sd">        Length of time each frame is displayed for (in milliseconds)</span>
+
+<span class="sd">    Output</span>
+<span class="sd">    ------</span>
+
+<span class="sd">    None</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c"># Initial frame</span>
+    <span class="n">initialFrame</span> <span class="o">=</span> <span class="n">sta</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="c"># Set up the figure</span>
+    <span class="n">fig</span>     <span class="o">=</span> <span class="n">_plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">ax</span>      <span class="o">=</span> <span class="n">_plt</span><span class="o">.</span><span class="n">axes</span><span class="p">(</span><span class="n">xlim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sta</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">sta</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">img</span>     <span class="o">=</span> <span class="n">_plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">initialFrame</span><span class="p">)</span>
+
+    <span class="c"># Set up the colors</span>
+    <span class="n">maxval</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">sta</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">set_cmap</span><span class="p">(</span><span class="s">&#39;gray&#39;</span><span class="p">)</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">set_interpolation</span><span class="p">(</span><span class="s">&#39;nearest&#39;</span><span class="p">)</span>
+
+    <span class="c"># Animation function (called sequentially)</span>
+    <span class="k">def</span> <span class="nf">animate</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s">&#39;Frame {0:#d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">img</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">sta</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">])</span>
+
+    <span class="c"># Call the animator</span>
+    <span class="n">anim</span> <span class="o">=</span> <span class="n">_animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">animate</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">sta</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">interval</span><span class="o">=</span><span class="n">frametime</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="n">repeat</span><span class="p">)</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">anim</span>
+</div>
+<div class="viewcode-block" id="spatial"><a class="viewcode-back" href="../../pyret.html#pyret.visualizations.spatial">[docs]</a><span class="k">def</span> <span class="nf">spatial</span><span class="p">(</span><span class="n">spatialFrame</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">clim</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    Plot a spatial filter on a given axes</span>
+
+<span class="sd">    Input</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    spatialFrame (ndarray):</span>
+<span class="sd">        The frame to plot, as an (n x n) matrix.</span>
+
+<span class="sd">    ax (matplotlib axes) [optional]:</span>
+<span class="sd">        the axes on which to plot the data; defaults to creating a new figure</span>
+
+<span class="sd">    clim (tuple) [optional]:</span>
+<span class="sd">        the color range with which to scale the image. Defaults to [-maxval, maxval] where maxval is the max abs. value</span>
+
+<span class="sd">    Output</span>
+<span class="sd">    ------</span>
+
+<span class="sd">    ax (matplotlib axes):</span>
+<span class="sd">        Axes into which the frame is plotted</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ax</span><span class="p">:</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">_plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+
+    <span class="c"># adjust color limits if necessary</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">clim</span><span class="p">:</span>
+
+        <span class="c"># normalize</span>
+        <span class="n">spatialFrame</span> <span class="o">-=</span> <span class="n">_np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">spatialFrame</span><span class="p">)</span>
+
+        <span class="c"># find max abs value</span>
+        <span class="n">maxabs</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">spatialFrame</span><span class="p">))</span>
+
+        <span class="c"># set clim</span>
+        <span class="n">clim</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">maxabs</span><span class="p">,</span> <span class="n">maxabs</span><span class="p">)</span>
+
+    <span class="c"># plot the spatial frame</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">spatialFrame</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s">&#39;bwr&#39;</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&#39;nearest&#39;</span><span class="p">)</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="n">clim</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s">&#39;Spatial RF&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s">&#39;equal&#39;</span><span class="p">)</span>
+
+    <span class="c"># add colorbar</span>
+    <span class="n">cbar</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+
+    <span class="n">_plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">ax</span>
+</div>
+<div class="viewcode-block" id="temporal"><a class="viewcode-back" href="../../pyret.html#pyret.visualizations.temporal">[docs]</a><span class="k">def</span> <span class="nf">temporal</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">temporalFilter</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    Plot a temporal filter on a given axes</span>
+
+<span class="sd">    Input</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    time (ndarray):</span>
+<span class="sd">        a time vector to plot against</span>
+
+<span class="sd">    temporalFilter (ndarray):</span>
+<span class="sd">        the temporal filter to plot, has the same dimensions as time</span>
+
+<span class="sd">    ax (matplotlib axes) [optional]:</span>
+<span class="sd">        the axes on which to plot the data; defaults to creating a new figure</span>
+
+<span class="sd">    Output</span>
+<span class="sd">    ------</span>
+
+<span class="sd">    ax (matplotlib axes):</span>
+<span class="sd">        Axes into which the frame is plotted</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ax</span><span class="p">:</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">_plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">temporalFilter</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">&#39;-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;LightCoral&#39;</span><span class="p">)</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">ax</span>
+</div>
+<div class="viewcode-block" id="plotsta1D"><a class="viewcode-back" href="../../pyret.html#pyret.visualizations.plotsta1D">[docs]</a><span class="k">def</span> <span class="nf">plotsta1D</span><span class="p">(</span><span class="n">sta</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    Plot a 1D spatiotemporal filter (e.g. from a bars experiment)</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c"># normalize</span>
+    <span class="n">stan</span> <span class="o">=</span> <span class="p">(</span><span class="n">sta</span> <span class="o">-</span> <span class="n">_np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">sta</span><span class="p">))</span> <span class="o">/</span> <span class="n">_np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">sta</span><span class="p">)</span>
+    <span class="n">lim</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">stan</span><span class="p">))</span><span class="o">*</span><span class="mf">1.2</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ax</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">_plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">_sns</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s">&#39;white&#39;</span><span class="p">)</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+
+    <span class="n">im</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">stan</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s">&#39;equal&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">get_yaxis</span><span class="p">()</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">get_xaxis</span><span class="p">()</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">im</span><span class="o">.</span><span class="n">set_clim</span><span class="p">(</span><span class="o">-</span><span class="n">lim</span><span class="p">,</span><span class="n">lim</span><span class="p">)</span>
+    <span class="n">im</span><span class="o">.</span><span class="n">set_cmap</span><span class="p">(</span><span class="s">&#39;seismic&#39;</span><span class="p">)</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="plotsta"><a class="viewcode-back" href="../../pyret.html#pyret.visualizations.plotsta">[docs]</a><span class="k">def</span> <span class="nf">plotsta</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">sta</span><span class="p">,</span> <span class="n">timeSlice</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    Plot a spatial and temporal filter</span>
+
+<span class="sd">    Input</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    time (ndarray):</span>
+<span class="sd">        a time vector to plot against</span>
+
+<span class="sd">    sta (ndarray):</span>
+<span class="sd">        the filter to plot</span>
+
+<span class="sd">    timeslice (int) [optional]:</span>
+<span class="sd">        the index of the spatial slice to plot</span>
+
+<span class="sd">    Output</span>
+<span class="sd">    ------</span>
+
+<span class="sd">    ax (matplotlib axes):</span>
+<span class="sd">        Axes into which the STA is plotted</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c"># create the figure</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">_plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+
+    <span class="c"># decompose</span>
+    <span class="n">spatialProfile</span><span class="p">,</span> <span class="n">temporalFilter</span> <span class="o">=</span> <span class="n">_ft</span><span class="o">.</span><span class="n">decompose</span><span class="p">(</span><span class="n">sta</span><span class="p">)</span>
+
+    <span class="c"># plot spatial profile</span>
+    <span class="n">axspatial</span> <span class="o">=</span> <span class="n">spatial</span><span class="p">(</span><span class="n">spatialProfile</span><span class="p">,</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">121</span><span class="p">))</span>
+
+    <span class="c"># plot temporal profile</span>
+    <span class="n">axtemporal</span> <span class="o">=</span> <span class="n">temporal</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">temporalFilter</span><span class="p">,</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">122</span><span class="p">))</span>
+
+    <span class="c"># return handles</span>
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="p">(</span><span class="n">axspatial</span><span class="p">,</span> <span class="n">axtemporal</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ellipse"><a class="viewcode-back" href="../../pyret.html#pyret.visualizations.ellipse">[docs]</a><span class="k">def</span> <span class="nf">ellipse</span><span class="p">(</span><span class="n">ell</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    Plot the given ellipse, fit to the spatial receptive field of a cell</span>
+
+<span class="sd">    Input</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    ell (matplotlibe.pathces.Ellipse object):</span>
+<span class="sd">        The ellipse to be plotted</span>
+
+<span class="sd">    ax (matplotlib axes) [optional]:</span>
+<span class="sd">        The axes onto which the ellipse should be plotted. Defaults to a new figure</span>
+
+<span class="sd">    Output</span>
+<span class="sd">    ------</span>
+
+<span class="sd">    ax  (matplotlib axes):</span>
+<span class="sd">        The axes onto which the ellipse is plotted</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c"># Set some properties</span>
+    <span class="n">ell</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="s">&#39;green&#39;</span><span class="p">)</span>
+    <span class="n">ell</span><span class="o">.</span><span class="n">set_alpha</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">ell</span><span class="o">.</span><span class="n">set_edgecolor</span><span class="p">(</span><span class="s">&#39;black&#39;</span><span class="p">)</span>
+
+    <span class="c"># Create axes or add to given</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ax</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">_plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">ell</span><span class="p">)</span>
+
+    <span class="n">_plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">ax</span>
+</div>
+<div class="viewcode-block" id="plotcells"><a class="viewcode-back" href="../../pyret.html#pyret.visualizations.plotcells">[docs]</a><span class="k">def</span> <span class="nf">plotcells</span><span class="p">(</span><span class="n">cells</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">boxdims</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.25</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    Plot the receptive fields</span>
+
+<span class="sd">    Input</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    cells:</span>
+<span class="sd">        a list of spatiotemporal receptive fields</span>
+
+<span class="sd">    ax (matplotlib axes) [optional]:</span>
+<span class="sd">        The axes onto which the ellipse should be plotted. Defaults to a new figure</span>
+
+<span class="sd">    boxdims [optional, default: None]:</span>
+<span class="sd">        Dimensions of a box (to indicate the electrode array) to draw behind the cells.</span>
+<span class="sd">        Should be a tuple containing the (width,height) of the box.</span>
+
+<span class="sd">    start [optional, default: None]:</span>
+<span class="sd">        Location of the lower left corner of the box to draw. If None, the box is centered on the plot.</span>
+<span class="sd">        Only matters if &#39;boxdims&#39; is not None.</span>
+
+<span class="sd">    Output</span>
+<span class="sd">    ------</span>
+
+<span class="sd">    ax  (matplotlib axes):</span>
+<span class="sd">        The axes onto which the ellipse is plotted</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c"># Create axes or add to given</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ax</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">_plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+
+    <span class="c"># define the color palatte</span>
+    <span class="n">colors</span> <span class="o">=</span> <span class="n">_sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">(</span><span class="s">&quot;hls&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">cells</span><span class="p">))</span>
+    <span class="n">_np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span>
+
+    <span class="c"># for each cell</span>
+    <span class="n">ellipses</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">sta</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cells</span><span class="p">):</span>
+
+        <span class="c"># get the spatial profile</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">tidx</span> <span class="o">=</span> <span class="n">_ft</span><span class="o">.</span><span class="n">filterpeak</span><span class="p">(</span><span class="n">sta</span><span class="p">)</span>
+
+        <span class="c"># generate ellipse</span>
+        <span class="n">ell</span> <span class="o">=</span> <span class="n">_ft</span><span class="o">.</span><span class="n">getellipse</span><span class="p">(</span><span class="n">sta</span><span class="p">[:,:,</span><span class="n">tidx</span><span class="p">],</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
+
+        <span class="c"># add it to the plot</span>
+        <span class="n">ell</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="n">colors</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="n">ell</span><span class="o">.</span><span class="n">set_edgecolor</span><span class="p">(</span><span class="n">colors</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="n">ell</span><span class="o">.</span><span class="n">set_linewidth</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">ell</span><span class="o">.</span><span class="n">set_linestyle</span><span class="p">(</span><span class="s">&#39;solid&#39;</span><span class="p">)</span>
+        <span class="n">ell</span><span class="o">.</span><span class="n">set_alpha</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">ell</span><span class="p">)</span>
+        <span class="n">ellipses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ell</span><span class="p">)</span>
+
+    <span class="c"># add a box to mark the array</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">boxdims</span><span class="p">))</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">_plt</span><span class="o">.</span><span class="n">Rectangle</span><span class="p">((</span><span class="n">start</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">start</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">boxdims</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">boxdims</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">fill</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s">&#39;Black&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">&#39;dashed&#39;</span><span class="p">))</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="n">xmin</span><span class="o">=</span><span class="n">start</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xmax</span><span class="o">=</span><span class="n">start</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">boxdims</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="n">ymin</span><span class="o">=</span><span class="n">start</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ymax</span><span class="o">=</span><span class="n">start</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">boxdims</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">_sns</span><span class="o">.</span><span class="n">set_style</span><span class="p">(</span><span class="s">&#39;nogrid&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s">&#39;equal&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+
+    <span class="n">_plt</span><span class="o">.</span><span class="n">box</span><span class="p">(</span><span class="s">&#39;off&#39;</span><span class="p">)</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ellipses</span>
+</div>
+<div class="viewcode-block" id="playrates"><a class="viewcode-back" href="../../pyret.html#pyret.visualizations.playrates">[docs]</a><span class="k">def</span> <span class="nf">playrates</span><span class="p">(</span><span class="n">rates</span><span class="p">,</span> <span class="n">patches</span><span class="p">,</span> <span class="n">palette</span><span class="o">=</span><span class="s">&#39;gray&#39;</span><span class="p">,</span> <span class="n">numLevels</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">frametime</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Plays a movie of the firing rate for N cells by updating the given patches (matplotlib handles)</span>
+<span class="sd">    (useful in conjunction with the output of plotcells)</span>
+
+<span class="sd">    Input</span>
+<span class="sd">    -----</span>
+<span class="sd">    rates: an (N, T) matrix of firing rates</span>
+<span class="sd">    patches: a list of N matplotlib patch elements. The facecolor of these patches is altered according to the rates values</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c"># approximate necessary colormap</span>
+    <span class="n">colors</span> <span class="o">=</span> <span class="n">_sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">(</span><span class="n">palette</span><span class="p">,</span> <span class="n">numLevels</span><span class="p">);</span>
+    <span class="n">rscale</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span> <span class="p">(</span><span class="n">numLevels</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">rates</span> <span class="o">-</span> <span class="n">rates</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="o">/</span> <span class="p">(</span><span class="n">rates</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">rates</span><span class="o">.</span><span class="n">min</span><span class="p">())</span> <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;int&#39;</span><span class="p">);</span>
+
+    <span class="c"># set up</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">_plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">_plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">time</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">rscale</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c"># Animation function (called sequentially)</span>
+    <span class="k">def</span> <span class="nf">animate</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rscale</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">patches</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="n">colors</span><span class="p">[</span><span class="n">rscale</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">t</span><span class="p">]])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s">&#39;Time: </span><span class="si">%0.2f</span><span class="s"> seconds&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">time</span><span class="p">[</span><span class="n">t</span><span class="p">]),</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+
+    <span class="c"># Call the animator</span>
+    <span class="n">anim</span> <span class="o">=</span> <span class="n">_animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">animate</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">rscale</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">interval</span><span class="o">=</span><span class="n">frametime</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="n">repeat</span><span class="p">)</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">_plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">anim</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">pyret 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014-2015, Ben Naecker, Niru Maheswaranathan, Pablo Jadzinsky.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

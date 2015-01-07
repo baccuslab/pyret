@@ -1,0 +1,334 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyret.stimulustools &mdash; pyret 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pyret 0.1.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">pyret 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pyret.stimulustools</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">stimulustools.py</span>
+
+<span class="sd">Tools for basic manipulation of stimulus arrays.</span>
+
+<span class="sd">(C) 2014 bnaecker, nirum</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">_np</span>
+<span class="kn">from</span> <span class="nn">scipy.linalg.blas</span> <span class="kn">import</span> <span class="n">get_blas_funcs</span>
+
+<div class="viewcode-block" id="upsamplestim"><a class="viewcode-back" href="../../pyret.html#pyret.stimulustools.upsamplestim">[docs]</a><span class="k">def</span> <span class="nf">upsamplestim</span><span class="p">(</span><span class="n">stim</span><span class="p">,</span> <span class="n">upfact</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    Upsample the given stimulus by the given factor.</span>
+
+<span class="sd">    Input</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    stim (ndarray):</span>
+<span class="sd">        The actual stimulus to be upsampled.</span>
+
+<span class="sd">    upfact (int):</span>
+<span class="sd">        The upsample factor.</span>
+
+<span class="sd">    time (ndarray) [optional]:</span>
+<span class="sd">        The time axis of the original stimulus.</span>
+
+<span class="sd">    Output</span>
+
+<span class="sd">    stim_us (ndarray), time_us (ndarray):</span>
+<span class="sd">        The upsampled time vector and stimulus array</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c"># Compute old and new sizes</span>
+    <span class="n">oldsz</span>   <span class="o">=</span> <span class="n">stim</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">newsz</span>   <span class="o">=</span> <span class="n">oldsz</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">upfact</span> <span class="o">*</span> <span class="n">oldsz</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],)</span>
+
+    <span class="c"># Upsample the stimulus array</span>
+    <span class="n">stim_us</span> <span class="o">=</span> <span class="p">(</span><span class="n">stim</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">_np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">upfact</span><span class="p">)))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">newsz</span><span class="p">)</span>
+
+    <span class="c"># Upsample the time vecctor if given</span>
+    <span class="k">if</span> <span class="n">time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">x</span>       <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">upfact</span> <span class="o">*</span> <span class="n">time</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">xp</span>      <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">upfact</span> <span class="o">*</span> <span class="n">time</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">upfact</span><span class="p">)</span>
+        <span class="n">time_us</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xp</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">time</span><span class="p">))</span>
+
+        <span class="c"># Check that last timestamp is valid. np.interp does no</span>
+        <span class="c"># extrapolation, which may be necessary for the last </span>
+        <span class="c"># timepoint, given the method above</span>
+        <span class="k">if</span> <span class="n">time_us</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">time_us</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">time_us</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">_np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">time_us</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">time_us</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">return</span> <span class="n">stim_us</span><span class="p">,</span> <span class="n">time_us</span>
+</div>
+<div class="viewcode-block" id="downsamplestim"><a class="viewcode-back" href="../../pyret.html#pyret.stimulustools.downsamplestim">[docs]</a><span class="k">def</span> <span class="nf">downsamplestim</span><span class="p">(</span><span class="n">stim</span><span class="p">,</span> <span class="n">downfact</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    Downsample the given stimulus by the given factor.</span>
+
+<span class="sd">    Input</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    stim (ndarray):</span>
+<span class="sd">        The original stimulus array</span>
+
+<span class="sd">    downfact (int):</span>
+<span class="sd">        The factor by which the stimulus will be downsampled</span>
+
+<span class="sd">    time (ndarray) [optional]:</span>
+<span class="sd">        The time axis of the original stimulus</span>
+
+<span class="sd">    Output</span>
+<span class="sd">    ------</span>
+
+<span class="sd">    stim_ds (ndarray), time_ds (ndarray):</span>
+<span class="sd">        The downsampled time vector and stimulus array</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c"># Downsample the stimulus array</span>
+    <span class="n">stim_ds</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">stim</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">stim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">downfact</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="c"># Downsample the time vector, if given</span>
+    <span class="n">time_ds</span> <span class="o">=</span> <span class="n">time</span><span class="p">[::</span><span class="n">downfact</span><span class="p">]</span> <span class="k">if</span> <span class="n">time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="bp">None</span>
+
+    <span class="k">return</span> <span class="n">stim_ds</span><span class="p">,</span> <span class="n">time_ds</span>
+</div>
+<div class="viewcode-block" id="slicestim"><a class="viewcode-back" href="../../pyret.html#pyret.stimulustools.slicestim">[docs]</a><span class="k">def</span> <span class="nf">slicestim</span><span class="p">(</span><span class="n">stim</span><span class="p">,</span> <span class="n">history</span><span class="p">,</span> <span class="n">locations</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">tproj</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    Slices a spatiotemporal stimulus array (over time) into overlapping frames.</span>
+
+<span class="sd">    Input</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    stim (ndarray):</span>
+<span class="sd">        The spatiotemporal or temporal stimulus to slices. Should have shape</span>
+<span class="sd">        (n, n, t) or (t,).</span>
+
+<span class="sd">    history (int):</span>
+<span class="sd">        Integer number of time points to keep in each slice.</span>
+
+<span class="sd">    locations (boolean) [optional]:</span>
+<span class="sd">        Boolean array of temporal locations at which slices are taken. If unspecified,</span>
+<span class="sd">        use all time points.</span>
+
+<span class="sd">    tproj (ndarray) [optional]:</span>
+<span class="sd">        Matrix of temporal filters to project stimuli onto</span>
+
+<span class="sd">    Output</span>
+<span class="sd">    ------</span>
+
+<span class="sd">    slices (ndarray):</span>
+<span class="sd">        Array of stimulus slices, with all stimulus dimensions collapsed into one. </span>
+<span class="sd">        That is, it has shape (np.prod(stim.shape), `history`)</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c"># Collapse any spatial dimensions of the stimulus array</span>
+    <span class="n">cstim</span> <span class="o">=</span> <span class="n">stim</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">stim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c"># Check history is an int</span>
+    <span class="k">if</span> <span class="n">history</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">history</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;&quot;history&quot; must be an integer&#39;</span><span class="p">)</span>
+    <span class="n">history</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">history</span><span class="p">)</span>
+
+    <span class="c"># Compute spatial locations to take</span>
+    <span class="k">if</span> <span class="n">locations</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">locations</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">cstim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    
+    <span class="c"># Don&#39;t include first `history` frames regardless</span>
+    <span class="n">locations</span><span class="p">[:</span><span class="n">history</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="c"># Construct full stimulus slice array</span>
+    <span class="k">if</span> <span class="n">tproj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+
+        <span class="c"># Preallocate</span>
+        <span class="n">slices</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">history</span> <span class="o">*</span> <span class="n">cstim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">locations</span><span class="p">[</span><span class="n">history</span><span class="p">:]))))</span>
+
+        <span class="c"># Loop over requested time points</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">_np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">locations</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">slices</span><span class="p">[:,</span> <span class="n">idx</span><span class="o">-</span><span class="n">history</span><span class="p">]</span> <span class="o">=</span> <span class="n">cstim</span><span class="p">[:,</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">history</span> <span class="p">:</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+    <span class="c"># Construct projected stimulus slice array</span>
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="c"># Preallocate</span>
+        <span class="n">slices</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">tproj</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">cstim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">locations</span><span class="p">[</span><span class="n">history</span><span class="p">:]))))</span>
+
+        <span class="c"># Loop over requested time points</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">_np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">locations</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+
+            <span class="c"># Project onto temporal basis</span>
+            <span class="n">slices</span><span class="p">[:,</span> <span class="n">idx</span><span class="o">-</span><span class="n">history</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">cstim</span><span class="p">[:,</span> <span class="n">idx</span><span class="o">-</span><span class="n">history</span><span class="p">:</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">tproj</span><span class="p">))</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">slices</span>
+</div>
+<div class="viewcode-block" id="getcov"><a class="viewcode-back" href="../../pyret.html#pyret.stimulustools.getcov">[docs]</a><span class="k">def</span> <span class="nf">getcov</span><span class="p">(</span><span class="n">stim</span><span class="p">,</span> <span class="n">history</span><span class="p">,</span> <span class="n">tproj</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">    Computes a stimulus covariance matrix</span>
+<span class="sd">    ** Warning: this is computationally expensive for large stimuli **</span>
+
+<span class="sd">    Input</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    stim (ndarray):</span>
+<span class="sd">        The spatiotemporal or temporal stimulus to slices. Should have shape</span>
+<span class="sd">        (n, n, t) or (t,).</span>
+
+<span class="sd">    history (int):</span>
+<span class="sd">        Integer number of time points to keep in each slice.</span>
+<span class="sd">    </span>
+<span class="sd">    tproj (ndarray) [None]:</span>
+<span class="sd">        Temporal basis set to use. Must have # of rows (first dimension) equal to history.</span>
+<span class="sd">        Each extracted stimulus slice is projected onto this basis set, which reduces the size</span>
+<span class="sd">        of the corresponding covariance matrix to store.</span>
+
+<span class="sd">    verbose (bool) [False]:</span>
+<span class="sd">        If True, print out progress of the computation.</span>
+
+<span class="sd">    Output</span>
+<span class="sd">    ------</span>
+
+<span class="sd">    cov (ndarray):</span>
+<span class="sd">        (n*n*t by n*n*t) Covariance matrix</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c"># temporal basis (if not given, use the identity matrix)</span>
+    <span class="k">if</span> <span class="n">tproj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">tproj</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">history</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">tproj</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">history</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;The first dimension of the basis set tproj must equal history&#39;</span><span class="p">)</span>
+
+    <span class="c"># Collapse any spatial dimensions of the stimulus array</span>
+    <span class="n">cstim</span> <span class="o">=</span> <span class="n">stim</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">stim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c"># store mean + covariance matrix</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">cstim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">tproj</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">cov</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">cstim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">tproj</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">cstim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">tproj</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+    <span class="c"># pick some indices to go through</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">history</span><span class="p">,</span><span class="n">cstim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">numpts</span>  <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">min</span><span class="p">((</span> <span class="n">cstim</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">tproj</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">10</span><span class="p">,</span> <span class="n">indices</span><span class="o">.</span><span class="n">size</span> <span class="p">))</span>
+    <span class="n">_np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+
+    <span class="c"># get blas function</span>
+    <span class="n">blas_ger_fnc</span> <span class="o">=</span> <span class="n">get_blas_funcs</span><span class="p">((</span><span class="s">&#39;ger&#39;</span><span class="p">,),</span> <span class="p">(</span><span class="n">cov</span><span class="p">,))[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c"># loop over temporal indices</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numpts</span><span class="p">):</span>
+
+        <span class="c"># pick which index to use</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">_np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;[</span><span class="si">%i</span><span class="s"> of </span><span class="si">%i</span><span class="s">]&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">numpts</span><span class="p">))</span>
+
+        <span class="c"># get this stimulus slice, projected onto the basis set tproj</span>
+        <span class="n">stimslice</span> <span class="o">=</span> <span class="n">cstim</span><span class="p">[:,</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">history</span> <span class="p">:</span> <span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">tproj</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c"># update the mean</span>
+        <span class="n">mean</span> <span class="o">+=</span> <span class="n">_np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">stimslice</span><span class="p">)</span>
+
+        <span class="c"># add it to the covariance matrix (using low-level BLAS operation)</span>
+        <span class="n">blas_ger_fnc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">stimslice</span><span class="p">,</span> <span class="n">stimslice</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">cov</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">overwrite_a</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="c"># normalize and compute the mean outer product</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">/</span> <span class="n">numpts</span>
+    <span class="n">mean_op</span> <span class="o">=</span> <span class="n">mean</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mean</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="c"># mean-subtract and normalize the STC by the number of points</span>
+    <span class="n">cov</span> <span class="o">=</span> <span class="p">(</span><span class="n">cov</span> <span class="o">/</span> <span class="p">(</span><span class="n">numpts</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="o">-</span> <span class="n">mean_op</span>
+
+    <span class="k">return</span> <span class="n">cov</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">pyret 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014-2015, Ben Naecker, Niru Maheswaranathan, Pablo Jadzinsky.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
