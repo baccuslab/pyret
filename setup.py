@@ -21,5 +21,5 @@ setup(name = 'pyret',
         packages = ['pyret'],
         package_dir = {'pyret': ''},
         py_modules = ['binary', 'spiketools', 'filtertools', 'stimulustools'],
-        license = 'LICENSE.txt'
+        license = 'LICENSE.md'
         )

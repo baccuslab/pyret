@@ -22,6 +22,10 @@ Demo
 ----
 For a demo of how to do analysis using `pyret`, check out the html file and corresponding ipython notebook in the `demo/` folder.
 
+Contributing
+------------
+Pull requests are welcome! We follow the [NumPy/SciPy documentation standards](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#docstring-standard), and [Sphinx](http://sphinx-doc.org/index.html) for generating documentation.
+
 Testing
 -------
 Testing is done via [nose](https://nose.readthedocs.org/en/latest/). Once installed (e.g. with `pip install nose`) then simply run `nosetests -v` at the top level directory to run the tests. Test functions are located in the `tests/` folder.
