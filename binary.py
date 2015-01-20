@@ -1,42 +1,41 @@
-'''
-binary.py
+"""
 Tools for interacting with binary recording files
-(C) 2014 Benjamin Naecker
-'''
+
+"""
 
 import numpy as _np
 from os import path as _path
 
-def readbin(fname, chanlist=None):
-    '''
+# noinspection PyNoneFunctionAssignment
+def readbin(filename, chanlist=None):
+    """
     Read a binary recording file
 
-    Input
-    -----
-
-    fname (string):
+    Parameters
+    ----------
+    filename : string
         Filename to read 
 
-    chanlist (array-like) [None]:
-        List of channels to read. Raises IndexError if any channels are not in the file.
-        None (the default) loads all channels.
+    chanlist : array_like
+        List of channels to read. Raises IndexError if any channels are not in the file. If None (default), loads all
+        channels.
 
     Output
     ------
-
     data (ndarray):
         Data from the channels requested. Shape is (nsamples, nchannels)
-    '''
+
+    """
     
     # Type of binary data, 16-bit unsigned integers
     uint = _np.dtype('>i2')
 
     # Check file exists
-    if not _path.exists(fname):
-        raise FileNotFoundError('Requested bin file {f} does not exist'.format(f=fname))
+    if not _path.exists(filename):
+        raise FileNotFoundError('Requested bin file {f} does not exist'.format(f=filename))
 
     # Read the header
-    hdr = readbinhdr(fname)
+    hdr = readbinhdr(filename)
 
     # Check the channel list given
     if chanlist is None or len(chanlist) == 0:
@@ -45,7 +44,7 @@ def readbin(fname, chanlist=None):
         chanlist = _np.array(chanlist)
 
     # Open the requested file
-    with open(fname, 'rb') as fid:
+    with open(filename, 'rb') as fid:
 
         # Check all requested channels are in the file
         for chan in chanlist:
@@ -72,32 +71,33 @@ def readbin(fname, chanlist=None):
                 fid.seek(hdr['hdrsize'] + block * chunk_size + chanoffset)
 
                 # Read the data
-                data[block * hdr['blksize'] : (block + 1) * hdr['blksize'], chan] = \
-                        _np.fromfile(fid, dtype=uint, count=hdr['blksize'])
+                data[block * hdr['blksize']: (block + 1) * hdr['blksize'], chan] = _np.fromfile(fid, dtype=uint,
+                                                                                                count=hdr['blksize'])
 
-    # Scale and offset
-    data *= hdr['gain']
-    data += hdr['offset']
+        # Scale and offset
+        data *= hdr['gain']
+        data += hdr['offset']
 
-    # Return the data
-    return data
+        # Return the data
+        return data
 
-def readbinhdr(fname):
-    '''
+
+# noinspection PyNoneFunctionAssignment
+def readbinhdr(filename):
+    """
     Read the header from a binary recording file
 
-    Input
-    -----
-
-    fname (string):
+    Parameters
+    ----------
+    filename : string
         Filename to read as binary
 
-    Output
-    ------
-
-    hdr (dict):
+    Returns
+    -------
+    hdr : dict
         Header data
-    '''
+
+    """
     
     # Define datatypes to be read in
     uint    = _np.dtype('>u4') 	# Unsigned integer, 32-bit
@@ -106,29 +106,29 @@ def readbinhdr(fname):
     uchar   = _np.dtype('>B') 	# Unsigned char
 
     # Read the header
-    with open(fname, 'rb') as fid:
-        hdr = {}
-        hdr['hdrsize'] 	    = _np.fromfile(fid, dtype=uint, count=1)[0] 	    # Size of header (bytes)
-        hdr['type']         = _np.fromfile(fid, dtype=short, count=1)[0]	    # Not sure
-        hdr['version']	    = _np.fromfile(fid, dtype=short, count=1)[0] 	    # Not sure
-        hdr['nsamples']	    = _np.fromfile(fid, dtype=uint, count=1)[0]		    # Samples in file
-        hdr['nchannels']    = _np.fromfile(fid, dtype=uint, count=1)[0] 	    # Number of channels
-        hdr['channels']     = _np.fromfile(fid, dtype=short, count=hdr['nchannels'])# Recorded channels
-        hdr['fs']	    = _np.fromfile(fid, dtype=flt, count=1)[0]		    # Sample rate
-        hdr['blksize'] 	    = _np.fromfile(fid, dtype=uint, count=1)[0]		    # Size of data blocks
-        hdr['gain']	    = _np.fromfile(fid, dtype=flt, count=1)[0]		    # Amplifier gain
-        hdr['offset']	    = _np.fromfile(fid, dtype=flt, count=1)[0]		    # Amplifier offset
-        hdr['datesz']	    = _np.fromfile(fid, dtype=uint, count=1)[0] 	    # Size of date string
-        tmpdate		    = _np.fromfile(fid, dtype=uchar, count=hdr['datesz'])   # Date
-        hdr['timesz']	    = _np.fromfile(fid, dtype=uint, count=1)[0]             # Size of time string
-        tmptime		    = _np.fromfile(fid, dtype=uchar, count=hdr['timesz'])   # Time
-        hdr['roomsz']	    = _np.fromfile(fid, dtype=uint, count=1)[0]		    # Size of room string
-        tmproom		    = _np.fromfile(fid, dtype=uchar, count=hdr['roomsz'])   # Room
+    with open(filename, 'rb') as fid:
+        hdr = dict()
+        hdr['hdrsize'] = _np.fromfile(fid, dtype=uint, count=1)[0] 	                # Size of header (bytes)
+        hdr['type'] = _np.fromfile(fid, dtype=short, count=1)[0]	                # Not sure
+        hdr['version'] = _np.fromfile(fid, dtype=short, count=1)[0] 	            # Not sure
+        hdr['nsamples'] = _np.fromfile(fid, dtype=uint, count=1)[0]		            # Samples in file
+        hdr['nchannels'] = _np.fromfile(fid, dtype=uint, count=1)[0] 	            # Number of channels
+        hdr['channels'] = _np.fromfile(fid, dtype=short, count=hdr['nchannels'])    # Recorded channels
+        hdr['fs'] = _np.fromfile(fid, dtype=flt, count=1)[0]		                # Sample rate
+        hdr['blksize'] = _np.fromfile(fid, dtype=uint, count=1)[0]		            # Size of data blocks
+        hdr['gain'] = _np.fromfile(fid, dtype=flt, count=1)[0]		                # Amplifier gain
+        hdr['offset'] = _np.fromfile(fid, dtype=flt, count=1)[0]		            # Amplifier offset
+        hdr['datesz'] = _np.fromfile(fid, dtype=uint, count=1)[0] 	                # Size of date string
+        tmpdate = _np.fromfile(fid, dtype=uchar, count=hdr['datesz'])               # Date
+        hdr['timesz'] = _np.fromfile(fid, dtype=uint, count=1)[0]                   # Size of time string
+        tmptime = _np.fromfile(fid, dtype=uchar, count=hdr['timesz'])               # Time
+        hdr['roomsz'] = _np.fromfile(fid, dtype=uint, count=1)[0]		            # Size of room string
+        tmproom = _np.fromfile(fid, dtype=uchar, count=hdr['roomsz'])               # Room
 
         # Convert the date, time and room to strings
         hdr['date'] = ''.join([chr(i) for i in tmpdate])
         hdr['time'] = ''.join([chr(i) for i in tmptime])
         hdr['room'] = ''.join([chr(i) for i in tmproom])
 
-    # Return the header
-    return hdr
+        # Return the header
+        return hdr
