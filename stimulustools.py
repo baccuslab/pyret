@@ -139,7 +139,7 @@ def slicestim(stimulus, history, locations=None, tproj=None):
 
         # Loop over requested time points
         for idx in _np.where(locations)[0]:
-            slices[:, idx-history] = cstim[:, idx - history :idx].ravel()
+            slices[:, idx - history] = cstim[:, idx - history:idx].ravel()
 
     # Construct projected stimulus slice array
     else:
@@ -151,7 +151,7 @@ def slicestim(stimulus, history, locations=None, tproj=None):
         for idx in _np.where(locations)[0]:
 
             # Project onto temporal basis
-            slices[:, idx-history] = (cstim[:, idx-history:idx].dot(tproj)).ravel()
+            slices[:, idx - history] = (cstim[:, idx - history:idx].dot(tproj)).ravel()
 
     return slices
 
@@ -197,11 +197,11 @@ def getcov(stimulus, history, tproj=None, verbose=False):
 
     # store mean + covariance matrix
     mean = _np.zeros(cstim.shape[0] * tproj.shape[1])
-    stim_cov = _np.zeros((cstim.shape[0] * tproj.shape[1], cstim.shape[0]*tproj.shape[1]))
+    stim_cov = _np.zeros((cstim.shape[0] * tproj.shape[1], cstim.shape[0] * tproj.shape[1]))
 
     # pick some indices to go through
     indices = _np.arange(history,cstim.shape[1])
-    numpts  = _np.min(( cstim.shape[0]*tproj.shape[1]*10, indices.size ))
+    numpts  = _np.min(( cstim.shape[0] * tproj.shape[1] * 10, indices.size ))
     _np.random.shuffle(indices)
 
     # get blas function
@@ -217,7 +217,7 @@ def getcov(stimulus, history, tproj=None, verbose=False):
                 print('[%i of %i]' % (j,numpts))
 
         # get this stimulus slice, projected onto the basis set tproj
-        stimslice = cstim[:, idx - history : idx].dot(tproj).reshape(-1,1)
+        stimslice = cstim[:, idx - history:idx].dot(tproj).reshape(-1,1)
 
         # update the mean
         mean += _np.squeeze(stimslice)
@@ -230,6 +230,6 @@ def getcov(stimulus, history, tproj=None, verbose=False):
     mean_op = mean.reshape(-1,1).dot(mean.reshape(1,-1))
 
     # mean-subtract and normalize the STC by the number of points
-    stim_cov = (stim_cov / (numpts-1)) - mean_op
+    stim_cov = (stim_cov / (numpts - 1)) - mean_op
 
     return stim_cov
