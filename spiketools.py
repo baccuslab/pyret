@@ -1,15 +1,10 @@
-'''
-spiketools.py
+"""
+Tools for spike train analysis
 
-Tools for basic manipulation of spike trains
-
-(c) 2014 bnaecker, nirum
-'''
+"""
 
 import numpy as _np
 import matplotlib.pyplot as _plt
-from scipy.io import loadmat as _loadmat
-from scipy import signal as _signal
 
 try:
     from peakdetect import peakdet
@@ -17,11 +12,10 @@ except ImportError:
     raise ImportError('You need to have the peakdetect module available on your python path. Download it here: https://raw.github.com/nirum/python-utils/master/peakdetect.py')
 
 def binspikes(spk, tmax=None, binsize=0.01, time=None, numTrials=1):
-    '''
-    
+    """
     Bin spike times at the given resolution. The function has two forms.
 
-    Input
+    Parameters
     -----
 
     spk (ndarray):
@@ -44,7 +38,7 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None, numTrials=1):
         time (ndarray):
             The array to use as the actual bins to np.histogram
 
-    Output
+    Returns
     ------
 
     bspk (ndarray):
@@ -53,7 +47,7 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None, numTrials=1):
     tax (ndarray):
         The bin centers
 
-    '''
+    """
 
     # if time is not specified, create a time vector
     if time is None:
@@ -75,11 +69,11 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None, numTrials=1):
     return bspk / numTrials, tax
 
 def estfr(tax, bspk, sigma=0.01):
-    '''
+    """
     
     Estimate the instantaneous firing rates from binned spike counts.
 
-    Input
+    Parameters
     -----
     tax:
         Array of time points corresponding to bins (as from binspikes)
@@ -93,13 +87,13 @@ def estfr(tax, bspk, sigma=0.01):
     mode (string):
         Mode of the convolution, one of 'valid', 'same', or 'full'.
 
-    Output
+    Returns
     ------
 
     rates (ndarray):
         Array of estimated instantaneous firing rate
 
-    '''
+    """
 
     # estimate binned spikes time step
     dt = _np.mean(_np.diff(tax))
@@ -114,7 +108,7 @@ def estfr(tax, bspk, sigma=0.01):
     return _np.convolve(filt, bspk, mode='full')[size:size+tax.size] / dt
 
 class spikingevent:
-    '''
+    """
 
     The spiking event class bundles together functions that are used to analyze
     individual firing events, consisting of spiking activity recorded across trials / cells / conditions.
@@ -133,7 +127,7 @@ class spikingevent:
         where the first column is the set of spike times in the event and the second column is a list of
         corresponding trial/cell/condition indices for each spike
 
-    '''
+    """
 
     def __init__(self, startTime, stopTime, spikes):
         self.start = startTime
@@ -141,34 +135,34 @@ class spikingevent:
         self.spikes = spikes
 
     def __repr__(self):
-        '''
+        """
         Printing this object prints out the start / stop time and number of spikes in the event
-        '''
+        """
         return ('%5.2fs - %5.2fs (%i spikes)' % (self.start, self.stop, self.spikes.shape[0]))
 
     def __eq__(self, other):
-        '''
+        """
         Equality between two spiking events is true if the start & stop times are the same
-        '''
+        """
         return (self.start == other.start) & (self.stop == other.stop)
 
     def trialCounts(self):
-        '''
+        """
         Count the number of spikes per trial
 
         Usage: counts = spkevent.trialCounts()
 
-        '''
+        """
         counts, _ = _np.histogram(self.spikes[:,1], bins=_np.arange(_np.min(self.spikes[:,1]), _np.max(self.spikes[:,1])))
         return counts
 
     def eventStats(self):
-        '''
+        """
         Compute statistics (mean and standard deviation) across trial spike counts
 
         Usage: mu, sigma = spkevent.trialStats()
 
-        '''
+        """
 
         # count number of spikes per trial
         counts = self.eventCounts()
@@ -176,31 +170,31 @@ class spikingevent:
         return _np.mean(counts), _np.std(counts)
 
     def ttfs(self):
-        '''
+        """
         Computes the time to first spike for each trial, ignoring trials that had zero spikes
 
         Usage: times = spkevent.ttfs()
 
-        '''
+        """
         (trials, indices) = _np.unique(self.spikes[:,1], return_index=True)
         return self.spikes[indices,0]
     
     def jitter(self):
-        '''
+        """
         Computes the jitter (standard deviation) in the time to first spike across trials
 
         Usage: sigma = spkevent.jitter()
 
-        '''
+        """
         return _np.std(self.ttfs())
 
     def sort(self):
-        '''
+        """
         Sort trial indices by the time to first spike
 
         Usage: sortedspikes = spkevent.sort()
 
-        '''
+        """
 
         # get first spike in each trial
         _, trialIndices = _np.unique(self.spikes[:,1], return_index=True)
@@ -219,12 +213,12 @@ class spikingevent:
         return sortedspikes
 
     def plot(self, sort=False, ax=None, color='SlateGray'):
-        '''
+        """
         Plots this event, as a spike raster
 
         Usage: spkevent.plot()
 
-        '''
+        """
 
         if sort:
             spikes = self.sort()
@@ -237,24 +231,24 @@ class spikingevent:
         ax.plot(spikes[:,0], spikes[:,1], 'o', markersize=6, markerfacecolor=color)
 
 def detectevents(spk, threshold=(0.3,0.05)):
-    '''
+    """
 
     Detects spiking events given a PSTH and spike times for multiple trials
     Usage: events = detectevents(spikes, threshold=(0.1, 0.005))
 
-    Input
+    Parameters
     -----
     spk:
         An (n by 2) array of spike times, indexed by trial / condition.
         The first column is the set of spike times in the event and the second column is a list of corresponding trial/cell/condition indices for each spike.
 
-    Output
+    Returns
     ------
     events (list):
         A list of 'spikingevent' objects, one for each firing event detected.
         See the spikingevent class for more info.
 
-    '''
+    """
 
     # find peaks in the PSTH
     bspk, tax = binspikes(spk[:,0], binsize=0.01, numTrials=_np.max(spk[:,1]))

@@ -498,6 +498,7 @@ def plotcells(cells, ax=None, box_dims=None, start=None, scale=0.25):
 
     # add a box to mark the array
     if start is None:
+        # noinspection PyTypeChecker
         start = (1 - _np.array(box_dims)) / 2.0
 
     ax.add_patch(_plt.Rectangle((start[0], start[1]), box_dims[0], box_dims[1],
