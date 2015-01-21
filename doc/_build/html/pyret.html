@@ -51,19 +51,52 @@
             
   <div class="section" id="module-binary">
 <span id="binary"></span><h1>binary<a class="headerlink" href="#module-binary" title="Permalink to this headline">¶</a></h1>
-<p>binary.py
-Tools for interacting with binary recording files
-(C) 2014 Benjamin Naecker</p>
+<p>Tools for interacting with binary recording files</p>
 <dl class="function">
 <dt id="binary.readbin">
-<tt class="descclassname">binary.</tt><tt class="descname">readbin</tt><big>(</big><em>fname</em>, <em>chanlist=None</em><big>)</big><a class="reference internal" href="_modules/binary.html#readbin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#binary.readbin" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">binary.</tt><tt class="descname">readbin</tt><big>(</big><em>filename</em>, <em>chanlist=None</em><big>)</big><a class="reference internal" href="_modules/binary.html#readbin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#binary.readbin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read a binary recording file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>Filename to read</p>
+</div></blockquote>
+<p><strong>chanlist</strong> : array_like</p>
+<blockquote class="last">
+<div><p>List of channels to read. Raises IndexError if any channels are not in the file. If None (default), loads all
+channels.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="binary.readbinhdr">
-<tt class="descclassname">binary.</tt><tt class="descname">readbinhdr</tt><big>(</big><em>fname</em><big>)</big><a class="reference internal" href="_modules/binary.html#readbinhdr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#binary.readbinhdr" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">binary.</tt><tt class="descname">readbinhdr</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="_modules/binary.html#readbinhdr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#binary.readbinhdr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read the header from a binary recording file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>Filename to read as binary</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>hdr</strong> : dict</p>
+<blockquote class="last">
+<div><p>Header data</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
@@ -123,193 +156,169 @@ Tools for interacting with binary recording files
 <div class="section" id="setup">
 <h1>setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h1>
 </div>
-<div class="section" id="module-spiketools">
-<span id="spiketools"></span><h1>spiketools<a class="headerlink" href="#module-spiketools" title="Permalink to this headline">¶</a></h1>
-<p>spiketools.py</p>
-<p>Tools for basic manipulation of spike trains</p>
-<ol class="loweralpha simple" start="3">
-<li>2014 bnaecker, nirum</li>
-</ol>
-<dl class="function">
-<dt id="spiketools.binspikes">
-<tt class="descclassname">spiketools.</tt><tt class="descname">binspikes</tt><big>(</big><em>spk</em>, <em>tmax=None</em>, <em>binsize=0.01</em>, <em>time=None</em>, <em>numTrials=1</em><big>)</big><a class="reference internal" href="_modules/spiketools.html#binspikes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.binspikes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bin spike times at the given resolution. The function has two forms.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="spiketools.detectevents">
-<tt class="descclassname">spiketools.</tt><tt class="descname">detectevents</tt><big>(</big><em>spk</em>, <em>threshold=(0.3</em>, <em>0.05)</em><big>)</big><a class="reference internal" href="_modules/spiketools.html#detectevents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.detectevents" title="Permalink to this definition">¶</a></dt>
-<dd><p>Detects spiking events given a PSTH and spike times for multiple trials
-Usage: events = detectevents(spikes, threshold=(0.1, 0.005))</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="spiketools.estfr">
-<tt class="descclassname">spiketools.</tt><tt class="descname">estfr</tt><big>(</big><em>tax</em>, <em>bspk</em>, <em>sigma=0.01</em><big>)</big><a class="reference internal" href="_modules/spiketools.html#estfr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.estfr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Estimate the instantaneous firing rates from binned spike counts.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="spiketools.spikingevent">
-<em class="property">class </em><tt class="descclassname">spiketools.</tt><tt class="descname">spikingevent</tt><big>(</big><em>startTime</em>, <em>stopTime</em>, <em>spikes</em><big>)</big><a class="reference internal" href="_modules/spiketools.html#spikingevent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.spikingevent" title="Permalink to this definition">¶</a></dt>
-<dd><p>The spiking event class bundles together functions that are used to analyze
-individual firing events, consisting of spiking activity recorded across trials / cells / conditions.</p>
-<p class="rubric">Methods</p>
-<dl class="method">
-<dt id="spiketools.spikingevent.eventStats">
-<tt class="descname">eventStats</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/spiketools.html#spikingevent.eventStats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.spikingevent.eventStats" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute statistics (mean and standard deviation) across trial spike counts</p>
-<p>Usage: mu, sigma = spkevent.trialStats()</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="spiketools.spikingevent.jitter">
-<tt class="descname">jitter</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/spiketools.html#spikingevent.jitter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.spikingevent.jitter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes the jitter (standard deviation) in the time to first spike across trials</p>
-<p>Usage: sigma = spkevent.jitter()</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="spiketools.spikingevent.plot">
-<tt class="descname">plot</tt><big>(</big><em>sort=False</em>, <em>ax=None</em>, <em>color='SlateGray'</em><big>)</big><a class="reference internal" href="_modules/spiketools.html#spikingevent.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.spikingevent.plot" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plots this event, as a spike raster</p>
-<p>Usage: spkevent.plot()</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="spiketools.spikingevent.sort">
-<tt class="descname">sort</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/spiketools.html#spikingevent.sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.spikingevent.sort" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sort trial indices by the time to first spike</p>
-<p>Usage: sortedspikes = spkevent.sort()</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="spiketools.spikingevent.trialCounts">
-<tt class="descname">trialCounts</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/spiketools.html#spikingevent.trialCounts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.spikingevent.trialCounts" title="Permalink to this definition">¶</a></dt>
-<dd><p>Count the number of spikes per trial</p>
-<p>Usage: counts = spkevent.trialCounts()</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="spiketools.spikingevent.ttfs">
-<tt class="descname">ttfs</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/spiketools.html#spikingevent.ttfs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.spikingevent.ttfs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes the time to first spike for each trial, ignoring trials that had zero spikes</p>
-<p>Usage: times = spkevent.ttfs()</p>
-</dd></dl>
-
-</dd></dl>
-
+<div class="section" id="spiketools">
+<h1>spiketools<a class="headerlink" href="#spiketools" title="Permalink to this headline">¶</a></h1>
 </div>
 <div class="section" id="module-stimulustools">
 <span id="stimulustools"></span><h1>stimulustools<a class="headerlink" href="#module-stimulustools" title="Permalink to this headline">¶</a></h1>
-<p>stimulustools.py</p>
-<p>Tools for basic manipulation of stimulus arrays.</p>
-<ol class="upperalpha simple" start="3">
-<li>2014 bnaecker, nirum</li>
-</ol>
+<p>Tools for dealing with spatiotemporal stimuli</p>
 <dl class="function">
-<dt id="stimulustools.downsamplestim">
-<tt class="descclassname">stimulustools.</tt><tt class="descname">downsamplestim</tt><big>(</big><em>stim</em>, <em>downfact</em>, <em>time=None</em><big>)</big><a class="reference internal" href="_modules/stimulustools.html#downsamplestim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#stimulustools.downsamplestim" title="Permalink to this definition">¶</a></dt>
+<dt id="stimulustools.downsample_stim">
+<tt class="descclassname">stimulustools.</tt><tt class="descname">downsample_stim</tt><big>(</big><em>stim</em>, <em>downsample_factor</em>, <em>time=None</em><big>)</big><a class="reference internal" href="_modules/stimulustools.html#downsample_stim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#stimulustools.downsample_stim" title="Permalink to this definition">¶</a></dt>
 <dd><p>Downsample the given stimulus by the given factor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>stim</strong> : array_like</p>
+<blockquote>
+<div><p>The original stimulus array</p>
+</div></blockquote>
+<p><strong>downsample_factor</strong> : int</p>
+<blockquote>
+<div><p>The factor by which the stimulus will be downsampled</p>
+</div></blockquote>
+<p><strong>time</strong> : array_like, optional</p>
+<blockquote>
+<div><p>The time axis of the original stimulus</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>stim_ds</strong> : array_like</p>
+<blockquote>
+<div><p>The downsampled stimulus array</p>
+</div></blockquote>
+<p><strong>time_ds</strong> : array_like</p>
+<blockquote class="last">
+<div><p>The downsampled time vector</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="stimulustools.getcov">
-<tt class="descclassname">stimulustools.</tt><tt class="descname">getcov</tt><big>(</big><em>stim</em>, <em>history</em>, <em>tproj=None</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="_modules/stimulustools.html#getcov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#stimulustools.getcov" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes a stimulus covariance matrix
-** Warning: this is computationally expensive for large stimuli **</p>
+<tt class="descclassname">stimulustools.</tt><tt class="descname">getcov</tt><big>(</big><em>stimulus</em>, <em>history</em>, <em>tproj=None</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="_modules/stimulustools.html#getcov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#stimulustools.getcov" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes a stimulus covariance matrix</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This is computationally expensive for large stimuli</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>stimulus</strong> : array_like</p>
+<blockquote>
+<div><p>The spatiotemporal or temporal stimulus to slices. Should have shape
+(n, n, t) or (t,).</p>
+</div></blockquote>
+<p><strong>history</strong> : int</p>
+<blockquote>
+<div><p>Integer number of time points to keep in each slice.</p>
+</div></blockquote>
+<p><strong>tproj</strong> : array_like, optional</p>
+<blockquote>
+<div><p>Temporal basis set to use. Must have # of rows (first dimension) equal to history.
+Each extracted stimulus slice is projected onto this basis set, which reduces the size
+of the corresponding covariance matrix to store.</p>
+</div></blockquote>
+<p><strong>verbose</strong> : boolean, optional</p>
+<blockquote>
+<div><p>If True, print out progress of the computation. (defaults to False)</p>
+</div></blockquote>
+<p><strong>Returns</strong></p>
+<p><strong>&#8212;&#8212;</strong></p>
+<p><strong>stim_cov</strong> : array_like</p>
+<blockquote class="last">
+<div><p>(n*n*t by n*n*t) Covariance matrix</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="stimulustools.slicestim">
-<tt class="descclassname">stimulustools.</tt><tt class="descname">slicestim</tt><big>(</big><em>stim</em>, <em>history</em>, <em>locations=None</em>, <em>tproj=None</em><big>)</big><a class="reference internal" href="_modules/stimulustools.html#slicestim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#stimulustools.slicestim" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">stimulustools.</tt><tt class="descname">slicestim</tt><big>(</big><em>stimulus</em>, <em>history</em>, <em>locations=None</em>, <em>tproj=None</em><big>)</big><a class="reference internal" href="_modules/stimulustools.html#slicestim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#stimulustools.slicestim" title="Permalink to this definition">¶</a></dt>
 <dd><p>Slices a spatiotemporal stimulus array (over time) into overlapping frames.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>stimulus</strong> : array_like</p>
+<blockquote>
+<div><p>The spatiotemporal or temporal stimulus to slices. Should have shape
+(n, n, t) or (t,).</p>
+</div></blockquote>
+<p><strong>history</strong> : int</p>
+<blockquote>
+<div><p>Integer number of time points to keep in each slice.</p>
+</div></blockquote>
+<p><strong>locations</strong> : array_like of booleans</p>
+<blockquote>
+<div><p>Boolean array of temporal locations at which slices are taken. If unspecified,
+use all time points.</p>
+</div></blockquote>
+<p><strong>tproj</strong> : array_like, optional</p>
+<blockquote>
+<div><p>Matrix of temporal filters to project stimuli onto</p>
+</div></blockquote>
+<p><strong>Returns</strong></p>
+<p><strong>&#8212;&#8212;</strong></p>
+<p><strong>slices</strong> : array_like</p>
+<blockquote class="last">
+<div><p>Array of stimulus slices, with all stimulus dimensions collapsed into one. 
+That is, it has shape (np.prod(stimulus.shape), <cite>history</cite>)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
-<dt id="stimulustools.upsamplestim">
-<tt class="descclassname">stimulustools.</tt><tt class="descname">upsamplestim</tt><big>(</big><em>stim</em>, <em>upfact</em>, <em>time=None</em><big>)</big><a class="reference internal" href="_modules/stimulustools.html#upsamplestim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#stimulustools.upsamplestim" title="Permalink to this definition">¶</a></dt>
+<dt id="stimulustools.upsample_stim">
+<tt class="descclassname">stimulustools.</tt><tt class="descname">upsample_stim</tt><big>(</big><em>stim</em>, <em>upsample_factor</em>, <em>time=None</em><big>)</big><a class="reference internal" href="_modules/stimulustools.html#upsample_stim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#stimulustools.upsample_stim" title="Permalink to this definition">¶</a></dt>
 <dd><p>Upsample the given stimulus by the given factor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>stim</strong> : array_like</p>
+<blockquote>
+<div><p>The actual stimulus to be upsampled.</p>
+</div></blockquote>
+<p><strong>upsample_factor</strong> : int</p>
+<blockquote>
+<div><p>The upsample factor.</p>
+</div></blockquote>
+<p><strong>time</strong> : arra_like, optional</p>
+<blockquote>
+<div><p>The time axis of the original stimulus.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>stim_us</strong> : array_like</p>
+<blockquote>
+<div><p>The upsampled stimulus array</p>
+</div></blockquote>
+<p><strong>time_us</strong> : array_like</p>
+<blockquote class="last">
+<div><p>the upsampled time vector</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
-<div class="section" id="module-visualizations">
-<span id="visualizations"></span><h1>visualizations<a class="headerlink" href="#module-visualizations" title="Permalink to this headline">¶</a></h1>
-<p>visualizations.py</p>
-<p>Tools for visualizing data from retinal experiments.</p>
-<ol class="upperalpha simple" start="3">
-<li>2014 bnaecker, nirum</li>
-</ol>
-<dl class="function">
-<dt id="visualizations.ellipse">
-<tt class="descclassname">visualizations.</tt><tt class="descname">ellipse</tt><big>(</big><em>ell</em>, <em>ax=None</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#ellipse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.ellipse" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot the given ellipse, fit to the spatial receptive field of a cell</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="visualizations.playrates">
-<tt class="descclassname">visualizations.</tt><tt class="descname">playrates</tt><big>(</big><em>rates</em>, <em>patches</em>, <em>palette='gray'</em>, <em>numLevels=255</em>, <em>time=None</em>, <em>repeat=True</em>, <em>frametime=100</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#playrates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.playrates" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plays a movie of the firing rate for N cells by updating the given patches (matplotlib handles)
-(useful in conjunction with the output of plotcells)</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="visualizations.playsta">
-<tt class="descclassname">visualizations.</tt><tt class="descname">playsta</tt><big>(</big><em>sta</em>, <em>repeat=True</em>, <em>frametime=100</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#playsta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.playsta" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plays a spatiotemporal spike-triggered average as a movie</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="visualizations.plotcells">
-<tt class="descclassname">visualizations.</tt><tt class="descname">plotcells</tt><big>(</big><em>cells</em>, <em>ax=None</em>, <em>boxdims=None</em>, <em>start=None</em>, <em>scale=0.25</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#plotcells"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.plotcells" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot the receptive fields</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="visualizations.plotsta">
-<tt class="descclassname">visualizations.</tt><tt class="descname">plotsta</tt><big>(</big><em>time</em>, <em>sta</em>, <em>timeSlice=None</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#plotsta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.plotsta" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot a spatial and temporal filter</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="visualizations.plotsta1D">
-<tt class="descclassname">visualizations.</tt><tt class="descname">plotsta1D</tt><big>(</big><em>sta</em>, <em>ax=None</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#plotsta1D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.plotsta1D" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot a 1D spatiotemporal filter (e.g. from a bars experiment)</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="visualizations.psth">
-<tt class="descclassname">visualizations.</tt><tt class="descname">psth</tt><big>(</big><em>spikes</em>, <em>triallength=None</em>, <em>binsize=0.01</em>, <em>fig=None</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#psth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.psth" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot a PSTH from the given spike times.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="visualizations.raster">
-<tt class="descclassname">visualizations.</tt><tt class="descname">raster</tt><big>(</big><em>spikes</em>, <em>triallength=None</em>, <em>fig=None</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#raster"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.raster" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot a raster of spike times. The <cite>triallength</cite> keyword specifies the
-length of time for each trial, and the <cite>spikes</cite> array is split up into
-segments of that length. These groups are then plotted on top of one
-another, as if they are individual trials.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="visualizations.rasterandpsth">
-<tt class="descclassname">visualizations.</tt><tt class="descname">rasterandpsth</tt><big>(</big><em>spikes</em>, <em>triallength=None</em>, <em>binsize=0.01</em>, <em>fig=None</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#rasterandpsth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.rasterandpsth" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot a spike raster and a PSTH on the same set of axes.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="visualizations.spatial">
-<tt class="descclassname">visualizations.</tt><tt class="descname">spatial</tt><big>(</big><em>spatialFrame</em>, <em>ax=None</em>, <em>clim=None</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#spatial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.spatial" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot a spatial filter on a given axes</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="visualizations.temporal">
-<tt class="descclassname">visualizations.</tt><tt class="descname">temporal</tt><big>(</big><em>time</em>, <em>temporalFilter</em>, <em>ax=None</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#temporal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.temporal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot a temporal filter on a given axes</p>
-</dd></dl>
-
+<div class="section" id="visualizations">
+<h1>visualizations<a class="headerlink" href="#visualizations" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
@@ -324,9 +333,9 @@ another, as if they are individual trials.</p>
 <li><a class="reference internal" href="#filtertools">filtertools</a></li>
 <li><a class="reference internal" href="#module-nonlinearities">nonlinearities</a></li>
 <li><a class="reference internal" href="#setup">setup</a></li>
-<li><a class="reference internal" href="#module-spiketools">spiketools</a></li>
+<li><a class="reference internal" href="#spiketools">spiketools</a></li>
 <li><a class="reference internal" href="#module-stimulustools">stimulustools</a></li>
-<li><a class="reference internal" href="#module-visualizations">visualizations</a></li>
+<li><a class="reference internal" href="#visualizations">visualizations</a></li>
 </ul>
 
   <h4>Previous topic</h4>

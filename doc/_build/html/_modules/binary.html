@@ -48,45 +48,44 @@
           <div class="body">
             
   <h1>Source code for binary</h1><div class="highlight"><pre>
-<span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">binary.py</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Tools for interacting with binary recording files</span>
-<span class="sd">(C) 2014 Benjamin Naecker</span>
-<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">_np</span>
 <span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">path</span> <span class="k">as</span> <span class="n">_path</span>
 
-<div class="viewcode-block" id="readbin"><a class="viewcode-back" href="../pyret.html#binary.readbin">[docs]</a><span class="k">def</span> <span class="nf">readbin</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">chanlist</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="c"># noinspection PyNoneFunctionAssignment</span>
+<div class="viewcode-block" id="readbin"><a class="viewcode-back" href="../pyret.html#binary.readbin">[docs]</a><span class="k">def</span> <span class="nf">readbin</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">chanlist</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Read a binary recording file</span>
 
-<span class="sd">    Input</span>
-<span class="sd">    -----</span>
-
-<span class="sd">    fname (string):</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : string</span>
 <span class="sd">        Filename to read </span>
 
-<span class="sd">    chanlist (array-like) [None]:</span>
-<span class="sd">        List of channels to read. Raises IndexError if any channels are not in the file.</span>
-<span class="sd">        None (the default) loads all channels.</span>
+<span class="sd">    chanlist : array_like</span>
+<span class="sd">        List of channels to read. Raises IndexError if any channels are not in the file. If None (default), loads all</span>
+<span class="sd">        channels.</span>
 
 <span class="sd">    Output</span>
 <span class="sd">    ------</span>
-
 <span class="sd">    data (ndarray):</span>
 <span class="sd">        Data from the channels requested. Shape is (nsamples, nchannels)</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c"># Type of binary data, 16-bit unsigned integers</span>
     <span class="n">uint</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;&gt;i2&#39;</span><span class="p">)</span>
 
     <span class="c"># Check file exists</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="n">FileNotFoundError</span><span class="p">(</span><span class="s">&#39;Requested bin file {f} does not exist&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">fname</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">FileNotFoundError</span><span class="p">(</span><span class="s">&#39;Requested bin file {f} does not exist&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">filename</span><span class="p">))</span>
 
     <span class="c"># Read the header</span>
-    <span class="n">hdr</span> <span class="o">=</span> <span class="n">readbinhdr</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+    <span class="n">hdr</span> <span class="o">=</span> <span class="n">readbinhdr</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
 
     <span class="c"># Check the channel list given</span>
     <span class="k">if</span> <span class="n">chanlist</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">chanlist</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -95,7 +94,7 @@
         <span class="n">chanlist</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">chanlist</span><span class="p">)</span>
 
     <span class="c"># Open the requested file</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fid</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fid</span><span class="p">:</span>
 
         <span class="c"># Check all requested channels are in the file</span>
         <span class="k">for</span> <span class="n">chan</span> <span class="ow">in</span> <span class="n">chanlist</span><span class="p">:</span>
@@ -122,32 +121,33 @@
                 <span class="n">fid</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">hdr</span><span class="p">[</span><span class="s">&#39;hdrsize&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">block</span> <span class="o">*</span> <span class="n">chunk_size</span> <span class="o">+</span> <span class="n">chanoffset</span><span class="p">)</span>
 
                 <span class="c"># Read the data</span>
-                <span class="n">data</span><span class="p">[</span><span class="n">block</span> <span class="o">*</span> <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;blksize&#39;</span><span class="p">]</span> <span class="p">:</span> <span class="p">(</span><span class="n">block</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;blksize&#39;</span><span class="p">],</span> <span class="n">chan</span><span class="p">]</span> <span class="o">=</span> \
-                        <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">hdr</span><span class="p">[</span><span class="s">&#39;blksize&#39;</span><span class="p">])</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">block</span> <span class="o">*</span> <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;blksize&#39;</span><span class="p">]:</span> <span class="p">(</span><span class="n">block</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;blksize&#39;</span><span class="p">],</span> <span class="n">chan</span><span class="p">]</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint</span><span class="p">,</span>
+                                                                                                <span class="n">count</span><span class="o">=</span><span class="n">hdr</span><span class="p">[</span><span class="s">&#39;blksize&#39;</span><span class="p">])</span>
 
-    <span class="c"># Scale and offset</span>
-    <span class="n">data</span> <span class="o">*=</span> <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;gain&#39;</span><span class="p">]</span>
-    <span class="n">data</span> <span class="o">+=</span> <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;offset&#39;</span><span class="p">]</span>
+        <span class="c"># Scale and offset</span>
+        <span class="n">data</span> <span class="o">*=</span> <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;gain&#39;</span><span class="p">]</span>
+        <span class="n">data</span> <span class="o">+=</span> <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;offset&#39;</span><span class="p">]</span>
 
-    <span class="c"># Return the data</span>
-    <span class="k">return</span> <span class="n">data</span>
-</div>
-<div class="viewcode-block" id="readbinhdr"><a class="viewcode-back" href="../pyret.html#binary.readbinhdr">[docs]</a><span class="k">def</span> <span class="nf">readbinhdr</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+        <span class="c"># Return the data</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="c"># noinspection PyNoneFunctionAssignment</span></div>
+<div class="viewcode-block" id="readbinhdr"><a class="viewcode-back" href="../pyret.html#binary.readbinhdr">[docs]</a><span class="k">def</span> <span class="nf">readbinhdr</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Read the header from a binary recording file</span>
 
-<span class="sd">    Input</span>
-<span class="sd">    -----</span>
-
-<span class="sd">    fname (string):</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : string</span>
 <span class="sd">        Filename to read as binary</span>
 
-<span class="sd">    Output</span>
-<span class="sd">    ------</span>
-
-<span class="sd">    hdr (dict):</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    hdr : dict</span>
 <span class="sd">        Header data</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c"># Define datatypes to be read in</span>
     <span class="n">uint</span>    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;&gt;u4&#39;</span><span class="p">)</span> 	<span class="c"># Unsigned integer, 32-bit</span>
@@ -156,32 +156,32 @@
     <span class="n">uchar</span>   <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s">&#39;&gt;B&#39;</span><span class="p">)</span> 	<span class="c"># Unsigned char</span>
 
     <span class="c"># Read the header</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fid</span><span class="p">:</span>
-        <span class="n">hdr</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;hdrsize&#39;</span><span class="p">]</span> 	    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> 	    <span class="c"># Size of header (bytes)</span>
-        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span>         <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">short</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>	    <span class="c"># Not sure</span>
-        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;version&#39;</span><span class="p">]</span>	    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">short</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> 	    <span class="c"># Not sure</span>
-        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;nsamples&#39;</span><span class="p">]</span>	    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>		    <span class="c"># Samples in file</span>
-        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;nchannels&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> 	    <span class="c"># Number of channels</span>
-        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;channels&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">short</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">hdr</span><span class="p">[</span><span class="s">&#39;nchannels&#39;</span><span class="p">])</span><span class="c"># Recorded channels</span>
-        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;fs&#39;</span><span class="p">]</span>	    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">flt</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>		    <span class="c"># Sample rate</span>
-        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;blksize&#39;</span><span class="p">]</span> 	    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>		    <span class="c"># Size of data blocks</span>
-        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;gain&#39;</span><span class="p">]</span>	    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">flt</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>		    <span class="c"># Amplifier gain</span>
-        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;offset&#39;</span><span class="p">]</span>	    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">flt</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>		    <span class="c"># Amplifier offset</span>
-        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;datesz&#39;</span><span class="p">]</span>	    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> 	    <span class="c"># Size of date string</span>
-        <span class="n">tmpdate</span>		    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uchar</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">hdr</span><span class="p">[</span><span class="s">&#39;datesz&#39;</span><span class="p">])</span>   <span class="c"># Date</span>
-        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;timesz&#39;</span><span class="p">]</span>	    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>             <span class="c"># Size of time string</span>
-        <span class="n">tmptime</span>		    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uchar</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">hdr</span><span class="p">[</span><span class="s">&#39;timesz&#39;</span><span class="p">])</span>   <span class="c"># Time</span>
-        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;roomsz&#39;</span><span class="p">]</span>	    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>		    <span class="c"># Size of room string</span>
-        <span class="n">tmproom</span>		    <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uchar</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">hdr</span><span class="p">[</span><span class="s">&#39;roomsz&#39;</span><span class="p">])</span>   <span class="c"># Room</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fid</span><span class="p">:</span>
+        <span class="n">hdr</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;hdrsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> 	                <span class="c"># Size of header (bytes)</span>
+        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">short</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>	                <span class="c"># Not sure</span>
+        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;version&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">short</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> 	            <span class="c"># Not sure</span>
+        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;nsamples&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>		            <span class="c"># Samples in file</span>
+        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;nchannels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> 	            <span class="c"># Number of channels</span>
+        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;channels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">short</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">hdr</span><span class="p">[</span><span class="s">&#39;nchannels&#39;</span><span class="p">])</span>    <span class="c"># Recorded channels</span>
+        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;fs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">flt</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>		                <span class="c"># Sample rate</span>
+        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;blksize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>		            <span class="c"># Size of data blocks</span>
+        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;gain&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">flt</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>		                <span class="c"># Amplifier gain</span>
+        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;offset&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">flt</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>		            <span class="c"># Amplifier offset</span>
+        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;datesz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> 	                <span class="c"># Size of date string</span>
+        <span class="n">tmpdate</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uchar</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">hdr</span><span class="p">[</span><span class="s">&#39;datesz&#39;</span><span class="p">])</span>               <span class="c"># Date</span>
+        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;timesz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>                   <span class="c"># Size of time string</span>
+        <span class="n">tmptime</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uchar</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">hdr</span><span class="p">[</span><span class="s">&#39;timesz&#39;</span><span class="p">])</span>               <span class="c"># Time</span>
+        <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;roomsz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>		            <span class="c"># Size of room string</span>
+        <span class="n">tmproom</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">fid</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uchar</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">hdr</span><span class="p">[</span><span class="s">&#39;roomsz&#39;</span><span class="p">])</span>               <span class="c"># Room</span>
 
         <span class="c"># Convert the date, time and room to strings</span>
         <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tmpdate</span><span class="p">])</span>
         <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tmptime</span><span class="p">])</span>
         <span class="n">hdr</span><span class="p">[</span><span class="s">&#39;room&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tmproom</span><span class="p">])</span>
 
-    <span class="c"># Return the header</span>
-    <span class="k">return</span> <span class="n">hdr</span></div>
+        <span class="c"># Return the header</span>
+        <span class="k">return</span> <span class="n">hdr</span></div>
 </pre></div>
 
           </div>
