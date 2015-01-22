@@ -11,6 +11,7 @@ import numpy as _np
 import matplotlib.pyplot as _plt
 from .peakdetect import peakdet
 
+
 def binspikes(spk, tmax=None, binsize=0.01, time=None, num_trials=1):
     """
     Bin spike times at the given resolution. The function has two forms.
@@ -98,6 +99,42 @@ def estfr(tax, bspk, sigma=0.01):
 
     # Filter  binned spike times
     return _np.convolve(filt, bspk, mode='full')[size:size + tax.size] / dt
+
+
+def sample(rate, dt=1.0, num_trials=1):
+    """
+    Sample discrete spikes from a given firing rate
+
+    Draws spikes according to the Poisson distribution with mean given by the `rate`
+
+    Parameters
+    ----------
+    rate : array_like
+        The time-varying firing rate that serves as the mean of the Poisson process
+
+    dt : float, optional
+        The time step corresponding to the bin size of the firing `rate`, in seconds (Default: 1s)
+
+    num_trials : int, optional
+        The number of trials (repeats) to draw samples for (Default: 1)
+
+    Returns
+    -------
+    spikes : array_like
+        An array of shape `num_trials` by `rate.shape` that contains the sampled number of spikes for each
+        trial at every point in the `rate` array
+
+    Notes
+    -----
+    Spikes are drawn according to the Poisson distribution:
+
+    .. math: p(n) = \frac{\exp(r\cdot dt)\left(r\cdot dt)^n}{n!}
+
+    Where n is the number of spikes drawn given a firing rate, r.
+
+    """
+
+    return _np.random.poisson(rate*dt, (num_trials,) + rate.shape)
 
 
 class SpikingEvent(object):

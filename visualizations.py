@@ -32,7 +32,7 @@ def raster(spikes, trial_length=None, fig=None):
         The figure into which the raster is plotted.
 
     Returns
-    ------
+    -------
     fig : matplotlib Figure object
         Matplotlib handle of the figure
 
