@@ -1,0 +1,1470 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>API &mdash; pyret 0.2.0 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="pyret 0.2.0 documentation" href="index.html"/>
+        <link rel="next" title="&lt;no title&gt;" href="license.html"/>
+        <link rel="prev" title="Quickstart" href="quickstart.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="fa fa-home"> pyret</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#install">Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#api-at-a-glance">API at a glance</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-binary">binary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-filtertools">filtertools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-nonlinearities">nonlinearities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-spiketools">spiketools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-stimulustools">stimulustools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-visualizations">visualizations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">pyret</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>API</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="_sources/api.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            
+  <div class="section" id="api">
+<h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-binary">
+<span id="binary"></span><h2>binary<a class="headerlink" href="#module-binary" title="Permalink to this headline">¶</a></h2>
+<p>Tools for interacting with binary recording files</p>
+<dl class="function">
+<dt id="binary.readbin">
+<tt class="descclassname">binary.</tt><tt class="descname">readbin</tt><big>(</big><em>filename</em>, <em>chanlist=None</em><big>)</big><a class="reference internal" href="_modules/binary.html#readbin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#binary.readbin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a binary recording file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>Filename to read</p>
+</div></blockquote>
+<p><strong>chanlist</strong> : array_like</p>
+<blockquote class="last">
+<div><p>List of channels to read. Raises IndexError if any channels are not in the file. If None (default), loads all
+channels.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="binary.readbinhdr">
+<tt class="descclassname">binary.</tt><tt class="descname">readbinhdr</tt><big>(</big><em>filename</em><big>)</big><a class="reference internal" href="_modules/binary.html#readbinhdr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#binary.readbinhdr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the header from a binary recording file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename</strong> : string</p>
+<blockquote>
+<div><p>Filename to read as binary</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>hdr</strong> : dict</p>
+<blockquote class="last">
+<div><p>Header data</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-filtertools">
+<span id="filtertools"></span><h2>filtertools<a class="headerlink" href="#module-filtertools" title="Permalink to this headline">¶</a></h2>
+<p>Tools ansd utilities for computing spike-triggered averages (filters), finding spatial and temporal components of
+spatiotemporal filters, and basic filter signal processing.</p>
+<dl class="function">
+<dt id="filtertools.cutout">
+<tt class="descclassname">filtertools.</tt><tt class="descname">cutout</tt><big>(</big><em>arr</em>, <em>idx</em>, <em>width=5</em><big>)</big><a class="reference internal" href="_modules/filtertools.html#cutout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#filtertools.cutout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cut out a chunk of the given stimulus or filter</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>arr</strong> : array_like</p>
+<blockquote>
+<div><p>Stimulus or filter array from which the chunk is cut out. The array
+should be shaped as (pix, pix, time).</p>
+</div></blockquote>
+<p><strong>idx</strong> : array_like</p>
+<blockquote>
+<div><p>2D array specifying the row and column indices of the center of the
+section to be cut out</p>
+</div></blockquote>
+<p><strong>width</strong> : int</p>
+<blockquote>
+<div><p>The size of the chunk to cut out from the start indices</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>cut</strong> : array_like</p>
+<blockquote class="last">
+<div><p>The cut out section of the given stimulus or filter</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="filtertools.decompose">
+<tt class="descclassname">filtertools.</tt><tt class="descname">decompose</tt><big>(</big><em>sta</em><big>)</big><a class="reference internal" href="_modules/filtertools.html#decompose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#filtertools.decompose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decomposes a spatiotemporal STA into a spatial and temporal kernel</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sta</strong> : array_like</p>
+<blockquote>
+<div><p>The full 3-dimensional STA to be decomposed</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>s</strong> : array_like</p>
+<blockquote>
+<div><p>The spatial kernel</p>
+</div></blockquote>
+<p><strong>t</strong> : array_like</p>
+<blockquote class="last">
+<div><p>The temporal kernel</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="filtertools.filterpeak">
+<tt class="descclassname">filtertools.</tt><tt class="descname">filterpeak</tt><big>(</big><em>sta</em><big>)</big><a class="reference internal" href="_modules/filtertools.html#filterpeak"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#filtertools.filterpeak" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the peak (single point in space/time) of a smoothed filter</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sta</strong> : array_like</p>
+<blockquote>
+<div><p>Filter of which to find the peak</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>idx</strong> : int</p>
+<blockquote>
+<div><p>Linear index of the maximal point</p>
+</div></blockquote>
+<p><strong>sidx</strong> : int</p>
+<blockquote>
+<div><p>Spatial index of the maximal point</p>
+</div></blockquote>
+<p><strong>tidx</strong> : int</p>
+<blockquote class="last">
+<div><p>Temporal index of the maximal point</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="filtertools.fit_ellipse">
+<tt class="descclassname">filtertools.</tt><tt class="descname">fit_ellipse</tt><big>(</big><em>sta_frame</em>, <em>scale=1.0</em><big>)</big><a class="reference internal" href="_modules/filtertools.html#fit_ellipse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#filtertools.fit_ellipse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit an ellipse to the given spatial receptive field</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sta_frame</strong> : array_like</p>
+<blockquote>
+<div><p>The spatial receptive field to which the ellipse should be fit</p>
+</div></blockquote>
+<p><strong>scale</strong> : float, optional</p>
+<blockquote>
+<div><p>Scale factor for the ellipse (Default: 1.0)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ell:</p>
+<blockquote class="last">
+<div><p>A matplotlib.patches.Ellipse object</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="filtertools.get_ellipse_params">
+<tt class="descclassname">filtertools.</tt><tt class="descname">get_ellipse_params</tt><big>(</big><em>sta_frame</em><big>)</big><a class="reference internal" href="_modules/filtertools.html#get_ellipse_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#filtertools.get_ellipse_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit an ellipse to the given spatial receptive field, return parameters of the fit ellipse</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sta_frame</strong> : array_like</p>
+<blockquote>
+<div><p>The spatial receptive field to which the ellipse should be fit</p>
+</div></blockquote>
+<p><strong>scale</strong> : float</p>
+<blockquote>
+<div><p>Scale factor for the ellipse</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>center</strong> : (float,float)</p>
+<blockquote>
+<div><p>The receptive field center (location stored as an (x,y) tuple)</p>
+</div></blockquote>
+<p><strong>widths</strong> : [float,float]</p>
+<blockquote>
+<div><p>Two-element list of the size of each principal axis of the RF ellipse</p>
+</div></blockquote>
+<p><strong>theta</strong> : float</p>
+<blockquote class="last">
+<div><p>angle of rotation of the ellipse from the vertical axis, in radians</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="filtertools.getsta">
+<tt class="descclassname">filtertools.</tt><tt class="descname">getsta</tt><big>(</big><em>time</em>, <em>stimulus</em>, <em>spikes</em>, <em>filter_length</em>, <em>norm=True</em>, <em>return_flag=0</em><big>)</big><a class="reference internal" href="_modules/filtertools.html#getsta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#filtertools.getsta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the spike-triggered average</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>time</strong> : array_like</p>
+<blockquote>
+<div><p>The time axis of the stimulus</p>
+</div></blockquote>
+<p><strong>stimulus</strong> : array_like</p>
+<blockquote>
+<div><p>The stimulus array. The last dimension of the stimulus
+array is assumed to be time, but no other restrictions
+are placed on its shape. It works for purely temporal
+and spatiotemporal stimuli.</p>
+</div></blockquote>
+<p><strong>spikes</strong> : array_like</p>
+<blockquote>
+<div><p>Array of spike times.</p>
+</div></blockquote>
+<p><strong>filter_length</strong> : int</p>
+<blockquote>
+<div><p>Number of frames over which to construct the
+ensemble</p>
+</div></blockquote>
+<p><strong>norm</strong> : boolean</p>
+<blockquote>
+<div><p>Normalize the computed filter by mean-subtracting and normalizing
+to a unit vector.</p>
+</div></blockquote>
+<p><strong>return_flag</strong> : int</p>
+<blockquote>
+<div><p>0:  (default) returns both sta and tax
+1:  returns only the sta
+2:  returns only the tax</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>sta</strong> : array_like</p>
+<blockquote>
+<div><p>The spike-triggered average. The returned array has
+stimulus.ndim + 1 dimensions, and has a shape of
+(nspikes, stimulus.shape[:-1], filter_length).</p>
+</div></blockquote>
+<p><strong>tax</strong> : array_like</p>
+<blockquote>
+<div><p>The time axis of the ensemble. It is of length <cite>filter_length</cite>,
+with intervals given by the sample rate of the <cite>time</cite> input
+array.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>If no spikes occurred during the given `time` array, a UserWarning</strong></p>
+<p><strong>is raised, and the returned STA is an array of zeros with the desired</strong></p>
+<p><strong>shape (stimulus.shape[:-1], filter_length). This allows the</strong></p>
+<p><strong>STA to play nicely with later functions using it, for example, adding</strong></p>
+<p class="last"><strong>multiple STAs together.</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="filtertools.getstc">
+<tt class="descclassname">filtertools.</tt><tt class="descname">getstc</tt><big>(</big><em>time</em>, <em>stimulus</em>, <em>spikes</em>, <em>filterlength</em>, <em>tproj=None</em><big>)</big><a class="reference internal" href="_modules/filtertools.html#getstc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#filtertools.getstc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the spike-triggered covariance</p>
+<p>Usage: cells, tax, stimcov = getstc(time, stimulus, spikes, filterlength, tproj=None)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>time</strong> : array_like</p>
+<blockquote>
+<div><p>The time axis of the stimulus</p>
+</div></blockquote>
+<p><strong>stimulus</strong> : array_like</p>
+<blockquote>
+<div><p>The stimulus array. The last dimension of the stimulus
+array is assumed to be time, but no other restrictions
+are placed on its shape. It works for purely temporal
+and spatiotemporal stimuli.</p>
+</div></blockquote>
+<p><strong>spikes</strong> : list of array_like</p>
+<blockquote>
+<div><p>List of arrays of spike times, one for each cell</p>
+</div></blockquote>
+<p><strong>filterlength</strong> : int</p>
+<blockquote>
+<div><p>Number of frames over which to construct the
+ensemble</p>
+</div></blockquote>
+<p><strong>tproj</strong> : array_like, optional</p>
+<blockquote>
+<div><p>Temporal basis set to use. Must have # of rows (first dimension) equal to filterlength.
+Each extracted stimulus slice is projected onto this basis set, which reduces the size
+of the corresponding covariance matrix to store. This basis can be chosen to be some smooth
+set of tiled functions, such as raised cosines, which enforces smooth filters in time.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>cells</strong> : list</p>
+<blockquote>
+<div><p>contains the following for each cell</p>
+<dl class="docutils">
+<dt>eigvecs <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">The (d x d) set of eigenvectors of the normalized STC matrix, each column is a separate eigenvector</p>
+</dd>
+<dt>eigvals <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">The corresponding set of d eigenvalues of the normalized STC matrix</p>
+</dd>
+<dt>spkcov <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">The (d x d) spike-triggered covariance matrix.</p>
+</dd>
+<dt>sta <span class="classifier-delimiter">:</span> <span class="classifier">array_like</span></dt>
+<dd><p class="first last">The spike-triggered average</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>stimcov</strong> : array_like</p>
+<blockquote>
+<div><p>The (d by d) stimulus covariance matrix</p>
+</div></blockquote>
+<p><strong>tax</strong> : array_like</p>
+<blockquote class="last">
+<div><p>The time axis of the ensemble. It is of length <cite>filterlength</cite>,
+with intervals given by the sample rate of the <cite>time</cite> input
+array.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>We define the dimensionality <cite>d</cite> to be: d = stimulus.shape[:-1] * filterlength</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="filtertools.getste">
+<tt class="descclassname">filtertools.</tt><tt class="descname">getste</tt><big>(</big><em>time</em>, <em>stimulus</em>, <em>spikes</em>, <em>filter_length</em>, <em>tproj=None</em><big>)</big><a class="reference internal" href="_modules/filtertools.html#getste"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#filtertools.getste" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct the spike-triggered ensemble</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>time</strong> : array_like</p>
+<blockquote>
+<div><p>The time axis of the stimulus</p>
+</div></blockquote>
+<p><strong>stimulus</strong> : array_like</p>
+<blockquote>
+<div><p>The stimulus array. The last dimension of the stimulus
+array is assumed to be time, but no other restrictions
+are placed on its shape. It works for purely temporal
+and spatiotemporal stimuli.</p>
+</div></blockquote>
+<p><strong>spikes</strong> : array_like</p>
+<blockquote>
+<div><p>Array of spike times</p>
+</div></blockquote>
+<p><strong>filter_length</strong> : int</p>
+<blockquote>
+<div><p>Number of frames over which to construct the ensemble.</p>
+</div></blockquote>
+<p><strong>tproj</strong> : array_like</p>
+<blockquote>
+<div><p>A basis onto which the raw ensemble is projected. This is
+useful for smoothing or reducing the size/dimensionality of
+the ensemble. If None (default), uses the identity matrix.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ste</strong> : array_like</p>
+<blockquote>
+<div><p>The spike-triggered stimulus ensemble. The returned array is
+reshaped from the input <cite>stimulus</cite> array, such that all spatial
+dimensions are collapsed. The array has shape 
+(nspikes, n_spatial_dims, filterlength).</p>
+</div></blockquote>
+<p><strong>steproj</strong> : array_like</p>
+<blockquote>
+<div><p>The spike-triggered stimulus ensemble, projected onto the 
+basis defined by <cite>tproj</cite>. If <cite>tproj</cite> is None (the default), the
+return value here is None.</p>
+</div></blockquote>
+<p><strong>tax</strong> : array_like</p>
+<blockquote>
+<div><p>The time axis of the ensemble. It is of length <cite>filterlength</cite>,
+with intervals given by the sample rate of the <cite>time</cite> input
+array.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>A ValueError is raised if there are no spikes within the requested `time`</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="filtertools.lowranksta">
+<tt class="descclassname">filtertools.</tt><tt class="descname">lowranksta</tt><big>(</big><em>f_orig</em>, <em>k=10</em><big>)</big><a class="reference internal" href="_modules/filtertools.html#lowranksta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#filtertools.lowranksta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs a rank-k approximation to the given spatiotemporal filter.
+This is useful for computing a spatial and temporal kernel of an STA,
+or for denoising.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>f</strong> : array_like</p>
+<blockquote>
+<div><p>3-D filter to be separated</p>
+</div></blockquote>
+<p><strong>k</strong> : int</p>
+<blockquote>
+<div><p>number of components to keep (rank of the filter)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>fk</strong> : array_like</p>
+<blockquote>
+<div><p>the rank-k filter</p>
+</div></blockquote>
+<p><strong>u</strong> : array_like</p>
+<blockquote>
+<div><p>the top k spatial components  (each row is a component)</p>
+</div></blockquote>
+<p><strong>s</strong> : array_like</p>
+<blockquote>
+<div><p>the top k singular values</p>
+</div></blockquote>
+<p><strong>u</strong> : array_like</p>
+<blockquote class="last">
+<div><p>the top k temporal components (each column is a component)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="filtertools.prinangles">
+<tt class="descclassname">filtertools.</tt><tt class="descname">prinangles</tt><big>(</big><em>u</em>, <em>v</em><big>)</big><a class="reference internal" href="_modules/filtertools.html#prinangles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#filtertools.prinangles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the principal angles between two subspaces. Useful for comparing
+subspaces returned via spike-triggered covariance, for example.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>u, v</strong> : array_like</p>
+<blockquote>
+<div><p>The subspaces to compare. They should be of the same size.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ang</strong> : array_like</p>
+<blockquote>
+<div><p>The angles between each dimension of the subspaces</p>
+</div></blockquote>
+<p><strong>mag</strong> : array_like</p>
+<blockquote class="last">
+<div><p>The magnitude of the overlap between each dimension of the subspace.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="filtertools.smoothfilter">
+<tt class="descclassname">filtertools.</tt><tt class="descname">smoothfilter</tt><big>(</big><em>f</em>, <em>spacesig=0.5</em>, <em>timesig=1</em><big>)</big><a class="reference internal" href="_modules/filtertools.html#smoothfilter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#filtertools.smoothfilter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Smooths a 3D spatiotemporal linear filter using a multi-dimensional
+Gaussian filter with the given properties.</p>
+<dl class="docutils">
+<dt>f:</dt>
+<dd>3D filter to be smoothed</dd>
+<dt>spacesig:</dt>
+<dd>The standard deviation of the spatial Gaussian smoothing kernel</dd>
+<dt>timesig:</dt>
+<dd>The standard deviation of the temporal Gaussian smoothing kernel</dd>
+</dl>
+<dl class="docutils">
+<dt>fsmooth:</dt>
+<dd>The smoothed filter, with the same shape as the input</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-nonlinearities">
+<span id="nonlinearities"></span><h2>nonlinearities<a class="headerlink" href="#module-nonlinearities" title="Permalink to this headline">¶</a></h2>
+<p>nonlinearities.py</p>
+<p>Tools for fitting nonlinear functions to data</p>
+<ol class="loweralpha simple" start="3">
+<li>2014 bnaecker, nirum</li>
+</ol>
+<dl class="function">
+<dt id="nonlinearities.dprime">
+<tt class="descclassname">nonlinearities.</tt><tt class="descname">dprime</tt><big>(</big><em>p0</em>, <em>p1</em><big>)</big><a class="reference internal" href="_modules/nonlinearities.html#dprime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nonlinearities.dprime" title="Permalink to this definition">¶</a></dt>
+<dd><p>compute d&#8217; between two distributions given mean / standard deviation</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nonlinearities.estdprime">
+<tt class="descclassname">nonlinearities.</tt><tt class="descname">estdprime</tt><big>(</big><em>u</em>, <em>r</em>, <em>numbins=100</em><big>)</big><a class="reference internal" href="_modules/nonlinearities.html#estdprime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nonlinearities.estdprime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit a nonlinearity given a 1D stimulus projection u and spiking response r</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nonlinearities.estnln">
+<tt class="descclassname">nonlinearities.</tt><tt class="descname">estnln</tt><big>(</big><em>u</em>, <em>r</em>, <em>numbins=50</em><big>)</big><a class="reference internal" href="_modules/nonlinearities.html#estnln"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nonlinearities.estnln" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit a nonlinearity given a 1D stimulus projection u and spiking response r</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nonlinearities.fitgaussian">
+<tt class="descclassname">nonlinearities.</tt><tt class="descname">fitgaussian</tt><big>(</big><em>xpts</em>, <em>ypts</em>, <em>p0=None</em><big>)</big><a class="reference internal" href="_modules/nonlinearities.html#fitgaussian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nonlinearities.fitgaussian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit a gaussian function to noisy data</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nonlinearities.fitsigmoid">
+<tt class="descclassname">nonlinearities.</tt><tt class="descname">fitsigmoid</tt><big>(</big><em>xpts</em>, <em>ypts</em><big>)</big><a class="reference internal" href="_modules/nonlinearities.html#fitsigmoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nonlinearities.fitsigmoid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit a sigmoidal function to noisy data</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nonlinearities.gaussian">
+<tt class="descclassname">nonlinearities.</tt><tt class="descname">gaussian</tt><big>(</big><em>x</em>, <em>mu</em>, <em>sigma</em><big>)</big><a class="reference internal" href="_modules/nonlinearities.html#gaussian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nonlinearities.gaussian" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 1D (unnormalized) gaussian function</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nonlinearities.sigmoid">
+<tt class="descclassname">nonlinearities.</tt><tt class="descname">sigmoid</tt><big>(</big><em>x</em>, <em>threshold</em>, <em>slope</em>, <em>peak</em>, <em>offset</em><big>)</big><a class="reference internal" href="_modules/nonlinearities.html#sigmoid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nonlinearities.sigmoid" title="Permalink to this definition">¶</a></dt>
+<dd><p>A sigmoidal nonlinearity</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-spiketools">
+<span id="spiketools"></span><h2>spiketools<a class="headerlink" href="#module-spiketools" title="Permalink to this headline">¶</a></h2>
+<p>Tools for spike train analysis</p>
+<p>Includes an object class, SpikingEvent, that is useful for detecting and analyzing firing events within
+a spike raster. Also provides functions for binning spike times into a histogram (<cite>binspikes</cite>) and a function
+for smoothing a histogram into a firing rate (<cite>estfr</cite>)</p>
+<dl class="class">
+<dt id="spiketools.SpikingEvent">
+<em class="property">class </em><tt class="descclassname">spiketools.</tt><tt class="descname">SpikingEvent</tt><big>(</big><em>start_time</em>, <em>stop_time</em>, <em>spikes</em><big>)</big><a class="reference internal" href="_modules/spiketools.html#SpikingEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.SpikingEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>The spiking event class bundles together functions that are used to analyze
+individual firing events, consisting of spiking activity recorded across trials / cells / conditions.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="2%" />
+<col width="98%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>start</td>
+<td>(float) the start time of the firing event</td>
+</tr>
+<tr class="row-even"><td>stop</td>
+<td>(float) the stop time of the firing event</td>
+</tr>
+<tr class="row-odd"><td>spikes</td>
+<td>(array_like) the spikes associated with this firing event. This data is stored as an (n by 2) numpy array, where the first column is the set of spike times in the event and the second column is a list of corresponding trial/cell/condition indices for each spike</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="spiketools.SpikingEvent.event_stats">
+<tt class="descname">event_stats</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/spiketools.html#SpikingEvent.event_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.SpikingEvent.event_stats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute statistics (mean and standard deviation) across trial spike counts</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="spiketools.SpikingEvent.jitter">
+<tt class="descname">jitter</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/spiketools.html#SpikingEvent.jitter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.SpikingEvent.jitter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the jitter (standard deviation) in the time to first spike across trials</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="spiketools.SpikingEvent.plot">
+<tt class="descname">plot</tt><big>(</big><em>sort=False</em>, <em>ax=None</em>, <em>color='SlateGray'</em><big>)</big><a class="reference internal" href="_modules/spiketools.html#SpikingEvent.plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.SpikingEvent.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots this event, as a spike raster</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sort</strong> : boolean, optional</p>
+<blockquote>
+<div><p>Whether or not to sort the raster by the time to first spike (Default: False)</p>
+</div></blockquote>
+<p><strong>ax</strong> : matplotlib Axes object, optional</p>
+<blockquote>
+<div><p>If given, plots the raster on these axes. If None, creates a new figure (Default: None)</p>
+</div></blockquote>
+<p><strong>color</strong> : string</p>
+<blockquote class="last">
+<div><p>The color of the points in the raster (Default: &#8216;SlateGray&#8217;)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="spiketools.SpikingEvent.sort">
+<tt class="descname">sort</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/spiketools.html#SpikingEvent.sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.SpikingEvent.sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sort trial indices by the time to first spike</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="spiketools.SpikingEvent.trial_counts">
+<tt class="descname">trial_counts</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/spiketools.html#SpikingEvent.trial_counts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.SpikingEvent.trial_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Count the number of spikes per trial</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="spiketools.SpikingEvent.ttfs">
+<tt class="descname">ttfs</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/spiketools.html#SpikingEvent.ttfs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.SpikingEvent.ttfs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the time to first spike for each trial, ignoring trials that had zero spikes</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="spiketools.binspikes">
+<tt class="descclassname">spiketools.</tt><tt class="descname">binspikes</tt><big>(</big><em>spk</em>, <em>tmax=None</em>, <em>binsize=0.01</em>, <em>time=None</em>, <em>num_trials=1</em><big>)</big><a class="reference internal" href="_modules/spiketools.html#binspikes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.binspikes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bin spike times at the given resolution. The function has two forms.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spk</strong> : array_like</p>
+<blockquote>
+<div><p>Array of spike times</p>
+</div></blockquote>
+<p><strong>tmax</strong> : float, optional</p>
+<blockquote>
+<div><p>Final stop time. Only takes spikes that occur before this time.
+If None (default), this is set to the final spike time</p>
+</div></blockquote>
+<p><strong>binsize</strong> : float, optional</p>
+<blockquote>
+<div><p>Size of bins in seconds (Default: 0.01 seconds)</p>
+</div></blockquote>
+<p><strong>time</strong> : array_like, optional</p>
+<blockquote>
+<div><p>If None (default), the <cite>tmax</cite> and <cite>binsize</cite> parameters are used to generate the time array.
+Otherwise, the given array is used as the time bins for the spike histogram</p>
+</div></blockquote>
+<p><strong>num_trials</strong> : float, optional</p>
+<blockquote>
+<div><p>How many trials went into this binning. The output counts are normalized such that
+they represent # of spikes / trial (Default: 1)</p>
+</div></blockquote>
+<p><strong>Returns</strong></p>
+<p><strong>&#8212;&#8212;</strong></p>
+<p><strong>bspk</strong> : array_like</p>
+<blockquote>
+<div><p>Binned spike times</p>
+</div></blockquote>
+<p><strong>tax</strong> : array_like</p>
+<blockquote class="last">
+<div><p>The time points corresponding to the bin centers (has the same size as <cite>bspk</cite>)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="spiketools.detectevents">
+<tt class="descclassname">spiketools.</tt><tt class="descname">detectevents</tt><big>(</big><em>spk</em>, <em>threshold=(0.3</em>, <em>0.05)</em><big>)</big><a class="reference internal" href="_modules/spiketools.html#detectevents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.detectevents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Detects spiking events given a PSTH and spike times for multiple trials</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spk</strong> : array_like</p>
+<blockquote>
+<div><p>An (n by 2) array of spike times, indexed by trial / condition.
+The first column is the set of spike times in the event and the second column is a list of
+corresponding trial/cell/condition indices for each spike.</p>
+</div></blockquote>
+<p><strong>threshold</strong> : (float, float), optional</p>
+<blockquote>
+<div><p>A tuple of two floats that are used as thresholds for detecting firing events. Default: (0.1, 0.005)
+See <cite>peakdetect.py</cite> for more info</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>events</strong> : list</p>
+<blockquote class="last">
+<div><p>A list of &#8216;spikingevent&#8217; objects, one for each firing event detected.
+See the <cite>spikingevent</cite> class for more info.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="spiketools.estfr">
+<tt class="descclassname">spiketools.</tt><tt class="descname">estfr</tt><big>(</big><em>tax</em>, <em>bspk</em>, <em>sigma=0.01</em><big>)</big><a class="reference internal" href="_modules/spiketools.html#estfr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.estfr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the instantaneous firing rates from binned spike counts.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>tax</strong> : array_like</p>
+<blockquote>
+<div><p>Array of time points corresponding to bins (as from binspikes)</p>
+</div></blockquote>
+<p><strong>bspk</strong> : array_like</p>
+<blockquote>
+<div><p>Array of binned spike counts (as from binspikes)</p>
+</div></blockquote>
+<p><strong>sigma</strong> : float, optional</p>
+<blockquote>
+<div><p>The width of the Gaussian filter, in seconds (Default: 0.01 seconds)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>rates</strong> : array_like</p>
+<blockquote class="last">
+<div><p>Array of estimated instantaneous firing rate</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="spiketools.sample">
+<tt class="descclassname">spiketools.</tt><tt class="descname">sample</tt><big>(</big><em>rate</em>, <em>dt=1.0</em>, <em>num_trials=1</em><big>)</big><a class="reference internal" href="_modules/spiketools.html#sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spiketools.sample" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Sample discrete spikes from a given firing rate</p>
+<p>Draws spikes according to the Poisson distribution with mean given by the <cite>rate</cite></p>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>rate</strong> : array_like</p>
+<blockquote>
+<div><blockquote>
+<div><p>The time-varying firing rate that serves as the mean of the Poisson process</p>
+</div></blockquote>
+<dl class="docutils">
+<dt>dt <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">The time step corresponding to the bin size of the firing <cite>rate</cite>, in seconds (Default: 1s)</p>
+</dd>
+<dt>num_trials <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
+<dd><p class="first last">The number of trials (repeats) to draw samples for (Default: 1)</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spikes</strong> : array_like</p>
+<blockquote class="last">
+<div><p>An array of shape <cite>num_trials</cite> by <cite>rate.shape</cite> that contains the sampled number of spikes for each
+trial at every point in the <cite>rate</cite> array</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p>rac{exp(rcdot dt)left(rcdot dt)^n}{n!}</p>
+<blockquote>
+<div>Where n is the number of spikes drawn given a firing rate, r.</div></blockquote>
+</dd></dl>
+
+</div>
+<div class="section" id="module-stimulustools">
+<span id="stimulustools"></span><h2>stimulustools<a class="headerlink" href="#module-stimulustools" title="Permalink to this headline">¶</a></h2>
+<p>Tools for dealing with spatiotemporal stimuli</p>
+<dl class="function">
+<dt id="stimulustools.downsample_stim">
+<tt class="descclassname">stimulustools.</tt><tt class="descname">downsample_stim</tt><big>(</big><em>stim</em>, <em>downsample_factor</em>, <em>time=None</em><big>)</big><a class="reference internal" href="_modules/stimulustools.html#downsample_stim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#stimulustools.downsample_stim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Downsample the given stimulus by the given factor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>stim</strong> : array_like</p>
+<blockquote>
+<div><p>The original stimulus array</p>
+</div></blockquote>
+<p><strong>downsample_factor</strong> : int</p>
+<blockquote>
+<div><p>The factor by which the stimulus will be downsampled</p>
+</div></blockquote>
+<p><strong>time</strong> : array_like, optional</p>
+<blockquote>
+<div><p>The time axis of the original stimulus</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>stim_ds</strong> : array_like</p>
+<blockquote>
+<div><p>The downsampled stimulus array</p>
+</div></blockquote>
+<p><strong>time_ds</strong> : array_like</p>
+<blockquote class="last">
+<div><p>The downsampled time vector</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="stimulustools.getcov">
+<tt class="descclassname">stimulustools.</tt><tt class="descname">getcov</tt><big>(</big><em>stimulus</em>, <em>history</em>, <em>tproj=None</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="_modules/stimulustools.html#getcov"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#stimulustools.getcov" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes a stimulus covariance matrix</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This is computationally expensive for large stimuli</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>stimulus</strong> : array_like</p>
+<blockquote>
+<div><p>The spatiotemporal or temporal stimulus to slices. Should have shape
+(n, n, t) or (t,).</p>
+</div></blockquote>
+<p><strong>history</strong> : int</p>
+<blockquote>
+<div><p>Integer number of time points to keep in each slice.</p>
+</div></blockquote>
+<p><strong>tproj</strong> : array_like, optional</p>
+<blockquote>
+<div><p>Temporal basis set to use. Must have # of rows (first dimension) equal to history.
+Each extracted stimulus slice is projected onto this basis set, which reduces the size
+of the corresponding covariance matrix to store.</p>
+</div></blockquote>
+<p><strong>verbose</strong> : boolean, optional</p>
+<blockquote>
+<div><p>If True, print out progress of the computation. (defaults to False)</p>
+</div></blockquote>
+<p><strong>Returns</strong></p>
+<p><strong>&#8212;&#8212;</strong></p>
+<p><strong>stim_cov</strong> : array_like</p>
+<blockquote class="last">
+<div><p>(n*n*t by n*n*t) Covariance matrix</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="stimulustools.slicestim">
+<tt class="descclassname">stimulustools.</tt><tt class="descname">slicestim</tt><big>(</big><em>stimulus</em>, <em>history</em>, <em>locations=None</em>, <em>tproj=None</em><big>)</big><a class="reference internal" href="_modules/stimulustools.html#slicestim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#stimulustools.slicestim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Slices a spatiotemporal stimulus array (over time) into overlapping frames.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>stimulus</strong> : array_like</p>
+<blockquote>
+<div><p>The spatiotemporal or temporal stimulus to slices. Should have shape
+(n, n, t) or (t,).</p>
+</div></blockquote>
+<p><strong>history</strong> : int</p>
+<blockquote>
+<div><p>Integer number of time points to keep in each slice.</p>
+</div></blockquote>
+<p><strong>locations</strong> : array_like of booleans</p>
+<blockquote>
+<div><p>Boolean array of temporal locations at which slices are taken. If unspecified,
+use all time points.</p>
+</div></blockquote>
+<p><strong>tproj</strong> : array_like, optional</p>
+<blockquote>
+<div><p>Matrix of temporal filters to project stimuli onto</p>
+</div></blockquote>
+<p><strong>Returns</strong></p>
+<p><strong>&#8212;&#8212;</strong></p>
+<p><strong>slices</strong> : array_like</p>
+<blockquote class="last">
+<div><p>Array of stimulus slices, with all stimulus dimensions collapsed into one. 
+That is, it has shape (np.prod(stimulus.shape), <cite>history</cite>)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="stimulustools.upsample_stim">
+<tt class="descclassname">stimulustools.</tt><tt class="descname">upsample_stim</tt><big>(</big><em>stim</em>, <em>upsample_factor</em>, <em>time=None</em><big>)</big><a class="reference internal" href="_modules/stimulustools.html#upsample_stim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#stimulustools.upsample_stim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upsample the given stimulus by the given factor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>stim</strong> : array_like</p>
+<blockquote>
+<div><p>The actual stimulus to be upsampled.</p>
+</div></blockquote>
+<p><strong>upsample_factor</strong> : int</p>
+<blockquote>
+<div><p>The upsample factor.</p>
+</div></blockquote>
+<p><strong>time</strong> : arra_like, optional</p>
+<blockquote>
+<div><p>The time axis of the original stimulus.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>stim_us</strong> : array_like</p>
+<blockquote>
+<div><p>The upsampled stimulus array</p>
+</div></blockquote>
+<p><strong>time_us</strong> : array_like</p>
+<blockquote class="last">
+<div><p>the upsampled time vector</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-visualizations">
+<span id="visualizations"></span><h2>visualizations<a class="headerlink" href="#module-visualizations" title="Permalink to this headline">¶</a></h2>
+<p>Visualization functions for displaying spikes, filters, and cells.</p>
+<dl class="function">
+<dt id="visualizations.ellipse">
+<tt class="descclassname">visualizations.</tt><tt class="descname">ellipse</tt><big>(</big><em>ell</em>, <em>ax=None</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#ellipse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.ellipse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a given ellipse</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ell</strong> : matplotlib.patches.Ellipse object</p>
+<blockquote>
+<div><p>The ellipse to be plotted</p>
+</div></blockquote>
+<p><strong>ax</strong> : matplotlib Axes object, optional</p>
+<blockquote>
+<div><p>The axes onto which the ellipse should be plotted. Defaults to a new figure</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ax</strong> : matplotlib Axes object</p>
+<blockquote class="last">
+<div><p>The axes onto which the ellipse is plotted</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="visualizations.playrates">
+<tt class="descclassname">visualizations.</tt><tt class="descname">playrates</tt><big>(</big><em>rates</em>, <em>patches</em>, <em>palette='gray'</em>, <em>num_levels=255</em>, <em>time=None</em>, <em>repeat=True</em>, <em>frametime=100</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#playrates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.playrates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plays a movie of the firing rate for N cells by updating the given patches (matplotlib handles)
+(useful in conjunction with the output of plotcells)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>rates</strong> : array_like</p>
+<blockquote>
+<div><p>an (N, T) matrix of firing rates</p>
+</div></blockquote>
+<p><strong>patches</strong> : list</p>
+<blockquote>
+<div><p>A list of N matplotlib patch elements. The facecolor of these patches is altered according to the rates values.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>anim</strong> : matplotlib Animation object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="visualizations.playsta">
+<tt class="descclassname">visualizations.</tt><tt class="descname">playsta</tt><big>(</big><em>sta</em>, <em>repeat=True</em>, <em>frametime=100</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#playsta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.playsta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plays a spatiotemporal spike-triggered average as a movie</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sta</strong> : array_like</p>
+<blockquote>
+<div><p>Spike-triggered average array, shaped as (npix, npix, nframes)</p>
+</div></blockquote>
+<p><strong>repeat</strong> : boolean, optional</p>
+<blockquote>
+<div><p>Whether or not to repeat the animation (default is True)</p>
+</div></blockquote>
+<p><strong>frametime</strong> : float, optional</p>
+<blockquote>
+<div><p>Length of time each frame is displayed for in milliseconds (default is 100)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="visualizations.plotcells">
+<tt class="descclassname">visualizations.</tt><tt class="descname">plotcells</tt><big>(</big><em>cells</em>, <em>ax=None</em>, <em>box_dims=None</em>, <em>start=None</em>, <em>scale=0.25</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#plotcells"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.plotcells" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the spatial receptive fields for multiple cells</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>cells</strong> : list of array_like</p>
+<blockquote>
+<div><p>A list of spatiotemporal receptive fields, each of which is a spatiotemporal array</p>
+</div></blockquote>
+<p><strong>ax</strong> : matplotlib Axes object, optional</p>
+<blockquote>
+<div><p>The axes onto which the ellipse should be plotted. Defaults to a new figure</p>
+</div></blockquote>
+<p><strong>box_dims</strong> : (float, float), optional</p>
+<blockquote>
+<div><p>Dimensions of a box (to indicate the electrode array) to draw behind the cells. Should be a tuple containing the
+(width,height) of the box. Defaults to</p>
+</div></blockquote>
+<p><strong>start</strong> : float, optional</p>
+<blockquote>
+<div><p>Location of the lower left corner of the box to draw. If None, the box is centered on the plot. Only matters if
+<cite>box_dims</cite> is not None.</p>
+</div></blockquote>
+<p><strong>Returns</strong></p>
+<p><strong>&#8212;&#8212;</strong></p>
+<p><strong>ax</strong> : matplotlib Axes object</p>
+<blockquote class="last">
+<div><p>The axes onto which the ellipse is plotted</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="visualizations.plotsta">
+<tt class="descclassname">visualizations.</tt><tt class="descname">plotsta</tt><big>(</big><em>time</em>, <em>sta</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#plotsta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.plotsta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a spatial and temporal filter</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>time</strong> : array_like</p>
+<blockquote>
+<div><p>a time vector to plot against</p>
+</div></blockquote>
+<p><strong>sta</strong> : array_like</p>
+<blockquote>
+<div><p>the filter to plot</p>
+</div></blockquote>
+<p><strong>timeslice</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the spatial slice to plot</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ax</strong> : matplotlib Axes object</p>
+<blockquote class="last">
+<div><p>Axes into which the STA is plotted</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="visualizations.psth">
+<tt class="descclassname">visualizations.</tt><tt class="descname">psth</tt><big>(</big><em>spikes</em>, <em>trial_length=None</em>, <em>binsize=0.01</em>, <em>fig=None</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#psth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.psth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a PSTH from the given spike times.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spikes</strong> : array_like</p>
+<blockquote>
+<div><p>An array of spike times</p>
+</div></blockquote>
+<p><strong>triallength</strong> : float</p>
+<blockquote>
+<div><p>The length of each trial to stack, in seconds</p>
+</div></blockquote>
+<p><strong>binsize</strong> : float</p>
+<blockquote>
+<div><p>The size of bins used in computing the PSTH</p>
+</div></blockquote>
+<p><strong>fig</strong> : matplotlib Figure object</p>
+<blockquote>
+<div><p>Figure into which the psth should be plotted</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>fig</strong> : matplotlib Figure object</p>
+<blockquote class="last">
+<div><p>Matplotlib figure handle</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="visualizations.raster">
+<tt class="descclassname">visualizations.</tt><tt class="descname">raster</tt><big>(</big><em>spikes</em>, <em>trial_length=None</em>, <em>fig=None</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#raster"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.raster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a raster of spike times from an array of spike times</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spikes</strong> : array_like</p>
+<blockquote>
+<div><p>An array of spike times</p>
+</div></blockquote>
+<p><strong>triallength</strong> : float</p>
+<blockquote>
+<div><p>The length of each trial to stack, in seconds.</p>
+</div></blockquote>
+<p><strong>fig</strong> : matplotlib Figure object</p>
+<blockquote>
+<div><p>The figure into which the raster is plotted.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>fig</strong> : matplotlib Figure object</p>
+<blockquote class="last">
+<div><p>Matplotlib handle of the figure</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>The <cite>triallength</cite> keyword specifies the length of time for each trial, and the
+<cite>spikes</cite> array is split up into segments of that length. These groups are then
+plotted on top of one another, as individual trials.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="visualizations.rasterandpsth">
+<tt class="descclassname">visualizations.</tt><tt class="descname">rasterandpsth</tt><big>(</big><em>spikes</em>, <em>trial_length=None</em>, <em>binsize=0.01</em>, <em>fig=None</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#rasterandpsth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.rasterandpsth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a spike raster and a PSTH on the same set of axes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spikes</strong> : array_like</p>
+<blockquote>
+<div><p>An array of spike times</p>
+</div></blockquote>
+<p><strong>triallength</strong> : float</p>
+<blockquote>
+<div><p>The length of each trial to stack, in seconds</p>
+</div></blockquote>
+<p><strong>binsize</strong> : float</p>
+<blockquote>
+<div><p>The size of bins used in computing the PSTH</p>
+</div></blockquote>
+<p><strong>fig</strong> : matplotlib Figure handle</p>
+<blockquote>
+<div><p>Figure into which the psth should be plotted</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>fig</strong> : matplotlib Figure handle</p>
+<blockquote class="last">
+<div><p>Matplotlib figure handle</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="visualizations.spatial">
+<tt class="descclassname">visualizations.</tt><tt class="descname">spatial</tt><big>(</big><em>spatial_filter</em>, <em>ax=None</em>, <em>clim=None</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#spatial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.spatial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a spatial filter on a given axes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spatialFrame</strong> : array_like</p>
+<blockquote>
+<div><p>The frame to plot, as an (n x n) matrix.</p>
+</div></blockquote>
+<p><strong>ax</strong> : matplotlib Axes object, optional</p>
+<blockquote>
+<div><p>the axes on which to plot the data; defaults to creating a new figure</p>
+</div></blockquote>
+<p><strong>clim</strong> : tuple, optional</p>
+<blockquote>
+<div><p>the color range with which to scale the image. Defaults to [-maxval, maxval] where maxval is the max abs. value</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ax</strong> : matplotlib Axes object</p>
+<blockquote class="last">
+<div><p>Axes into which the frame is plotted</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="visualizations.temporal">
+<tt class="descclassname">visualizations.</tt><tt class="descname">temporal</tt><big>(</big><em>time</em>, <em>temporal_filter</em>, <em>ax=None</em><big>)</big><a class="reference internal" href="_modules/visualizations.html#temporal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualizations.temporal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot a temporal filter on a given axes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>time</strong> : array_like</p>
+<blockquote>
+<div><p>a time vector to plot against</p>
+</div></blockquote>
+<p><strong>temporal_filter</strong> : ndarray</p>
+<blockquote>
+<div><p>the temporal filter to plot, has the same dimensions as time</p>
+</div></blockquote>
+<p><strong>ax</strong> : matplotlib Axes object, optional</p>
+<blockquote>
+<div><p>the axes on which to plot the data; defaults to creating a new figure</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ax</strong> : matplotlib Axes object</p>
+<blockquote class="last">
+<div><p>Axes into which the frame is plotted</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-contents">
+<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="license.html" class="btn btn-neutral float-right" title="&lt;no title&gt;"/>Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="quickstart.html" class="btn btn-neutral" title="Quickstart"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014-2015, Ben Naecker, Niru Maheswaranathan, Pablo Jadzinsky.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

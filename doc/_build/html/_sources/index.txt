@@ -3,16 +3,23 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Documentation for pyret
-=======================
+======================================
+pyret: retinal data analysis in python
+======================================
 
-Contents:
+`pyret`_ is a library for pre-processing, analyzing, and visualizing data from retina electrophysiology experiments.
+It was written because we think sharing code and data withing the scientific community is easiest when there are open
+standards to adhere to.
+
+.. _pyret: https://github.com/baccuslab/pyret/
+
 
 .. toctree::
-  :maxdepth: 2
+    :maxdepth: 3
 
-  pyret.rst
-
+    quickstart.rst
+    api.rst
+    license.rst
 
 Indices and tables
 ==================

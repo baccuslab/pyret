@@ -1,5 +1,9 @@
+===
+API
+===
+
 binary
--------------------
+------
 
 .. automodule:: binary
     :members:
@@ -7,7 +11,7 @@ binary
     :show-inheritance:
 
 filtertools
-------------------------
+-----------
 
 .. automodule:: filtertools
     :members:
@@ -15,23 +19,15 @@ filtertools
     :show-inheritance:
 
 nonlinearities
----------------------------
+--------------
 
 .. automodule:: nonlinearities
     :members:
     :undoc-members:
     :show-inheritance:
 
-setup
-------------------
-
-.. automodule:: setup
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 spiketools
------------------------
+----------
 
 .. automodule:: spiketools
     :members:
@@ -39,7 +35,7 @@ spiketools
     :show-inheritance:
 
 stimulustools
---------------------------
+-------------
 
 .. automodule:: stimulustools
     :members:
@@ -47,10 +43,18 @@ stimulustools
     :show-inheritance:
 
 visualizations
----------------------------
+--------------
 
 .. automodule:: visualizations
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: pyret
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -9,8 +9,7 @@ for smoothing a histogram into a firing rate (`estfr`)
 
 import numpy as _np
 import matplotlib.pyplot as _plt
-from .peakdetect import peakdet
-
+from peakdetect import peakdet
 
 def binspikes(spk, tmax=None, binsize=0.01, time=None, num_trials=1):
     """
@@ -134,7 +133,7 @@ def sample(rate, dt=1.0, num_trials=1):
 
     """
 
-    return _np.random.poisson(rate*dt, (num_trials,) + rate.shape)
+    return _np.random.poisson(rate * dt, (num_trials,) + rate.shape)
 
 
 class SpikingEvent(object):
@@ -314,7 +313,7 @@ def detectevents(spk, threshold=(0.3,0.05)):
 
     # find peaks in the PSTH
     bspk, tax = binspikes(spk[:,0], binsize=0.01, num_trials=_np.max(spk[:,1]))
-    psth      = estfr(tax, bspk, sigma=0.005)
+    psth      = estfr(tax, bspk, sigma=0.02)
     maxtab, _ = peakdet(psth, threshold[0], tax)
 
     # store spiking events in a list

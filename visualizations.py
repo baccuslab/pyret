@@ -6,9 +6,8 @@ Visualization functions for displaying spikes, filters, and cells.
 import numpy as _np
 import matplotlib.pyplot as _plt
 import seaborn as _sns
-from . import filtertools as _ft
+import filtertools as _ft
 from matplotlib import animation as _animation
-
 
 def raster(spikes, trial_length=None, fig=None):
     """
@@ -485,7 +484,7 @@ def plotcells(cells, ax=None, box_dims=None, start=None, scale=0.25):
         _, _, tidx = _ft.filterpeak(sta)
 
         # generate ellipse
-        ell = _ft.getellipse(sta[:,:,tidx], scale=scale)
+        ell = _ft.fit_ellipse(sta[:,:,tidx], scale=scale)
 
         # add it to the plot
         ell.set_facecolor(colors[idx])

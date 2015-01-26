@@ -9,7 +9,7 @@ from matplotlib.patches import Ellipse as _Ellipse
 from numpy.linalg import LinAlgError
 from scipy.ndimage.filters import gaussian_filter as _gaussian_filter
 from scipy.linalg.blas import get_blas_funcs
-from .stimulustools import getcov as _getcov
+from stimulustools import getcov as _getcov
 
 def getste(time, stimulus, spikes, filter_length, tproj=None):
     """

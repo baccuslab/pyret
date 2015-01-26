@@ -1,56 +1,72 @@
-binary
--------------------
+binary module
+-------------
 
 .. automodule:: binary
     :members:
     :undoc-members:
     :show-inheritance:
 
-filtertools
+pyret.filtertools module
 ------------------------
 
-.. automodule:: filtertools
+.. automodule:: pyret.filtertools
     :members:
     :undoc-members:
     :show-inheritance:
 
-nonlinearities
+pyret.nonlinearities module
 ---------------------------
 
-.. automodule:: nonlinearities
+.. automodule:: pyret.nonlinearities
     :members:
     :undoc-members:
     :show-inheritance:
 
-setup
+pyret.peakdetect module
+-----------------------
+
+.. automodule:: pyret.peakdetect
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pyret.setup module
 ------------------
 
-.. automodule:: setup
+.. automodule:: pyret.setup
     :members:
     :undoc-members:
     :show-inheritance:
 
-spiketools
------------------------
+spiketools module
+-----------------
 
 .. automodule:: spiketools
     :members:
     :undoc-members:
     :show-inheritance:
 
-stimulustools
+pyret.stimulustools module
 --------------------------
 
-.. automodule:: stimulustools
+.. automodule:: pyret.stimulustools
     :members:
     :undoc-members:
     :show-inheritance:
 
-visualizations
+pyret.visualizations module
 ---------------------------
 
-.. automodule:: visualizations
+.. automodule:: pyret.visualizations
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: pyret
+    :members:
+    :undoc-members:
+    :show-inheritance:
