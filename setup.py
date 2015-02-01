@@ -1,12 +1,12 @@
 from distutils.core import setup
 
 setup(name = 'pyret', 
-        version = '0.1.1',
+        version = '0.2',
         description = 'Tools for the analysis of neural data',
         author = 'Benjamin Naecker, Niru Maheshwaranathan',
         author_email = 'bnaecker@stanford.edu',
         url = 'https://github.com/baccuslab/pyret.git',
-        requires = ['scipy', 'numpy', 'maplotlib', 'seaborn'],
+        install_requires = ['scipy', 'numpy', 'maplotlib', 'seaborn'],
         long_description = '''
             The pyret package contains tools for analyzing neural
             data. In particular, it contains methods for manipulating
@@ -20,6 +20,6 @@ setup(name = 'pyret',
             'Topic :: Scientific/Engineering :: Information Analysis'],
         packages = ['pyret'],
         package_dir = {'pyret': ''},
-        py_modules = ['binary', 'spiketools', 'filtertools', 'stimulustools'],
+        py_modules = ['spiketools', 'filtertools', 'stimulustools', 'nonlinearities', 'visualizations'],
         license = 'LICENSE.md'
         )
