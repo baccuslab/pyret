@@ -11,20 +11,17 @@ pyret: retinal data analysis in python
 It was written because we think sharing code and data withing the scientific community is easiest when there are open
 standards to adhere to.
 
+.. note:: Pyret is under active development. Please refer to these pages or the Github repository for the latest info.
+
 .. _pyret: https://github.com/baccuslab/pyret/
 
-
 .. toctree::
-    :maxdepth: 3
+    :maxdepth: 1
+    :numbered:
 
-    quickstart.rst
-    api.rst
-    license.rst
+    install
+    quickstart
+    api
+    changelog
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+:ref:`genindex` of all functions.

@@ -2,25 +2,18 @@
 Quickstart
 ==========
 
-Install
--------
+Overview
+--------
 
-.. py:currentmodule:: pyret
+Coming soon
 
-.. code:: bash
+Demo
+----
 
-    $ pip install pyret
+Coming soon
 
-To compile from source:
+Bugs
+----
 
-.. code:: bash
-
-    $ git clone https://github.com/baccuslab/pyret.git
-    $ pip install -r requirements.txt
-
-Usage
------
-
-API at a glance
----------------
-
+Please report any bugs you encounter through the github `issue tracker
+<https://github.com/baccuslab/pyret/issues/new>`_.

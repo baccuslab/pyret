@@ -1,14 +1,8 @@
-===
-API
-===
+=============
+API Reference
+=============
 
-binary
-------
-
-.. automodule:: binary
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. py:currentmodule:: pyret
 
 filtertools
 -----------
@@ -46,15 +40,6 @@ visualizations
 --------------
 
 .. automodule:: visualizations
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: pyret
     :members:
     :undoc-members:
     :show-inheritance:
