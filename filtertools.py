@@ -212,6 +212,7 @@ def getsta(time, stimulus, spikes, filter_length, norm=True, return_flag=0):
     else:
         raise ValueError('return_flag has to be either 0, 1 or 2 in getsta')
 
+
 def getstc(time, stimulus, spikes, filterlength, tproj=None):
     """
     Compute the spike-triggered covariance
@@ -602,21 +603,21 @@ def smoothfilter(f, spacesig=0.5, timesig=1):
     Gaussian filter with the given properties.
 
     Parameters
-    -----
+    ----------
 
-    f:
+    f : array_like
         3D filter to be smoothed
 
-    spacesig:
+    spacesig : float
         The standard deviation of the spatial Gaussian smoothing kernel
 
-    timesig:
+    timesig : float
         The standard deviation of the temporal Gaussian smoothing kernel
 
     Returns
-    ------
+    -------
 
-    fsmooth:
+    fsmooth : array_like
         The smoothed filter, with the same shape as the input
 
     """

@@ -6,7 +6,7 @@ setup(name = 'pyret',
         author = 'Benjamin Naecker, Niru Maheshwaranathan',
         author_email = 'bnaecker@stanford.edu',
         url = 'https://github.com/baccuslab/pyret.git',
-        install_requires = ['scipy', 'numpy', 'maplotlib', 'seaborn'],
+        requires = [i.strip() for i in open("requirements.txt").readlines()],
         long_description = '''
             The pyret package contains tools for analyzing neural
             data. In particular, it contains methods for manipulating

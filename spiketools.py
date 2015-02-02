@@ -7,9 +7,9 @@ for smoothing a histogram into a firing rate (`estfr`)
 
 """
 
+import sys
 import numpy as _np
 import matplotlib.pyplot as _plt
-from peakdetect import peakdet
 
 def binspikes(spk, tmax=None, binsize=0.01, time=None, num_trials=1):
     """
@@ -127,9 +127,9 @@ def sample(rate, dt=1.0, num_trials=1):
     -----
     Spikes are drawn according to the Poisson distribution:
 
-    .. math: p(n) = \frac{\exp(r\cdot dt)\left(r\cdot dt)^n}{n!}
+    .. math::
 
-    Where n is the number of spikes drawn given a firing rate, r.
+        p(n) = (\exp(-r)(r)^n) / n!
 
     """
 
@@ -179,9 +179,7 @@ class SpikingEvent(object):
         """
         Count the number of spikes per trial
 
-        Usage
-        -----
-        counts = spkevent.trial_counts()
+        >> counts = spkevent.trial_counts()
 
         """
         counts, _ = _np.histogram(self.spikes[:,1], bins=_np.arange(_np.min(self.spikes[:,1]),
@@ -192,9 +190,7 @@ class SpikingEvent(object):
         """
         Compute statistics (mean and standard deviation) across trial spike counts
 
-        Usage
-        -----
-        mu, sigma = spkevent.event_stats()
+        >> mu, sigma = spkevent.event_stats()
 
         """
 
@@ -207,9 +203,7 @@ class SpikingEvent(object):
         """
         Computes the time to first spike for each trial, ignoring trials that had zero spikes
 
-        Usage
-        -----
-        times = spkevent.ttfs()
+        >> times = spkevent.ttfs()
 
         """
         trials, indices = _np.unique(self.spikes[:,1], return_index=True)[:2]
@@ -219,9 +213,7 @@ class SpikingEvent(object):
         """
         Computes the jitter (standard deviation) in the time to first spike across trials
 
-        Usage
-        -----
-        sigma = spkevent.jitter()
+        >> sigma = spkevent.jitter()
 
         """
         return _np.std(self.ttfs())
@@ -230,9 +222,7 @@ class SpikingEvent(object):
         """
         Sort trial indices by the time to first spike
 
-        Usage
-        -----
-        sortedspikes = spkevent.sort()
+        >> sortedspikes = spkevent.sort()
 
         """
 
@@ -256,9 +246,7 @@ class SpikingEvent(object):
         """
         Plots this event, as a spike raster
 
-        Usage
-        -----
-        spkevent.plot()
+        >> spkevent.plot()
 
         Parameters
         ----------
@@ -288,9 +276,7 @@ def detectevents(spk, threshold=(0.3,0.05)):
     """
     Detects spiking events given a PSTH and spike times for multiple trials
 
-    Usage
-    -----
-    events = detectevents(spikes, threshold=(0.1, 0.005))
+    >> events = detectevents(spikes, threshold=(0.1, 0.005))
 
     Parameters
     ----------
@@ -343,3 +329,83 @@ def detectevents(spk, threshold=(0.3,0.05)):
             events.append(event)
 
     return tax, psth, bspk, events
+
+
+def peakdet(v, delta, x=None):
+    """
+    Converted from MATLAB script at http://billauer.co.il/peakdet.html
+
+    Returns two arrays containing the maxima and minima of a 1D signal
+
+    Parameters
+    ----------
+    v : array_like
+        The input signal (array) to find the peaks of
+
+    delta : float
+        The threshold for peak detection. A point is considered a maxima
+         (or minima) if it is at least delta larger (or smaller) than
+         its neighboring points
+
+    x : array_like, optional
+        If given, the locations of the peaks are given as the corresponding
+        values in `x`. Otherwise, the locations are given as indices
+
+    Returns
+    -------
+    maxtab : array_like
+        An (N x 2) array containing the indices or locations (left column)
+        of the local maxima in `v` along with the corresponding maximum
+        values (right column).
+
+    mintab : array_like
+        An (M x 2) array containing the indices or locations (left column)
+        of the local minima in `v` along with the corresponding minimum
+        values (right column).
+
+    """
+    maxtab = []
+    mintab = []
+
+    if x is None:
+        x = _np.arange(len(v))
+
+    v = _np.asarray(v)
+
+    if len(v) != len(x):
+        sys.exit('Input vectors v and x must have same length')
+
+    if not _np.isscalar(delta):
+        sys.exit('Input argument delta must be a scalar')
+
+    if delta <= 0:
+        sys.exit('Input argument delta must be positive')
+
+    mn, mx = _np.Inf, -_np.Inf
+    mnpos, mxpos = _np.NaN, _np.NaN
+
+    lookformax = True
+
+    for i in _np.arange(len(v)):
+        this = v[i]
+        if this > mx:
+            mx = this
+            mxpos = x[i]
+        if this < mn:
+            mn = this
+            mnpos = x[i]
+
+        if lookformax:
+            if this < mx - delta:
+                maxtab.append((mxpos, mx))
+                mn = this
+                mnpos = x[i]
+                lookformax = False
+        else:
+            if this > mn + delta:
+                mintab.append((mnpos, mn))
+                mx = this
+                mxpos = x[i]
+                lookformax = True
+
+    return _np.array(maxtab), _np.array(mintab)
