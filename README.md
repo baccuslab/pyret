@@ -18,6 +18,10 @@ The package describes a Cell class, which contains data and functionality associ
 with individual cells recorded during an experiment. The class is described in detail 
 below.
 
+Documentation
+-------------
+For more info and documentation, see the [pyret website](http://baccuslab.github.io/pyret/)
+
 Demo
 ----
 For a demo of how to do analysis using `pyret`, check out the html file and corresponding ipython notebook in the `demo/` folder.
@@ -29,100 +33,3 @@ Pull requests are welcome! We follow the [NumPy/SciPy documentation standards](h
 Testing
 -------
 Testing is done via [nose](https://nose.readthedocs.org/en/latest/). Once installed (e.g. with `pip install nose`) then simply run `nosetests -v` at the top level directory to run the tests. Test functions are located in the `tests/` folder.
-
-Submodule overview
-------------------
-
-[**spiketools**](#spk)		-- basic manipulation of spike-times, including binning & smoothing
-
-[**filtertools**](#sta)		-- computing components of simple linear-nonlinear models, including linear filters and nonlinearities
-
-[**stimulustools**](#stim)	-- tools for manipulating stimuli, e.g., upsampling.
-
-[**visualization**](#viz)	-- visualization methods
-
-[**binary**](#binary)		-- reading binary recording files, useful for checking the photodiode
-
-Classes overview
-----------------
-
-[**Cell**](#cell)			-- individual cell (under development)
-
-Submodules in detail
---------------------
-
-<h3 id="sta">filtertools</h3>
-<hr>
-Tools for computing linear filters of various kinds.
-
-`getste(time, stimulus, spikes, length)`
-Construct the spike-triggered stimulus ensemble
-
-`getsta(time, stimulus, spikes, length)`
-Compute the spike-triggered average
-
-`getstc(time, stimulus, spikes, length)`
-Compute the spike-triggered covariance
-
-`lowranksta(sta, k=10)`
-Compute a rank-k approximation to the given spatiotemporal STA
-
-`decompose(sta)`
-Decompose the given spatiotemporal STA into a spatial and temporal kernel.
-
-<h3 id="stim">stimulustools</h3>
-<hr>
-Stimulus tools.
-
-`upsamplestim(time, stim, upfact)`
-Upsample the stimulus by the given factor.
-
-`downsamplestim(time, stim, upfact)`
-Downsample the stimulus by the given factor.
-
-`slicestim(stim, history, locations=None)`
-Take slices of length `history` from the given stimulus, optionally
-specifying the temporal locations of the slices.
-
-<h3 id="viz">visualization</h3>
-<hr>
-Visualization tools.
-
-`raster(spk, trange=None)`
-Plot spike raster over the given time range
-
-`psth(spk, trange=None)`
-Plot psth over the given time range
-
-`playsta(sta, repeat=True, frametime=100)`
-Play a spatio-temporal STA as a movie
-
-`plotsta(time, sta, timeslice=None)`
-Plot the spatial and temporal kernels of a spatiotemporal STA
-
-`temporal(time, temporalfilter, ax=None)`
-Plot the given temporal filter
-
-`spatial(spatialfilter, ax=None)`
-Plot the given spatial filter
-
-<h3 id="binary">binary</h3>
-<hr>
-Tools for reading Igor binary files, particularly for interacting with the photodiode.
-_Note: these tools are somewhat Baccus lab specific_
-
-`readbinhdr(fname)`
-Read the header from the file `fname`
-
-`readbin(fname, chan=0)`
-Read the channel `chan` from the file `fname`
-
-<h3 id="spk">spiketools</h3>
-<hr>
-Tools for manipulating spike-time arrays.
-
-`binspikes(spk, binsize=0.01)`
-Bin spike times at the given resolution
-
-`estfr(bspk, npts=9, sd=2)`
-Estimate firing rate by smoothing binned spikes
