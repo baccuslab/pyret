@@ -1,65 +1,74 @@
-'''
-nonlinearities.py
-
+"""
 Tools for fitting nonlinear functions to data
 
-(c) 2014 bnaecker, nirum
-'''
+.. warning:: These functions have not been tested
+
+"""
 
 import numpy as _np
 from scipy.optimize import curve_fit
 
+
 def gaussian(x, mu, sigma):
-    '''
+    """
     A 1D (unnormalized) gaussian function
-    '''
+
+    """
 
     return _np.exp( -0.5 * ((x-mu) / sigma)**2 )
 
+
 def sigmoid(x, threshold, slope, peak, offset):
-    '''
+    """
     A sigmoidal nonlinearity
-    '''
+
+    """
 
     return offset + peak / (1 + _np.exp(-slope*(x - threshold)))
 
+
 def dprime(p0, p1):
-    '''
+    """
     compute d' between two distributions given mean / standard deviation
 
-    input
-    -----
-    p0: (mean, standard deviation) for the first distribution
-    p1: (mean, standard deviation) for the second distribution
+    Parameters
+    ----------
 
-    '''
+    p0 : (float, float)
+        Mean and standard deviation for the first distribution
+
+    p1 : (float, float)
+        Mean and standard deviation for the second distribution
+
+    """
     return (p1[0] - p0[0]) / _np.sqrt( p1[1]**2 + p0[1]**2 )
 
+
 def fitgaussian(xpts, ypts, p0=None):
-    '''
+    """
     Fit a gaussian function to noisy data
 
-    input
-    -----
+    Parameters
+    ----------
 
-    xpts [array]:
+    xpts : array_like
         x-values of the data to fit
 
-    ypts [array]: 
+    ypts : array_like
         y-values of the data to fit
 
-    output
-    ------
+    Returns
+    -------
 
-    popt [array]:
+    popt : array_like
         The best-fit sigmoidal parameters (threshold, slope, peak, and offset)
 
-    yhat [array]:
+    yhat : array_like
         The estimated y-values at the given locations in xpts
 
     pcov [matrix]:
 
-    '''
+    """
 
     # estimate initial conditions
     if p0 is None:
@@ -77,31 +86,32 @@ def fitgaussian(xpts, ypts, p0=None):
 
     return popt, yhat, pcov
 
+
 def fitsigmoid(xpts, ypts):
-    '''
+    """
     Fit a sigmoidal function to noisy data
 
-    input
-    -----
+    Parameters
+    ----------
 
-    xpts [array]:
+    xpts : array_like
         x-values of the data to fit
 
-    ypts [array]: 
+    ypts : array_like
         y-values of the data to fit
 
-    output
-    ------
+    Returns
+    -------
 
-    popt [array]:
+    popt : array_like
         The best-fit sigmoidal parameters (threshold, slope, peak, and offset)
 
-    yhat [array]:
+    yhat : array_like
         The estimated y-values at the given locations in xpts
 
-    pcov [matrix]:
+    pcov : array_like
 
-    '''
+    """
 
     # estimate initial conditions
     p0 = (_np.mean(xpts), 1, _np.max(ypts), _np.min(ypts))
@@ -114,10 +124,12 @@ def fitsigmoid(xpts, ypts):
 
     return popt, yhat, pcov
 
+
 def estdprime(u, r, numbins=100):
-    '''
+    """
     Fit a nonlinearity given a 1D stimulus projection u and spiking response r
-    '''
+
+    """
 
     # pick a set of bins, store centered bins
     bins = _np.linspace(_np.min(u), _np.max(u), numbins)
@@ -142,10 +154,12 @@ def estdprime(u, r, numbins=100):
     # estimate d'
     return dprime(raw_params, spk_params)
 
+
 def estnln(u, r, numbins=50):
-    '''
+    """
     Fit a nonlinearity given a 1D stimulus projection u and spiking response r
-    '''
+
+    """
 
     # the minimum number of data points / bin to keep for fitting
     mincount = 2

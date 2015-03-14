@@ -1,0 +1,44 @@
+
+v0.2.0 (February 2015)
+----------------------
+
+This is a major release with a number of API changes, enhancements, and bug fixes.
+
+The main focus has been on adding thorough documentation of all the packages and functions available.
+
+API changes
+-----------
+
+- Changed the ``filterlength``, ``numSamples`` and ``spatialSmoothing`` optional arguments to ``filter_length``, ``num_samples`` and ``spatialSmoothing`` in ``filtertools.py``
+
+- Changed the ``numTrials`` to ``num_trials`` in ``spiketools.py``
+
+- Changed the ``triallength``, ``spatialFrame``, ``temporalFilter`` and ``boxdims`` optional arguments to ``trial_length``, ``spatial_filter``, ``temporal_filter`` and ``box_dims`` in ``visualizations.py``
+
+- Changed the ``stim`` paramteer to ``stimulus`` in ``stimulustools.py``
+
+- Added a function ``sample(rate)`` to ``spiketools.py`` which draws spikes from a Poisson distribution with the given rate.
+
+- Renamed the ``spikingevent`` class in ``spiketools.py`` to ``SpikingEvent``
+
+- Renamed the attributes ``startTime``, ``stopTime`` and functions ``trialCounts``, ``eventStats`` of ``SpikingEvent`` to ``start_time``, ``stop_time`` and ``trial_counts``, ``event_stats``
+
+- Moved the ``peakdet`` function from the ``peakdetect.py`` module to ``spiketools.py``. Removed the ``peakdetect.py`` module
+
+- Renamed the functions ``getellipseparams`` and ``getellipse`` to ``get_ellipse_params`` and ``fit_ellipse`` in ``filtertools.py``
+
+- Renamed the functions ``upsamplestim`` and ``downsamplestim`` to ``upsample_stim`` and ``downsample_stim`` in ``stimulustools.py``
+
+General package changes
+-----------------------
+
+- Removed the (Igor and Baccus lab specific) module ``binary.py``
+
+- Documentation via ``sphinx`` is included in the ``doc/`` folder
+
+Known issues
+------------
+
+- Installing with ``pip`` has not been tested.
+
+- Installing with ``python setup.py install`` is known to not work on some machines.
