@@ -10,13 +10,8 @@ Brief description
 -----------------
 
 The pyret package provides a set of tools useful in the analysis of retina experiments
-in the Baccus lab. It contains routines for interacting with raw Igor binary files
-from the recording computer, manipulating spike trains, performing basic spike-triggered
-analyses, and visualization tools for all these.
-
-The package describes a Cell class, which contains data and functionality associated 
-with individual cells recorded during an experiment. The class is described in detail 
-below.
+in the Baccus lab. It contains routines for manipulating spike trains, performing basic spike-triggered
+analyses, and visualization tools.
 
 Documentation
 -------------
