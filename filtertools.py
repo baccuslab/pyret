@@ -8,6 +8,7 @@ import numpy as _np
 from matplotlib.patches import Ellipse as _Ellipse
 from numpy.linalg import LinAlgError
 from scipy.linalg.blas import get_blas_funcs
+from scipy import ndimage as _ndimage
 from stimulustools import getcov as _getcov
 from scipy.stats import skew
 from skimage.restoration import denoise_tv_bregman
@@ -397,17 +398,17 @@ def lowranksta(f_orig, k=10):
     k = _np.min([k, s.size])
 
     # Compute the rank-k filter
-    fk = (u[:,:k].dot(_np.diag(s[:k]).dot(v[:k,:]))).reshape(f.shape)
+    fk = (u[:, :k].dot(_np.diag(s[:k]).dot(v[:k, :]))).reshape(f.shape)
 
     # make sure the temporal kernels have the correct sign
 
     # get out the temporal filter at the RF center
     peakidx = filterpeak(f)[1]
-    tsta = f[peakidx[1], peakidx[0], :].reshape(-1,1)
+    tsta = f[peakidx[1], peakidx[0], :].reshape(-1, 1)
     tsta -= _np.mean(tsta)
 
     # project onto the temporal filters and keep the sign
-    signs = _np.sign((v - _np.mean(v,axis=1)).dot(tsta))
+    signs = _np.sign((v - _np.mean(v, axis=1)).dot(tsta))
 
     # flip signs according to this projection
     v *= signs
@@ -676,7 +677,7 @@ def smoothfilter(f, spacesig=0.5, timesig=1):
         The smoothed filter, with the same shape as the input
 
     """
-    return _gaussian_filter(f, (spacesig, spacesig, timesig), order=0)
+    return _ndimage.filters.gaussian_filter(f, (spacesig, spacesig, timesig), order=0)
 
 
 def cutout(arr, idx, width=5):
