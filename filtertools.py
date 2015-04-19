@@ -7,9 +7,13 @@ spatiotemporal filters, and basic filter signal processing.
 import numpy as _np
 from matplotlib.patches import Ellipse as _Ellipse
 from numpy.linalg import LinAlgError
-from scipy.ndimage.filters import gaussian_filter as _gaussian_filter
 from scipy.linalg.blas import get_blas_funcs
 from stimulustools import getcov as _getcov
+from scipy.stats import skew
+from skimage.restoration import denoise_tv_bregman
+from skimage.filter import gaussian_filter
+from scipy.optimize import curve_fit
+
 
 def getste(time, stimulus, spikes, filter_length, tproj=None):
     """
@@ -435,84 +439,123 @@ def decompose(sta):
     return u[:, 0].reshape(sta.shape[:2]), v[0, :]
 
 
-def _fit_two_dim_gaussian(histogram, num_samples=10000):
+def _gaussian_function_2d(x, x0, y0, a, b, c):
     """
-    Fit a 2D gaussian to an empirical histogram
+    A 2D gaussian function
 
     Parameters
     ----------
-    histogram : array_like
-        The binned 2D histogram of values
+    x : array_like
+        A (2 by N) array of N data points
 
-    num_samples : int, optional
-        Number of samples to draw when estimating the Gaussian parameters (Default: 10,000)
+    x0 : float
+        The x center
+    
+    y0 : float
+        The y center
+    
+    a : float
+        The upper left number in the precision matrix
+    
+    b : float
+        The upper right / lower left number in the precision matrix
+    
+    c : float
+        The lower right number in the precision matrix
+    
+    """
+    
+    # center the data
+    xn = x[0, :] - x0
+    yn = x[1, :] - y0
+    
+    # gaussian function
+    return _np.exp(-0.5*(a*xn**2 + 2*b*xn*yn + c*yn**2))
+
+
+def _popt_to_ellipse(x0, y0, a, b, c):
+    """
+    Converts the parameters for the 2D gaussian function (see `fgauss`) into ellipse parameters
+    """
+
+    # convert precision matrix parameters to ellipse parameters
+    u, v = _np.linalg.eigh(_np.array([[a, b], [b, c]]))
+
+    # standard deviations
+    sigmas = _np.sqrt(1/u)
+
+    # rotation angle
+    theta = _np.rad2deg(_np.arccos(v[1, 1]))
+
+    return (x0, y0), sigmas, theta
+
+
+def _smooth_spatial_profile(f, spatial_smoothing, tvd_penalty):
+    """
+    Smooths a 2D spatial RF profile using a gaussian filter and total variation denoising
+
+    Parameters
+    ----------
+    f : array_like
+        2D profile to smooth
+
+    spatial_smoothing : float
+        width of the gaussian filter
+
+    tvd_penalty : float
+        strength of the total variation penalty (note: large values correspond to weaker penalty)
+
+    Notes
+    -----
+    Raises a ValueError if the RF profile is too noisy
 
     """
 
-    # Indices
-    x  = _np.linspace(0,1,histogram.shape[0])
-    y  = _np.linspace(0,1,histogram.shape[1])
-    xx, yy = _np.meshgrid(x, y)
-
-    # Draw samples
-    # noinspection PyTypeChecker
-    indices = _np.random.choice(_np.flatnonzero(histogram + 1), size=int(num_samples),
-                                replace=True, p=histogram.ravel())
-    x_samples = xx.ravel()[indices]
-    y_samples = yy.ravel()[indices]
-
-    # Fit mean / covariance
-    samples = _np.array((x_samples,y_samples))
-    center_index = _np.unravel_index(_np.argmax(histogram), histogram.shape)
-    center = (xx[center_index], yy[center_index])
-    C = _np.cov(samples)
-
-    # Get width / angles
-    widths,vectors = _np.linalg.eig(C)
-    angle = _np.arccos(vectors[0,0])
-
-    return center, widths, angle
+    sgn = _np.sign(skew(f.ravel()))
+    if sgn*skew(f.ravel()) < 0.1:
+        raise ValueError("Error! RF profile is too noisy!")
+    
+    H = denoise_tv_bregman(gaussian_filter(sgn * f, spatial_smoothing), tvd_penalty)
+    return H / H.max()
 
 
-def _image_to_hist(data, spatial_smoothing=2.5):
+def _initial_gaussian_params(sta_frame, xm, ym):
     """
-    Converts 2D image to histogram
-
+    Guesses the initial 2D Gaussian parameters
     """
 
-    # Smooth the data
-    data_smooth = _gaussian_filter(data, spatial_smoothing, order=0)
+    # normalize
+    wn = (sta_frame / _np.sum(sta_frame)).ravel()
 
-    # Mean subtract
-    mu              = _np.median(data_smooth)
-    data_centered   = data_smooth - mu
+    # estimate means
+    xc = _np.sum(wn * xm.ravel())
+    yc = _np.sum(wn * ym.ravel())
 
-    # Figure out if it is an on or off profile
-    if _np.abs(_np.max(data_centered)) < _np.abs(_np.min(data_centered)):
+    # estimate covariance
+    data = _np.vstack(((xm.ravel() - xc), (ym.ravel() - yc)))
+    Q = data.dot(_np.diag(wn).dot(data.T)) / (1 - _np.sum(wn**2))
 
-        # flip from 'off' to 'on'
-        data_centered *= -1
+    # compute precision matrix
+    P = _np.linalg.inv(Q)
+    a = P[0, 0]
+    b = P[0, 1]
+    c = P[1, 1]
 
-    # Min-subtract
-    data_centered -= _np.min(data_centered)
-
-    # Normalize to a PDF
-    pdf = data_centered / _np.sum(data_centered)
-
-    return pdf
+    return xc, yc, a, b, c
 
 
-def get_ellipse_params(sta_frame):
+def get_ellipse_params(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=100):
     """
-    Fit an ellipse to the given spatial receptive field, return parameters of the fit ellipse
+    Fit an ellipse to the given spatial receptive field and return parameters
 
     Parameters
     ----------
     sta_frame : array_like
         The spatial receptive field to which the ellipse should be fit
 
-    scale : float
-        Scale factor for the ellipse
+    spatial_smoothing : float, optional
+
+    tvd_penalty : float, optional
 
     Returns
     -------
@@ -527,12 +570,22 @@ def get_ellipse_params(sta_frame):
 
     """
 
-    # Get ellipse parameters
-    histogram = _image_to_hist(sta_frame)
-    return _fit_two_dim_gaussian(histogram)
+    # preprocess
+    ydata = _smooth_spatial_profile(sta_frame, spatial_smoothing, tvd_penalty)
+
+    # get initial params
+    xm, ym = _np.meshgrid(tx, ty)
+    pinit = _initial_gaussian_params(ydata**2, xm, ym)
+
+    # optimize
+    xdata = _np.vstack((xm.ravel(), ym.ravel()))
+    popt, pcov = curve_fit(_gaussian_function_2d, xdata, ydata.ravel(), p0=pinit)
+
+    # return ellipse parameters
+    return _popt_to_ellipse(*popt)
 
 
-def fit_ellipse(sta_frame, scale=1.0):
+def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=100, scale=1.5, alpha=0.5):
     """
     Fit an ellipse to the given spatial receptive field
 
@@ -552,11 +605,13 @@ def fit_ellipse(sta_frame, scale=1.0):
     """
 
     # Get ellipse parameters
-    center, widths, theta = get_ellipse_params(sta_frame)
+    center, widths, theta = get_ellipse_params(tx, ty, sta_frame,
+                                               spatial_smoothing=spatial_smoothing,
+                                               tvd_penalty=tvd_penalty)
 
     # Generate ellipse
-    ell = _Ellipse(xy=center, width=scale * widths[0], height=scale * widths[1], angle=_np.rad2deg(theta)+45)
-
+    ell = _Ellipse(xy=center, width=scale * widths[0],
+                   height=scale * widths[1], angle=theta, alpha=alpha)
     return ell
 
 
