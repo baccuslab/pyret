@@ -208,7 +208,7 @@ class SpikingEvent(object):
         """
         trials, indices = _np.unique(self.spikes[:,1], return_index=True)[:2]
         return self.spikes[indices,0]
-    
+
     def jitter(self):
         """
         Computes the jitter (standard deviation) in the time to first spike across trials
