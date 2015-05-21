@@ -1,6 +1,6 @@
-
+====================
 v0.2 (February 2015)
-----------------------
+====================
 
 This is a major release with a number of API changes, enhancements, and bug fixes.
 
