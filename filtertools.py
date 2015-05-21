@@ -47,11 +47,11 @@ def getste(time, stimulus, spikes, filter_length, tproj=None):
     ste : array_like
         The spike-triggered stimulus ensemble. The returned array is
         reshaped from the input `stimulus` array, such that all spatial
-        dimensions are collapsed. The array has shape 
+        dimensions are collapsed. The array has shape
         (nspikes, n_spatial_dims, filterlength).
 
     steproj : array_like
-        The spike-triggered stimulus ensemble, projected onto the 
+        The spike-triggered stimulus ensemble, projected onto the
         basis defined by `tproj`. If `tproj` is None (the default), the
         return value here is None.
 
@@ -88,7 +88,7 @@ def getste(time, stimulus, spikes, filter_length, tproj=None):
 
         # Loop over spikes, adding filterlength frames preceding each spike
         for idx, val in enumerate(nzhist):
-            
+
             # Raw STE
             ste[idx, :, :] = cstim[:, (val - filter_length):val]
 
@@ -162,7 +162,7 @@ def getsta(time, stimulus, spikes, filter_length, norm=True, return_flag=0):
     is raised, and the returned STA is an array of zeros with the desired
     shape (stimulus.shape[:-1], filter_length). This allows the
     STA to play nicely with later functions using it, for example, adding
-    multiple STAs together. 
+    multiple STAs together.
 
     """
 
@@ -451,25 +451,25 @@ def _gaussian_function_2d(x, x0, y0, a, b, c):
 
     x0 : float
         The x center
-    
+
     y0 : float
         The y center
-    
+
     a : float
         The upper left number in the precision matrix
-    
+
     b : float
         The upper right / lower left number in the precision matrix
-    
+
     c : float
         The lower right number in the precision matrix
-    
+
     """
-    
+
     # center the data
     xn = x[0, :] - x0
     yn = x[1, :] - y0
-    
+
     # gaussian function
     return _np.exp(-0.5*(a*xn**2 + 2*b*xn*yn + c*yn**2))
 
@@ -515,7 +515,7 @@ def _smooth_spatial_profile(f, spatial_smoothing, tvd_penalty):
     sgn = _np.sign(skew(f.ravel()))
     if sgn*skew(f.ravel()) < 0.1:
         raise ValueError("Error! RF profile is too noisy!")
-    
+
     H = denoise_tv_bregman(gaussian_filter(sgn * f, spatial_smoothing), tvd_penalty)
     return H / H.max()
 
@@ -586,7 +586,7 @@ def get_ellipse_params(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=100
     return _popt_to_ellipse(*popt)
 
 
-def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=100, scale=1.5, alpha=0.5):
+def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=100, scale=1.5, **kwargs):
     """
     Fit an ellipse to the given spatial receptive field
 
@@ -612,7 +612,7 @@ def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=100, scale
 
     # Generate ellipse
     ell = _Ellipse(xy=center, width=scale * widths[0],
-                   height=scale * widths[1], angle=theta, alpha=alpha)
+                   height=scale * widths[1], angle=theta, **kwargs)
     return ell
 
 
