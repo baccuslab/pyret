@@ -325,13 +325,13 @@ def detectevents(spk, threshold=(0.3, 0.05)):
         if start_indices.size == 0:
             starttime = tax[0]
         else:
-            tax[_np.max(start_indices)]
+            starttime = tax[_np.max(start_indices)]
 
         # find the stop time, defined as the lest most peak index
         if stop_indices.size == 0:
             stoptime = tax[-1]
         else:
-            tax[_np.min(stop_indices)]
+            stoptime = tax[_np.min(stop_indices)]
 
         # find spikes within this time interval
         event_spikes = spk[(spk[:, 0] >= starttime) &
