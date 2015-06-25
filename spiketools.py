@@ -9,9 +9,10 @@ for smoothing a histogram into a firing rate (`estfr`)
 """
 
 import sys
-import numpy as _np
-import matplotlib.pyplot as _plt
+import numpy as np
+import matplotlib.pyplot as plt
 
+__all__ = ['binspikes', 'estfr', 'sample', 'detectevents', 'peakdet', 'SpikingEvent']
 
 def binspikes(spk, tmax=None, binsize=0.01, time=None, num_trials=1):
     """
@@ -53,16 +54,16 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None, num_trials=1):
 
         # If a max time is not specified, set it to the time of the last spike
         if not tmax:
-            tmax = _np.ceil(spk.max())
+            tmax = np.ceil(spk.max())
 
         # create the time vector
-        time = _np.arange(0, tmax + binsize, binsize)
+        time = np.arange(0, tmax + binsize, binsize)
 
     # bin spike times
-    bspk = _np.histogram(spk, bins=time)[0].astype(float)
+    bspk = np.histogram(spk, bins=time)[0].astype(float)
 
     # center the time bins
-    tax = time[:-1] + 0.5 * _np.mean(_np.diff(time))
+    tax = time[:-1] + 0.5 * np.mean(np.diff(time))
 
     # returned binned spikes and cenetered time axis
     return bspk / num_trials, tax
@@ -91,16 +92,16 @@ def estfr(tax, bspk, sigma=0.01):
     """
 
     # estimate binned spikes time step
-    dt = float(_np.mean(_np.diff(tax)))
+    dt = float(np.mean(np.diff(tax)))
 
     # Construct Gaussian filter, make sure it is normalized
-    tau = _np.arange(-5 * sigma, 5 * sigma, dt)
-    filt = _np.exp(-0.5 * (tau / sigma) ** 2)
-    filt = filt / _np.sum(filt)
-    size = _np.round(filt.size / 2)
+    tau = np.arange(-5 * sigma, 5 * sigma, dt)
+    filt = np.exp(-0.5 * (tau / sigma) ** 2)
+    filt = filt / np.sum(filt)
+    size = np.round(filt.size / 2)
 
     # Filter  binned spike times
-    return _np.convolve(filt, bspk, mode='full')[size:size + tax.size] / dt
+    return np.convolve(filt, bspk, mode='full')[size:size + tax.size] / dt
 
 
 def sample(rate, dt=1.0, num_trials=1):
@@ -136,7 +137,7 @@ def sample(rate, dt=1.0, num_trials=1):
 
     """
 
-    return _np.random.poisson(rate * dt, (num_trials,) + rate.shape)
+    return np.random.poisson(rate * dt, (num_trials,) + rate.shape)
 
 
 class SpikingEvent(object):
@@ -185,8 +186,8 @@ class SpikingEvent(object):
         >> counts = spkevent.trial_counts()
 
         """
-        counts, _ = _np.histogram(self.spikes[:, 1], bins=_np.arange(
-            _np.min(self.spikes[:, 1]), _np.max(self.spikes[:, 1])))
+        counts, _ = np.histogram(self.spikes[:, 1], bins=np.arange(
+            np.min(self.spikes[:, 1]), np.max(self.spikes[:, 1])))
         return counts
 
     def event_stats(self):
@@ -200,7 +201,7 @@ class SpikingEvent(object):
         # count number of spikes per trial
         counts = self.trial_counts()
 
-        return _np.mean(counts), _np.std(counts)
+        return np.mean(counts), np.std(counts)
 
     def ttfs(self):
         """
@@ -210,7 +211,7 @@ class SpikingEvent(object):
         >> times = spkevent.ttfs()
 
         """
-        trials, indices = _np.unique(self.spikes[:, 1], return_index=True)[:2]
+        trials, indices = np.unique(self.spikes[:, 1], return_index=True)[:2]
         return self.spikes[indices, 0]
 
     def jitter(self):
@@ -220,7 +221,7 @@ class SpikingEvent(object):
         >> sigma = spkevent.jitter()
 
         """
-        return _np.std(self.ttfs())
+        return np.std(self.ttfs())
 
     def sort(self):
         """
@@ -231,10 +232,10 @@ class SpikingEvent(object):
         """
 
         # get first spike in each trial
-        trial_indices = _np.unique(self.spikes[:, 1], return_index=True)[1]
+        trial_indices = np.unique(self.spikes[:, 1], return_index=True)[1]
 
         # sort by time of first spike
-        sorted_indices = _np.argsort(self.spikes[trial_indices, 0])
+        sorted_indices = np.argsort(self.spikes[trial_indices, 0])
 
         # get reassigned trials
         sorted_trials = self.spikes[trial_indices[sorted_indices], 1]
@@ -271,7 +272,7 @@ class SpikingEvent(object):
             spikes = self.spikes
 
         if not ax:
-            ax = _plt.figure().add_subplot(111)
+            ax = plt.figure().add_subplot(111)
 
         ax.plot(spikes[:, 0], spikes[:, 1], 'o', markersize=6,
                 markerfacecolor=color)
@@ -305,7 +306,7 @@ def detectevents(spk, threshold=(0.3, 0.05)):
 
     # find peaks in the PSTH
     bspk, tax = binspikes(spk[:, 0], binsize=0.01,
-                          num_trials=_np.max(spk[:, 1]))
+                          num_trials=np.max(spk[:, 1]))
     psth = estfr(tax, bspk, sigma=0.02)
     maxtab, _ = peakdet(psth, threshold[0], tax)
 
@@ -316,22 +317,22 @@ def detectevents(spk, threshold=(0.3, 0.05)):
     for eventidx in range(maxtab.shape[0]):
 
         # get putative start and stop indices of each spiking event
-        start_indices = _np.where((psth <= threshold[1]) &
+        start_indices = np.where((psth <= threshold[1]) &
                                   (tax < maxtab[eventidx, 0]))[0]
-        stop_indices = _np.where((psth <= threshold[1]) &
+        stop_indices = np.where((psth <= threshold[1]) &
                                  (tax > maxtab[eventidx, 0]))[0]
 
         # find the start time, defined as the right most peak index
         if start_indices.size == 0:
             starttime = tax[0]
         else:
-            tax[_np.max(start_indices)]
+            starttime = tax[np.max(start_indices)]
 
         # find the stop time, defined as the lest most peak index
         if stop_indices.size == 0:
             stoptime = tax[-1]
         else:
-            tax[_np.min(stop_indices)]
+            stoptime = tax[np.min(stop_indices)]
 
         # find spikes within this time interval
         event_spikes = spk[(spk[:, 0] >= starttime) &
@@ -384,25 +385,25 @@ def peakdet(v, delta, x=None):
     mintab = []
 
     if x is None:
-        x = _np.arange(len(v))
+        x = np.arange(len(v))
 
-    v = _np.asarray(v)
+    v = np.asarray(v)
 
     if len(v) != len(x):
         sys.exit('Input vectors v and x must have same length')
 
-    if not _np.isscalar(delta):
+    if not np.isscalar(delta):
         sys.exit('Input argument delta must be a scalar')
 
     if delta <= 0:
         sys.exit('Input argument delta must be positive')
 
-    mn, mx = _np.Inf, -_np.Inf
-    mnpos, mxpos = _np.NaN, _np.NaN
+    mn, mx = np.Inf, -np.Inf
+    mnpos, mxpos = np.NaN, np.NaN
 
     lookformax = True
 
-    for i in _np.arange(len(v)):
+    for i in np.arange(len(v)):
         this = v[i]
         if this > mx:
             mx = this
@@ -424,4 +425,4 @@ def peakdet(v, delta, x=None):
                 mxpos = x[i]
                 lookformax = True
 
-    return _np.array(maxtab), _np.array(mintab)
+    return np.array(maxtab), np.array(mintab)
