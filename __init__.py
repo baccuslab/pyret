@@ -6,7 +6,6 @@ A Python package for analysis of retinal data
 
 Modules
 -------
-    binary          - Interact with *.bin raw experiment data files
     spiketools      - Tools for manipulating spike trains
     filtertools     - Analysis of linear filters
     stimulustools   - Tools for getting stimulus history and statistics
@@ -18,11 +17,20 @@ For more information, see the accompanying README.md
 """
 
 __all__ = [
-        'spiketools', 
-        'filtertools', 
-        'stimulustools', 
-        'visualizations', 
-        'nonlinearities']
+        'spiketools',
+        'nonlinearities',
+        'stimulustools',
+        'visualizations',
+        'filtertools'
+        ]
+
+#__all__ = [
+        #'spiketools', 
+        #'filtertools', 
+        #'stimulustools'] #, 
+        #'visualizations', 
+        #'nonlinearities']
 __version__ = '0.2'
 
 from pyret import *
+

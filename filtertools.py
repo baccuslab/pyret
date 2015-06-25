@@ -9,12 +9,11 @@ from matplotlib.patches import Ellipse as _Ellipse
 from numpy.linalg import LinAlgError
 from scipy.linalg.blas import get_blas_funcs
 from scipy import ndimage as _ndimage
-from stimulustools import getcov as _getcov
 from scipy.stats import skew
 from skimage.restoration import denoise_tv_bregman
-from skimage.filter import gaussian_filter
+from skimage.filters import gaussian_filter
 from scipy.optimize import curve_fit
-
+from .stimulustools import getcov as _getcov
 
 def getste(time, stimulus, spikes, filter_length, tproj=None):
     """
