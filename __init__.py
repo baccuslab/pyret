@@ -16,11 +16,14 @@ For more information, see the accompanying README.md
 
 """
 
-__all__ = ['spiketools',
-           'filtertools',
-           'stimulustools',
-           'visualizations',
-           'nonlinearities']
-__version__ = '0.2'
+__all__ = [
+        'spiketools',
+        'nonlinearities',
+        'stimulustools',
+        'visualizations',
+        'filtertools'
+        ]
+__version__ = '0.3'
 
 from pyret import *
+

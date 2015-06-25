@@ -9,11 +9,11 @@ from matplotlib.patches import Ellipse
 from numpy.linalg import LinAlgError
 from scipy.linalg.blas import get_blas_funcs
 from scipy import ndimage
-from stimulustools import getcov
 from scipy.stats import skew
 from skimage.restoration import denoise_tv_bregman
-from skimage.filter import gaussian_filter
+from skimage.filters import gaussian_filter
 from scipy.optimize import curve_fit
+from .stimulustools import getcov as _getcov
 
 __all__ = ['getste', 'getsta', 'getstc', 'lowranksta', 'decompose', 'get_ellipse_params',
            'fit_ellipse', 'filterpeak', 'smoothfilter', 'cutout', 'prinangles']

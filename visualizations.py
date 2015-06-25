@@ -6,12 +6,11 @@ Visualization functions for displaying spikes, filters, and cells.
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import filtertools as ft
+from . import filtertools as ft
 from matplotlib import animation as animation
 
 __all__ = ['raster', 'psth', 'rasterandpsth', 'playsta', 'spatial', 'temporal',
            'plotsta', 'playsta', 'ellipse', 'plotcells', 'playrates']
-
 
 def raster(spikes, trial_length=None, fig=None):
     """
