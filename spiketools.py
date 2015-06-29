@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 
 __all__ = ['binspikes', 'estfr', 'sample', 'detectevents', 'peakdet', 'SpikingEvent']
 
+
 def binspikes(spk, tmax=None, binsize=0.01, time=None, num_trials=1):
     """
     Bin spike times at the given resolution. The function has two forms.

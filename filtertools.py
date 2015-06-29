@@ -13,7 +13,7 @@ from scipy.stats import skew
 from skimage.restoration import denoise_tv_bregman
 from skimage.filters import gaussian_filter
 from scipy.optimize import curve_fit
-from .stimulustools import getcov as _getcov
+from stimulustools import getcov
 
 __all__ = ['getste', 'getsta', 'getstc', 'lowranksta', 'decompose',
            'get_ellipse_params', 'fit_ellipse', 'filterpeak', 'smoothfilter',
