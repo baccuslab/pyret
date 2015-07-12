@@ -212,6 +212,9 @@ def playsta(sta, repeat=True, frametime=100):
     frametime : float, optional
         Length of time each frame is displayed for in milliseconds (default is 100)
 
+    clim : array_like
+        2 Dimensional color limit for animation; e.g. [0, 255]
+
     Returns
     -------
     None
@@ -229,6 +232,8 @@ def playsta(sta, repeat=True, frametime=100):
     # Set up the colors
     img.set_cmap('gray')
     img.set_interpolation('nearest')
+    if clim:
+      img.set_clim(clim)
 
     # Animation function (called sequentially)
     def animate(i):
