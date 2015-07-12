@@ -14,59 +14,16 @@ from skimage.restoration import denoise_tv_bregman
 from skimage.filters import gaussian_filter
 from scipy.optimize import curve_fit
 from stimulustools import getcov
+from itertools import imap
 
 __all__ = ['getste', 'getsta', 'getstc', 'lowranksta', 'decompose',
            'get_ellipse_params', 'fit_ellipse', 'filterpeak', 'smoothfilter',
            'cutout', 'prinangles', 'rolling_window']
 
 
-def getste(time, stimulus, spikes, filter_length, tproj=None):
+def getste(time, stimulus, spikes, filter_length):
     """
-    Construct the spike-triggered ensemble
-
-    Parameters
-    ----------
-    time : array_like
-        The time axis of the stimulus
-
-    stimulus : array_like
-        The stimulus array. The last dimension of the stimulus
-        array is assumed to be time, but no other restrictions
-        are placed on its shape. It works for purely temporal
-        and spatiotemporal stimuli.
-
-    spikes : array_like
-        Array of spike times
-
-    filter_length : int
-        Number of frames over which to construct the ensemble.
-
-    tproj : array_like
-        A basis onto which the raw ensemble is projected. This is
-        useful for smoothing or reducing the size/dimensionality of
-        the ensemble. If None (default), uses the identity matrix.
-
-    Returns
-    -------
-    ste : array_like
-        The spike-triggered stimulus ensemble. The returned array is
-        reshaped from the input `stimulus` array, such that all spatial
-        dimensions are collapsed. The array has shape
-        (nspikes, n_spatial_dims, filterlength).
-
-    steproj : array_like
-        The spike-triggered stimulus ensemble, projected onto the
-        basis defined by `tproj`. If `tproj` is None (the default), the
-        return value here is None.
-
-    tax : array_like
-        The time axis of the ensemble. It is of length `filterlength`,
-        with intervals given by the sample rate of the `time` input
-        array.
-
-    Raises
-    ------
-    A ValueError is raised if there are no spikes within the requested `time`
+    Constructs an iterator over spike-triggered stimuli
 
     """
 
@@ -75,280 +32,48 @@ def getste(time, stimulus, spikes, filter_length, tproj=None):
 
     # Get indices of non-zero firing, truncating spikes earlier
     # than `filterlength` frames
-    nzhist = [x for x in np.where(hist > 0)[0] if x > filter_length]
+    spike_indices = [x for x in np.where(hist > 0)[0] if x > filter_length]
 
-    # Collapse any spatial dimensions of the stimulus array
-    cstim = stimulus.reshape(-1, stimulus.shape[-1])
+    # get slice
+    getslice = lambda idx: stimulus[..., (idx - filter_length):idx]
 
-    # Preallocate STE array
-    ste = np.empty((nzhist.size, cstim.shape[0], filter_length))
+    # return the iterator
+    return imap(getslice, spike_indices)
 
-    # Compute the STE, and optionally the projection onto tproj
-    if tproj is not None:
 
-        # Preallocate the projection array
-        steproj = np.empty((nzhist.size, cstim.shape[0], filter_length))
+def getsta(time, stimulus, spikes, filter_length):
 
-        # Loop over spikes, adding filterlength frames preceding each spike
-        for idx, val in enumerate(nzhist):
+    # all zeros
+    sta_init = np.zeros(stimulus.shape[:-1] + (filter_length,))
 
-            # Raw STE
-            ste[idx, :, :] = cstim[:, (val - filter_length):val]
+    # get the iterator
+    ste = getste(time, stimulus, spikes, filter_length)
 
-            # Projected STE
-            steproj[idx, :, :] = ste[idx, :, :].dot(tproj).dot(tproj.T)
+    # reduce
+    sta = reduce(lambda sta, x: sta + x, ste, sta_init) / len(spikes)
 
-    else:
-
-        # Projected STE is None
-        steproj = None
-
-        # Loop over spikes, adding filterlength frames preceding each spike
-        for idx, val in enumerate(nzhist):
-
-            # Raw STE only
-            ste[idx, :, :] = cstim[:, (val - filter_length):val]
-
-    # Construct a time axis to return
+    # time axis
     tax = time[:filter_length] - time[0]
 
-    # Return STE and the time axis
-    return ste, steproj, tax
+    return sta, tax
 
 
-def getsta(time, stimulus, spikes, filter_length, norm=True, return_flag=0):
-    """
-    Compute the spike-triggered average
+def getstc(time, stimulus, spikes, filter_length):
 
-    Parameters
-    ----------
-    time : array_like
-        The time axis of the stimulus
+    # initialize
+    ndims = np.prod(stimulus.shape[:-1]) * filter_length
+    stc_init = np.zeros((ndims, ndims))
 
-    stimulus : array_like
-        The stimulus array. The last dimension of the stimulus
-        array is assumed to be time, but no other restrictions
-        are placed on its shape. It works for purely temporal
-        and spatiotemporal stimuli.
+    # add an outer product to the covariance matrix
+    outerprod = lambda C, x: C + np.outer(x.ravel(), x.ravel())
 
-    spikes : array_like
-        Array of spike times.
+    # get the iterator
+    ste = getste(time, stimulus, spikes, filter_length)
 
-    filter_length : int
-        Number of frames over which to construct the
-        ensemble
+    # reduce
+    stc = reduce(outerprod, ste, stc_init) / len(spikes)
 
-    norm : boolean, optional
-        Normalize the computed filter by mean-subtracting and normalizing
-        to a unit vector. (Default: True)
-
-    return_flag : int, optional
-        0:  (default) returns both sta and tax
-        1:  returns only the sta
-        2:  returns only the tax (time axis)
-
-    Returns
-    -------
-    sta : array_like
-        The spike-triggered average. The returned array has
-        stimulus.ndim + 1 dimensions, and has a shape of
-        (nspikes, stimulus.shape[:-1], filter_length).
-
-    tax : array_like
-        The time axis of the ensemble. It is of length `filter_length`,
-        with intervals given by the sample rate of the `time` input
-        array.
-
-    Raises
-    ------
-    If no spikes occurred during the given `time` array, a UserWarning
-    is raised, and the returned STA is an array of zeros.
-
-    """
-
-    # Bin spikes
-    (hist, bins) = np.histogram(spikes, time)
-
-    # Get indices of non-zero firing, truncating spikes earlier
-    # than `filter_length` frames
-    nzhist = [x for x in np.where(hist > 0)[0] if x > filter_length]
-
-    # Check if there are no spikes during this time
-    if not np.any(nzhist):
-        import warnings as _wrn
-        _wrn.warn('There are no spikes during the requested time')
-        sta = np.zeros(stimulus.shape[:-1] + (filter_length,))
-        tax = time[:filter_length] - time[filter_length - 1]
-
-    else:
-        # Collapse any spatial dimensions of the stimulus array
-        cstim = stimulus.reshape(-1, stimulus.shape[-1])
-
-        # Preallocate STA array
-        sta = np.zeros((cstim.shape[0], filter_length))
-
-        # Add filter_length frames preceding each spike to the running STA
-        for idx in nzhist:
-            sta += hist[idx] * cstim[:, (idx - filter_length):idx]
-
-        # Mean-subtract and normalize as a vector
-        if norm:
-            sta -= np.mean(sta)
-            sta /= np.linalg.norm(sta)
-
-        # otherwise, normalize by dividing by the number of spikes
-        else:
-            sta /= np.sum(hist[nzhist])
-
-        # Construct a time axis to return
-        tax = time[:filter_length] - time[filter_length - 1]
-
-        # Reshape the STA and flip the time axis so that the time of the spike is at index 0
-        sta = np.reshape(sta, stimulus.shape[:-1] + (filter_length,))
-
-    # Return STA and the time axis
-    if return_flag == 0:
-        return sta, tax
-    elif return_flag == 1:
-        return sta
-    elif return_flag == 2:
-        return tax
-    else:
-        raise ValueError('return_flag has to be either 0, 1 or 2 in getsta')
-
-
-def getstc(time, stimulus, spikes, filterlength, tproj=None):
-    """
-    Compute the spike-triggered covariance
-
-    Usage: cells, tax, stimcov = getstc(time, stimulus, spikes, filterlength, tproj=None)
-
-    Notes
-    -----
-    We define the dimensionality `d` to be: d = stimulus.shape[:-1] * filterlength
-
-    Parameters
-    ----------
-    time : array_like
-        The time axis of the stimulus
-
-    stimulus : array_like
-        The stimulus array. The last dimension of the stimulus
-        array is assumed to be time, but no other restrictions
-        are placed on its shape. It works for purely temporal
-        and spatiotemporal stimuli.
-
-    spikes : list of array_like
-        List of arrays of spike times, one for each cell
-
-    filterlength : int
-        Number of frames over which to construct the
-        ensemble
-
-    tproj : array_like, optional
-        Temporal basis set to use. Must have # of rows (first dimension) equal to filterlength.
-        Each extracted stimulus slice is projected onto this basis set, which reduces the size
-        of the corresponding covariance matrix to store. This basis can be chosen to be some smooth
-        set of tiled functions, such as raised cosines, which enforces smooth filters in time.
-
-    Returns
-    -------
-    cells : list
-        contains the following for each cell
-
-        eigvecs : array_like
-            The (d x d) set of eigenvectors of the normalized STC matrix, each column is a separate eigenvector
-
-        eigvals : array_like
-            The corresponding set of d eigenvalues of the normalized STC matrix
-
-        spkcov : array_like
-            The (d x d) spike-triggered covariance matrix.
-
-        sta : array_like
-            The spike-triggered average
-
-    stimcov : array_like
-        The (d by d) stimulus covariance matrix
-
-    tax : array_like
-        The time axis of the ensemble. It is of length `filterlength`,
-        with intervals given by the sample rate of the `time` input
-        array.
-
-    """
-
-    # temporal basis (if not given, use the identity matrix)
-    if tproj is None:
-        tproj = np.eye(filterlength)
-
-    if tproj.shape[0] != filterlength:
-        raise ValueError('The first dimension of the basis set tproj must equal filterlength')
-
-    # get the stimulus covariance matrix
-    stimcov = getcov(stimulus, filterlength, tproj=tproj)
-
-    # store information about cells in a list
-    cells = list()
-
-    # Construct a time axis to return
-    tax = time[:filterlength] - time[0]
-
-    # for each cell's spike times
-    for spk in spikes:
-
-        print('[Cell %i of %i]' % (len(cells) + 1, len(spikes)))
-
-        # Bin spikes
-        (hist, bins) = np.histogram(spk, time)
-
-        # Get indices of non-zero firing, truncating spikes earlier
-        # than `filterlength` frames
-        nzhist = np.where(hist > 0)[0]
-        nzhist = nzhist[nzhist > filterlength]
-
-        # Collapse any spatial dimensions of the stimulus array
-        cstim = stimulus.reshape(-1, stimulus.shape[-1])
-
-        # Preallocate STA array and STC matrix
-        sta = np.zeros((cstim.shape[0] * tproj.shape[1], 1))
-        spkcov = np.zeros((cstim.shape[0] * tproj.shape[1], cstim.shape[0] * tproj.shape[1]))
-
-        # get blas function
-        blas_ger_fnc = get_blas_funcs(('ger',), (spkcov,))[0]
-
-        # Add the outerproduct of stimulus slices to the STC, keep track of the STA
-        for idx in nzhist:
-
-            # get the stimulus slice
-            stimslice = (hist[idx] * cstim[:, (idx - filterlength):idx]).dot(tproj).reshape(-1,1)
-
-            # update the spike-triggered average
-            sta += stimslice
-
-            # add it to the covariance matrix (using low-level BLAS operation)
-            blas_ger_fnc(hist[idx], stimslice, stimslice, a=spkcov.T, overwrite_a=True)
-
-        # normalize and compute the STA outer product
-        sta /= float(nzhist.size)
-        sta_op = sta.dot(sta.T)
-
-        # mean-subtract and normalize the STC by the number of samples
-        spkcov = spkcov / (float(nzhist.size) - 1) - sta_op
-
-        # estimate eigenvalues and eigenvectors of the normalized STC matrix
-        try:
-            eigvals, eigvecs = np.linalg.eig(spkcov - stimcov)
-        except np.linalg.LinAlgError:
-            print('Warning: eigendecomposition did not converge. You may not have enough data.')
-            eigvals = None
-            eigvecs = None
-
-        # store results
-        cells.append({'sta': sta, 'eigvals': eigvals, 'eigvecs': eigvecs, 'spkcov': spkcov})
-
-    # Return values
-    return cells, tax, stimcov
+    return stc
 
 
 def lowranksta(f_orig, k=10):
