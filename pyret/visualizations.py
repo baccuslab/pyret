@@ -12,26 +12,28 @@ from matplotlib import animation as animation
 __all__ = ['raster', 'psth', 'rasterandpsth', 'playsta', 'spatial', 'temporal',
            'plotsta', 'playsta', 'ellipse', 'plotcells', 'playrates']
 
-def raster(spikes, trial_length=None, fig=None):
-    """
-    Plot a raster of spike times from an array of spike times
 
-    Notes
-    -----
-    The `triallength` keyword specifies the length of time for each trial, and the
-    `spikes` array is split up into segments of that length. These groups are then
-    plotted on top of one another, as individual trials.
+def raster(spikes, labels, title='Spike raster', marker_string='ko', fig=None, **kwargs):
+    """
+    Plot a raster of spike times
 
     Parameters
     ----------
     spikes : array_like
         An array of spike times
 
-    triallength : float
-        The length of each trial to stack, in seconds.
+    labels : array_like
+        An array of labels corresponding to each spike in spikes. For example,
+        this can indicate which cell or trial each spike came from
 
-    fig : matplotlib Figure object
-        The figure into which the raster is plotted.
+    title : string, optional
+        An optional title for the plot (Default: 'Spike raster').
+
+    marker_string : string, optional
+        The marker string passed to matplotlib's plot function (Default: 'ko').
+
+    kwargs : dict
+        Optional keyword arguments are passed to matplotlib's plot function
 
     Returns
     -------
@@ -40,32 +42,20 @@ def raster(spikes, trial_length=None, fig=None):
 
     """
 
-    # Parse time input
-    if trial_length is None:
-        # Compute the time indices of the start and stop of the spikes
-        times = np.array([spikes.min(), spikes.max()])
-    else:
-        # Compute the time indices of each trial
-        times = np.array([np.array([0, trial_length]) + trial_length * i
-                           for i in np.arange(np.ceil(spikes.max() / trial_length))])
+    # data checking
+    assert len(spikes) == len(labels), "Spikes and labels must have the same length"
 
     # Make a new figure
     if not fig or type(fig) is not plt.Figure:
         fig = plt.figure()
 
-    # Plot each trial
+    # Plot the spikes
     ax = fig.add_subplot(111)
-    plt.hold(True)
-    for trial in range(times.shape[0]):
-        idx = np.bitwise_and(spikes > times[trial, 0], spikes <= times[trial, 1])
-        ax.plot(spikes[idx] - times[trial, 0], (trial + 1) * np.ones((idx.sum(), 1)),
-                color='k', linestyle='none', marker='.')
+    ax.plot(spikes, labels, marker_string, **kwargs)
 
     # Labels, etc.
-    plt.title('spike raster', fontdict={'fontsize': 24})
-    plt.xlabel('time (s)', fontdict={'fontsize': 20})
-    plt.ylabel('trial #', fontdict={'fontsize': 20})
-    plt.ylim(ymin=0, ymax=times.shape[0] + 1)
+    plt.title(title, fontdict={'fontsize': 24})
+    plt.xlabel('Time (s)', fontdict={'fontsize': 20})
     plt.show()
     plt.draw()
 
