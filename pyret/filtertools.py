@@ -75,8 +75,7 @@ def getste(time, stimulus, spikes, filter_length, tproj=None):
 
     # Get indices of non-zero firing, truncating spikes earlier
     # than `filterlength` frames
-    nzhist = np.where(hist > 0)[0]
-    nzhist = nzhist[nzhist > filter_length]
+    nzhist = [x for x in np.where(hist > 0)[0] if x > filter_length]
 
     # Collapse any spatial dimensions of the stimulus array
     cstim = stimulus.reshape(-1, stimulus.shape[-1])
@@ -139,14 +138,14 @@ def getsta(time, stimulus, spikes, filter_length, norm=True, return_flag=0):
         Number of frames over which to construct the
         ensemble
 
-    norm : boolean
+    norm : boolean, optional
         Normalize the computed filter by mean-subtracting and normalizing
-        to a unit vector.
+        to a unit vector. (Default: True)
 
-    return_flag : int
+    return_flag : int, optional
         0:  (default) returns both sta and tax
         1:  returns only the sta
-        2:  returns only the tax
+        2:  returns only the tax (time axis)
 
     Returns
     -------
@@ -163,10 +162,7 @@ def getsta(time, stimulus, spikes, filter_length, norm=True, return_flag=0):
     Raises
     ------
     If no spikes occurred during the given `time` array, a UserWarning
-    is raised, and the returned STA is an array of zeros with the desired
-    shape (stimulus.shape[:-1], filter_length). This allows the
-    STA to play nicely with later functions using it, for example, adding
-    multiple STAs together.
+    is raised, and the returned STA is an array of zeros.
 
     """
 
@@ -175,8 +171,7 @@ def getsta(time, stimulus, spikes, filter_length, norm=True, return_flag=0):
 
     # Get indices of non-zero firing, truncating spikes earlier
     # than `filter_length` frames
-    nzhist = np.where(hist > 0)[0]
-    nzhist = nzhist[nzhist > filter_length]
+    nzhist = [x for x in np.where(hist > 0)[0] if x > filter_length]
 
     # Check if there are no spikes during this time
     if not np.any(nzhist):
@@ -748,7 +743,7 @@ def prinangles(u, v):
     """
 
     # Orthogonalize each subspace
-    (qu, ru), (qv, rv) = np.linalg.qr(u), np.linalg.qr(v)
+    (qu, _), (qv, _) = np.linalg.qr(u), np.linalg.qr(v)
 
     # Compute singular values of the inner product between the orthogonalized spaces
     mag = np.linalg.svd(qu.T.dot(qv), compute_uv=False, full_matrices=False)

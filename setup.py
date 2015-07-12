@@ -1,7 +1,8 @@
-from setuptools import setup
+from setuptools import setup, find_packages
+import pyret
 
 setup(name='pyret',
-      version='0.3.0',
+      version=pyret.__version__,
       description='Tools for the analysis of neural data',
       author='Benjamin Naecker, Niru Maheshwaranathan',
       author_email='bnaecker@stanford.edu',
@@ -18,9 +19,6 @@ setup(name='pyret',
           'Intended Audience :: Science/Research',
           'Operating System :: MacOS :: MacOS X',
           'Topic :: Scientific/Engineering :: Information Analysis'],
-      packages=['pyret'],
-      package_dir={'pyret': ''},
-      py_modules=['spiketools', 'filtertools', 'stimulustools',
-                  'nonlinearities', 'visualizations'],
+      packages=find_packages(),
       license='LICENSE.md'
       )
