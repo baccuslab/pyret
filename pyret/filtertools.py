@@ -69,22 +69,21 @@ def getstc(time, stimulus, spikes, filter_length):
     stc_init = np.zeros((ndims, ndims))
 
     # get the blas function for computing the outer product
-    def blas_ger(X, v):
-        # for overwrite_a flag to work and not copy X, we have to pass
-        # in a transposed version of X
-        blas_ger_fnc = get_blas_funcs(('ger',), (X,))[0]
-        blas_ger_fnc(1, v, v, a=X.T, overwrite_a=True)
-        return X
+    assert stimulus.dtype == 'float64', 'Stimulus must be double precision'
+    outer = get_blas_funcs('syr', dtype='d')
 
     # add an outer product to the covariance matrix
-    outerprod = lambda C, x: C + np.outer(x.ravel(), x.ravel())
+    outerprod = lambda C, x: outer(1, x.ravel(), a=C)
 
     # get the iterator
     ste = getste(time, stimulus, spikes, filter_length)
 
-    # reduce
-    #stc = reduce(blas_ger, ste, stc_init) / len(spikes)
-    stc = reduce(outerprod, ste, stc_init) / len(spikes)
+    # reduce, note that this only contains the upper triangular portion
+    stc_ut = reduce(outerprod, ste, stc_init) / len(spikes)
+
+    # make the full STC matrix (copy the upper triangular portion to the lower
+    # triangle)
+    stc = np.triu(stc_ut, 1).T + stc_ut
 
     return stc
 
