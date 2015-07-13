@@ -13,8 +13,12 @@ from scipy.stats import skew
 from skimage.restoration import denoise_tv_bregman
 from skimage.filters import gaussian_filter
 from scipy.optimize import curve_fit
-from stimulustools import getcov
-from itertools import imap
+
+# python2 needs imap from itertools, this is just the map function in python3
+try:
+    import itertools.imap as map
+except ImportError:
+    pass
 
 __all__ = ['getste', 'getsta', 'getstc', 'lowranksta', 'decompose',
            'get_ellipse_params', 'fit_ellipse', 'filterpeak', 'smoothfilter',
@@ -38,7 +42,7 @@ def getste(time, stimulus, spikes, filter_length):
     getslice = lambda idx: stimulus[..., (idx - filter_length):idx]
 
     # return the iterator
-    return imap(getslice, spike_indices)
+    return map(getslice, spike_indices)
 
 
 def getsta(time, stimulus, spikes, filter_length):
@@ -64,6 +68,14 @@ def getstc(time, stimulus, spikes, filter_length):
     ndims = np.prod(stimulus.shape[:-1]) * filter_length
     stc_init = np.zeros((ndims, ndims))
 
+    # get the blas function for computing the outer product
+    def blas_ger(X, v):
+        # for overwrite_a flag to work and not copy X, we have to pass
+        # in a transposed version of X
+        blas_ger_fnc = get_blas_funcs(('ger',), (X,))[0]
+        blas_ger_fnc(1, v, v, a=X.T, overwrite_a=True)
+        return X
+
     # add an outer product to the covariance matrix
     outerprod = lambda C, x: C + np.outer(x.ravel(), x.ravel())
 
@@ -71,6 +83,7 @@ def getstc(time, stimulus, spikes, filter_length):
     ste = getste(time, stimulus, spikes, filter_length)
 
     # reduce
+    #stc = reduce(blas_ger, ste, stc_init) / len(spikes)
     stc = reduce(outerprod, ste, stc_init) / len(spikes)
 
     return stc
