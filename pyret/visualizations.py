@@ -197,7 +197,7 @@ def rasterandpsth(spikes, trial_length=None, binsize=0.01, fig=None):
     return fig
 
 
-def playsta(sta, repeat=True, frametime=100):
+def playsta(sta, repeat=True, frametime=100, cmap='gray', clim=None):
     """
     Plays a spatiotemporal spike-triggered average as a movie
 
@@ -212,7 +212,10 @@ def playsta(sta, repeat=True, frametime=100):
     frametime : float, optional
         Length of time each frame is displayed for in milliseconds (default is 100)
 
-    clim : array_like
+    cmap : string, optional
+        Name of the colormap to use (Default: gray)
+
+    clim : array_like, optional
         2 Dimensional color limit for animation; e.g. [0, 255]
 
     Returns
@@ -230,10 +233,10 @@ def playsta(sta, repeat=True, frametime=100):
     img = plt.imshow(initial_frame)
 
     # Set up the colors
-    img.set_cmap('gray')
+    img.set_cmap(cmap)
     img.set_interpolation('nearest')
-    if clim:
-      img.set_clim(clim)
+    if clim is not None:
+        img.set_clim(clim)
 
     # Animation function (called sequentially)
     def animate(i):
