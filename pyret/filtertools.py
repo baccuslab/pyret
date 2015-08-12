@@ -13,6 +13,7 @@ from scipy.stats import skew
 from skimage.restoration import denoise_tv_bregman
 from skimage.filters import gaussian_filter
 from scipy.optimize import curve_fit
+from functools import reduce
 
 # python2 needs imap from itertools, this is just the map function in python3
 try:
@@ -36,13 +37,11 @@ def getste(time, stimulus, spikes, filter_length):
 
     # Get indices of non-zero firing, truncating spikes earlier
     # than `filterlength` frames
-    spike_indices = [x for x in np.where(hist > 0)[0] if x > filter_length]
-
-    # get slice
-    getslice = lambda idx: stimulus[..., (idx - filter_length):idx]
+    slices = (stimulus[..., (idx - filter_length):idx]
+                      for idx in np.where(hist > 0)[0] if idx > filter_length)
 
     # return the iterator
-    return map(getslice, spike_indices)
+    return slices
 
 
 def getsta(time, stimulus, spikes, filter_length):
@@ -54,7 +53,7 @@ def getsta(time, stimulus, spikes, filter_length):
     ste = getste(time, stimulus, spikes, filter_length)
 
     # reduce
-    sta = reduce(lambda sta, x: sta + x, ste, sta_init) / len(spikes)
+    sta = reduce(lambda sta, x: np.add(sta, x), ste, sta_init) / len(spikes)
 
     # time axis
     tax = time[:filter_length] - time[0]
