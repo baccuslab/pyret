@@ -21,8 +21,9 @@ __all__ = [
     'nonlinearities',
     'stimulustools',
     'visualizations',
-    'filtertools'
+    'filtertools',
+    'containers'
     ]
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 from pyret import *
