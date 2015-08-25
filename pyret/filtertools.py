@@ -45,6 +45,34 @@ def getste(time, stimulus, spikes, filter_length):
 
 
 def getsta(time, stimulus, spikes, filter_length):
+    """
+    Compute a spike-triggered average
+
+    sta, tax = getsta(time, stimulus, spikes, filter_length)
+
+    Parameters
+    ----------
+    time : ndarray
+        The time array corresponding to the stimulus
+
+    stimulus : ndarray
+        A spatiotemporal or temporal stimulus array
+
+    spikes : iterable
+        A list or ndarray of spike times
+
+    filter_length : int
+        The desired temporal history / length of the STA
+
+    Returns
+    -------
+    sta : ndarray
+        The spatiotemporal spike-triggered average (RF)
+
+    tax : ndarray
+        A time axis corresponding to the STA
+
+    """
 
     # all zeros
     sta_init = np.zeros(stimulus.shape[:-1] + (filter_length,))
