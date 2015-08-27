@@ -1,5 +1,6 @@
 """
-Tools ansd utilities for computing spike-triggered averages (filters), finding spatial and temporal components of
+Tools ansd utilities for computing spike-triggered averages (filters),
+finding spatial and temporal components of
 spatiotemporal filters, and basic filter signal processing.
 
 """
@@ -14,12 +15,6 @@ from skimage.restoration import denoise_tv_bregman
 from skimage.filters import gaussian_filter
 from scipy.optimize import curve_fit
 from functools import reduce
-
-# python2 needs imap from itertools, this is just the map function in python3
-try:
-    import itertools.imap as map
-except ImportError:
-    pass
 
 __all__ = ['getste', 'getsta', 'getstc', 'lowranksta', 'decompose',
            'get_ellipse_params', 'fit_ellipse', 'filterpeak', 'smoothfilter',
@@ -37,8 +32,8 @@ def getste(time, stimulus, spikes, filter_length):
 
     # Get indices of non-zero firing, truncating spikes earlier
     # than `filterlength` frames
-    slices = (stimulus[..., (idx - filter_length):idx]
-                      for idx in np.where(hist > 0)[0] if idx > filter_length)
+    slices = (stimulus[(idx - filter_length):idx, ...]
+              for idx in np.where(hist > 0)[0] if idx > filter_length)
 
     # return the iterator
     return slices
@@ -74,14 +69,11 @@ def getsta(time, stimulus, spikes, filter_length):
 
     """
 
-    # all zeros
-    sta_init = np.zeros(stimulus.shape[:-1] + (filter_length,))
-
     # get the iterator
     ste = getste(time, stimulus, spikes, filter_length)
 
     # reduce
-    sta = reduce(lambda sta, x: np.add(sta, x), ste, sta_init) / len(spikes)
+    sta = reduce(lambda sta, x: np.add(sta, x), ste) / float(len(spikes))
 
     # time axis
     tax = time[:filter_length] - time[0]
@@ -92,21 +84,19 @@ def getsta(time, stimulus, spikes, filter_length):
 def getstc(time, stimulus, spikes, filter_length):
 
     # initialize
-    ndims = np.prod(stimulus.shape[:-1]) * filter_length
+    ndims = np.prod(stimulus.shape[1:]) * filter_length
     stc_init = np.zeros((ndims, ndims))
 
     # get the blas function for computing the outer product
     assert stimulus.dtype == 'float64', 'Stimulus must be double precision'
     outer = get_blas_funcs('syr', dtype='d')
 
-    # add an outer product to the covariance matrix
-    outerprod = lambda C, x: outer(1, x.ravel(), a=C)
-
     # get the iterator
     ste = getste(time, stimulus, spikes, filter_length)
 
     # reduce, note that this only contains the upper triangular portion
-    stc_ut = reduce(outerprod, ste, stc_init) / len(spikes)
+    stc_ut = reduce(lambda C, x: outer(1, x.ravel(), a=C),
+                    ste, stc_init) / float(len(spikes))
 
     # make the full STC matrix (copy the upper triangular portion to the lower
     # triangle)
@@ -150,12 +140,13 @@ def lowranksta(f_orig, k=10):
 
     # Compute the SVD of the full filter
     try:
-        u, s, v = np.linalg.svd(f.reshape(-1, f.shape[-1]) - np.mean(f), full_matrices=False)
+        u, s, v = np.linalg.svd(f.reshape(-1, f.shape[-1]) - np.mean(f),
+                                full_matrices=False)
     except LinAlgError:
-        print('The SVD did not converge for the given spatiotemporal filter')
-        print('The data is likely too noisy to compute a rank-{0} approximation'.format(k))
-        print('Try reducing the requested rank.')
-        return None, None, None, None
+        err = '''The SVD did not converge for the given spatiotemporal filter
+              The data is likely too noisy to compute a rank-{0} approximation,
+              try reducing the requested rank.'''.format(k)
+        raise LinAlgError(err)
 
     # Keep the top k components
     k = np.min([k, s.size])
@@ -239,7 +230,8 @@ def _gaussian_function_2d(x, x0, y0, a, b, c):
 
 def _popt_to_ellipse(x0, y0, a, b, c):
     """
-    Converts the parameters for the 2D gaussian function (see `fgauss`) into ellipse parameters
+    Converts the parameters for the 2D gaussian function (see `fgauss`) into
+    ellipse parameters
     """
 
     # convert precision matrix parameters to ellipse parameters
@@ -256,7 +248,8 @@ def _popt_to_ellipse(x0, y0, a, b, c):
 
 def _smooth_spatial_profile(f, spatial_smoothing, tvd_penalty):
     """
-    Smooths a 2D spatial RF profile using a gaussian filter and total variation denoising
+    Smooths a 2D spatial RF profile using a gaussian filter and total variation
+    denoising
 
     Parameters
     ----------
@@ -267,7 +260,7 @@ def _smooth_spatial_profile(f, spatial_smoothing, tvd_penalty):
         width of the gaussian filter
 
     tvd_penalty : float
-        strength of the total variation penalty (note: large values correspond to weaker penalty)
+        TV penalty strength (note: larger values indicate a weaker penalty)
 
     Notes
     -----
@@ -279,7 +272,8 @@ def _smooth_spatial_profile(f, spatial_smoothing, tvd_penalty):
     if sgn*skew(f.ravel()) < 0.1:
         raise ValueError("Error! RF profile is too noisy!")
 
-    H = denoise_tv_bregman(gaussian_filter(sgn * f, spatial_smoothing), tvd_penalty)
+    H = denoise_tv_bregman(gaussian_filter(sgn * f, spatial_smoothing),
+                           tvd_penalty)
     return H / H.max()
 
 
@@ -343,7 +337,8 @@ def get_ellipse_params(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=100
 
     # optimize
     xdata = np.vstack((xm.ravel(), ym.ravel()))
-    popt, pcov = curve_fit(_gaussian_function_2d, xdata, ydata.ravel(), p0=pinit)
+    popt, pcov = curve_fit(_gaussian_function_2d, xdata, ydata.ravel(),
+                           p0=pinit)
 
     # return ellipse parameters
     return _popt_to_ellipse(*popt)
@@ -375,7 +370,7 @@ def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=100, scale
 
     # Generate ellipse
     ell = Ellipse(xy=center, width=scale * widths[0],
-                   height=scale * widths[1], angle=theta, **kwargs)
+                  height=scale * widths[1], angle=theta, **kwargs)
     return ell
 
 
@@ -440,7 +435,8 @@ def smoothfilter(f, spacesig=0.5, timesig=1):
         The smoothed filter, with the same shape as the input
 
     """
-    return ndimage.filters.gaussian_filter(f, (spacesig, spacesig, timesig), order=0)
+    return ndimage.filters.gaussian_filter(f, (spacesig, spacesig, timesig),
+                                           order=0)
 
 
 def cutout(arr, idx, width=5):
@@ -507,9 +503,9 @@ def prinangles(u, v):
     """
 
     # Orthogonalize each subspace
-    (qu, _), (qv, _) = np.linalg.qr(u), np.linalg.qr(v)
+    qu, qv = np.linalg.qr(u)[0], np.linalg.qr(v)[0]
 
-    # Compute singular values of the inner product between the orthogonalized spaces
+    # singular values of the inner product between the orthogonalized spaces
     mag = np.linalg.svd(qu.T.dot(qv), compute_uv=False, full_matrices=False)
 
     # Compute the angles between each dimension
