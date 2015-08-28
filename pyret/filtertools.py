@@ -25,6 +25,26 @@ def getste(time, stimulus, spikes, filter_length):
     """
     Constructs an iterator over spike-triggered stimuli
 
+    Parameters
+    ----------
+    time : ndarray
+        The time array corresponding to the stimulus
+
+    stimulus : ndarray
+        A spatiotemporal or temporal stimulus array
+        (where time is the first dimension)
+
+    spikes : iterable
+        A list or ndarray of spike times
+
+    filter_length : int
+        The desired temporal history / length of the STA
+
+    Returns
+    -------
+    ste : generator
+        A generator that yields samples from the spike-triggered ensemble
+
     """
 
     # Bin spikes
@@ -52,6 +72,7 @@ def getsta(time, stimulus, spikes, filter_length):
 
     stimulus : ndarray
         A spatiotemporal or temporal stimulus array
+        (where time is the first dimension)
 
     spikes : iterable
         A list or ndarray of spike times
@@ -82,6 +103,32 @@ def getsta(time, stimulus, spikes, filter_length):
 
 
 def getstc(time, stimulus, spikes, filter_length):
+    """
+    Compute the spike-triggered covariance
+
+    stc = getstc(time, stimulus, spikes, filter_length)
+
+    Parameters
+    ----------
+    time : ndarray
+        The time array corresponding to the stimulus
+        (where time is the first dimension)
+
+    stimulus : ndarray
+        A spatiotemporal or temporal stimulus array
+
+    spikes : iterable
+        A list or ndarray of spike times
+
+    filter_length : int
+        The desired temporal history / length of the STA
+
+    Returns
+    -------
+    stc : ndarray
+        The spike-triggered covariance (STC) matrix
+
+    """
 
     # initialize
     ndims = np.prod(stimulus.shape[1:]) * filter_length
