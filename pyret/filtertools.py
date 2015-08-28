@@ -140,7 +140,8 @@ def lowranksta(f_orig, k=10):
 
     # Compute the SVD of the full filter
     try:
-        u, s, v = np.linalg.svd(f.reshape(-1, f.shape[-1]) - np.mean(f),
+        assert f.ndim >= 2, "Filter must be at least 2-D"
+        u, s, v = np.linalg.svd(f.reshape(f.shape[0], -1) - np.mean(f),
                                 full_matrices=False)
     except LinAlgError:
         err = '''The SVD did not converge for the given spatiotemporal filter
