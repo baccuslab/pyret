@@ -15,10 +15,21 @@ from skimage.restoration import denoise_tv_bregman
 from skimage.filters import gaussian_filter
 from scipy.optimize import curve_fit
 from functools import reduce
+from warnings import warn
 
 __all__ = ['getste', 'getsta', 'getstc', 'lowranksta', 'decompose',
            'get_ellipse_params', 'fit_ellipse', 'filterpeak', 'smoothfilter',
            'cutout', 'prinangles', 'rolling_window']
+
+
+def dimension_warning(stim):
+    """
+    Warning for mis-shaped stimuli (due to the time axis flip in pyret v0.3.1)
+    """
+    if np.argmax(stim.shape) != 0:
+        warn('''Your stimulus seems to have the wrong shape.
+             Check to make sure that the time dimension is the first dimension
+             (new in v0.3.1)''', DeprecationWarning, stacklevel=2)
 
 
 def getste(time, stimulus, spikes, filter_length):
@@ -46,6 +57,8 @@ def getste(time, stimulus, spikes, filter_length):
         A generator that yields samples from the spike-triggered ensemble
 
     """
+
+    dimension_warning(stimulus)
 
     # Bin spikes
     (hist, bins) = np.histogram(spikes, time)
@@ -90,6 +103,8 @@ def getsta(time, stimulus, spikes, filter_length):
 
     """
 
+    dimension_warning(stimulus)
+
     # get the iterator
     ste = getste(time, stimulus, spikes, filter_length)
 
@@ -129,6 +144,8 @@ def getstc(time, stimulus, spikes, filter_length):
         The spike-triggered covariance (STC) matrix
 
     """
+
+    dimension_warning(stimulus)
 
     # initialize
     ndims = np.prod(stimulus.shape[1:]) * filter_length
