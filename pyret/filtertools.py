@@ -65,7 +65,7 @@ def getste(time, stimulus, spikes, filter_length):
 
     # Get indices of non-zero firing, truncating spikes earlier
     # than `filterlength` frames
-    slices = (stimulus[(idx - filter_length):idx, ...]
+    slices = (stimulus[(idx - filter_length):idx, ...].astype('float64')
               for idx in np.where(hist > 0)[0] if idx > filter_length)
 
     # return the iterator
@@ -178,7 +178,7 @@ def lowranksta(f_orig, k=10):
     Parameters
     ----------
     f : array_like
-        3-D filter to be separated
+        3-D filter to be separated (time, space, space)
 
     k : int
         number of components to keep (rank of the filter)
@@ -222,16 +222,16 @@ def lowranksta(f_orig, k=10):
     # make sure the temporal kernels have the correct sign
 
     # get out the temporal filter at the RF center
-    peakidx = filterpeak(f)[1]
-    tsta = f[peakidx[1], peakidx[0], :].reshape(-1, 1)
-    tsta -= np.mean(tsta)
+    # peakidx = filterpeak(f)[1]
+    # tsta = f[:, peakidx[1], peakidx[0]].reshape(-1, 1)
+    # tsta -= np.mean(tsta)
 
     # project onto the temporal filters and keep the sign
-    signs = np.sign((v - np.mean(v, axis=1)).dot(tsta))
+    # signs = np.sign((v - np.mean(v, axis=1)).T.dot(tsta))
 
     # flip signs according to this projection
-    v *= signs
-    u *= signs.T
+    # v *= signs
+    # u *= signs.T
 
     # Return the rank-k approximate filter, and the SVD components
     return fk, u, s, v
@@ -256,7 +256,7 @@ def decompose(sta):
 
     """
     _, u, _, v = lowranksta(sta, k=1)
-    return u[:, 0].reshape(sta.shape[:2]), v[0, :]
+    return v[0].reshape(sta.shape[1:]), u[:, 0]
 
 
 def _gaussian_function_2d(x, x0, y0, a, b, c):
@@ -461,15 +461,12 @@ def filterpeak(sta):
 
     """
 
-    # Smooth filter
-    fs = smoothfilter(sta, spacesig=0.7, timesig=1)
-
     # Find the index of the maximal point
-    idx = np.unravel_index(np.abs(fs).argmax(), fs.shape)
+    idx = np.unravel_index(np.abs(sta).argmax(), sta.shape)
 
     # Split into spatial/temporal indices
-    sidx = np.roll(idx[:2], 1)
-    tidx = idx[-1]
+    sidx = np.roll(idx[1:], 1)
+    tidx = idx[0]
 
     # Return the indices
     return idx, sidx, tidx
@@ -500,7 +497,7 @@ def smoothfilter(f, spacesig=0.5, timesig=1):
         The smoothed filter, with the same shape as the input
 
     """
-    return ndimage.filters.gaussian_filter(f, (spacesig, spacesig, timesig),
+    return ndimage.filters.gaussian_filter(f, (timesig, spacesig, spacesig),
                                            order=0)
 
 
