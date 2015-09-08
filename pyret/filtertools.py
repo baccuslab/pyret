@@ -222,16 +222,16 @@ def lowranksta(f_orig, k=10):
     # make sure the temporal kernels have the correct sign
 
     # get out the temporal filter at the RF center
-    # peakidx = filterpeak(f)[1]
-    # tsta = f[:, peakidx[1], peakidx[0]].reshape(-1, 1)
-    # tsta -= np.mean(tsta)
+    peakidx = filterpeak(f)[1]
+    tsta = f[:, peakidx[1], peakidx[0]].reshape(-1, 1)
+    tsta -= np.mean(tsta)
 
     # project onto the temporal filters and keep the sign
-    # signs = np.sign((v - np.mean(v, axis=1)).T.dot(tsta))
+    signs = np.sign((u - np.mean(u, axis=0)).T.dot(tsta))
 
     # flip signs according to this projection
-    # v *= signs
-    # u *= signs.T
+    v *= signs
+    u *= signs.T
 
     # Return the rank-k approximate filter, and the SVD components
     return fk, u, s, v
@@ -501,7 +501,7 @@ def smoothfilter(f, spacesig=0.5, timesig=1):
                                            order=0)
 
 
-def cutout(arr, idx, width=5):
+def cutout(arr, idx=None, width=5):
     """
     Cut out a chunk of the given stimulus or filter
 
@@ -509,11 +509,11 @@ def cutout(arr, idx, width=5):
     ----------
     arr : array_like
         Stimulus or filter array from which the chunk is cut out. The array
-        should be shaped as (pix, pix, time).
+        should be shaped as (time, spatial, spatial)
 
     idx : array_like
         2D array specifying the row and column indices of the center of the
-        section to be cut out
+        section to be cut out (if None, the indices are taken from filterpeak)
 
     width : int
         The size of the chunk to cut out from the start indices
@@ -525,6 +525,9 @@ def cutout(arr, idx, width=5):
 
     """
 
+    if idx is None:
+        idx = np.roll(filterpeak(arr)[1], 1)
+
     # Check idx is a 2-elem array-like
     if len(idx) != 2:
         raise ValueError('idx must be a 2-element array')
@@ -534,14 +537,14 @@ def cutout(arr, idx, width=5):
     col = np.arange(idx[1] - width, idx[1] + width + 1)
 
     # Make sure the indices are within the bounds of the given array
-    row = row[(row >= 0) & (row < arr.shape[0])]
-    col = col[(col >= 0) & (col < arr.shape[1])]
+    row = row[(row >= 0) & (row < arr.shape[1])]
+    col = col[(col >= 0) & (col < arr.shape[2])]
 
     # Mesh the indices
     rmesh, cmesh = np.meshgrid(row, col)
 
     # Extract and return the reduced array
-    return arr[rmesh, cmesh, :]
+    return arr[:, rmesh, cmesh]
 
 
 def prinangles(u, v):
