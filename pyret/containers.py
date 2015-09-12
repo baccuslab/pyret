@@ -4,6 +4,7 @@ Objects for holding relevant experimental data
 
 from .filtertools import rolling_window
 from .spiketools import binspikes
+from . import visualizations as viz
 import numpy as np
 
 __all__ = ['Experiment', 'Filter']
@@ -90,35 +91,35 @@ class Filter(np.ndarray):
     Container for a spatiotemporal or temporal filter
     """
 
-    def __new__(cls, input_array, dt):
+    def __new__(cls, arr, dt, dx=None, dy=None, tstart=0.):
         # Input array is an already formed ndarray instance
         # We first cast to be our class type
-        obj = np.asarray(input_array).view(cls)
+        obj = np.asarray(arr).view(cls)
 
-        # add the new attribute to the created instance
+        # add the spatial and temporal resolutions
         obj.dt = dt
-        obj.tau = np.linspace(0, -dt*input_array.shape[-1],
-                              input_array.shape[-1])
+        obj.dx = dx
+        obj.dy = dy
+
+        # time at which the STA starts
+        obj.tstart = tstart
+
+        # time array corresponding to this filter
+        obj.tax = np.linspace(obj.tstart, -dt*arr.shape[-1], arr.shape[-1])
 
         # Finally, we must return the newly created object:
         return obj
 
-    # def __array_finalize__(self, obj):
-        # if obj is None: return
-        # self.info = getattr(obj, 'info', 1)
+    @property
+    def length(self):
+        return len(self.tax) * self.dt
 
+    def __str__(self):
+        return '{}s filter with {} spatial dimensions'.format(self.length,
+                                                              self.shape[1:])
 
-def partition_last(arr, size, keeplast=True):
+    def plot(self):
+        viz.plotsta(self.tax, self)
 
-    if keeplast:
-        n = int(np.ceil(float(arr.shape[-1]) / float(size)))
-    else:
-        n = int(np.floor(float(arr.shape[-1]) / float(size)))
-
-    sliced_array = list()
-
-    for idx in range(n):
-        inds = slice(idx * size, min((idx+1) * size, arr.shape[-1]))
-        sliced_array.append(arr[..., inds])
-
-    return sliced_array
+    def play(self):
+        viz.playsta(self)
