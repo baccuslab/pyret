@@ -9,7 +9,7 @@ import seaborn as sns
 from . import filtertools as ft
 from matplotlib import animation as animation
 
-__all__ = ['raster', 'psth', 'rasterandpsth', 'playsta', 'spatial', 'temporal',
+__all__ = ['raster', 'psth', 'rasterandpsth', 'spatial', 'temporal',
            'plotsta', 'playsta', 'ellipse', 'plotcells', 'playrates']
 
 
@@ -229,8 +229,11 @@ def playsta(sta, repeat=True, frametime=100, cmap='seismic', clim=None):
 
     # Set up the figure
     fig = plt.figure()
+    plt.axis('equal')
     ax = plt.axes(xlim=(0, sta.shape[1]), ylim=(0, sta.shape[2]))
     img = plt.imshow(initial_frame)
+    ax.set_xticks([])
+    ax.set_yticks([])
 
     # Set up the colors
     img.set_cmap(cmap)
