@@ -15,12 +15,6 @@ from skimage.filters import gaussian_filter
 from scipy.optimize import curve_fit
 from functools import reduce
 
-# python2 needs imap from itertools, this is just the map function in python3
-try:
-    import itertools.imap as map
-except ImportError:
-    pass
-
 __all__ = ['getste', 'getsta', 'getstc', 'lowranksta', 'decompose',
            'get_ellipse_params', 'fit_ellipse', 'filterpeak', 'smoothfilter',
            'cutout', 'prinangles', 'rolling_window']
@@ -349,17 +343,29 @@ def get_ellipse_params(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=100
     return _popt_to_ellipse(*popt)
 
 
-def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=100, scale=1.5, **kwargs):
+def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=0., scale=1.5, **kwargs):
     """
     Fit an ellipse to the given spatial receptive field
 
     Parameters
     ----------
+    tx : array_like
+        A 1-D array that specifies the x-locations of the STA frame
+
+    ty : array_like
+        A 1-D array that specifies the y-locations of the STA frame
+
     sta_frame : array_like
         The spatial receptive field to which the ellipse should be fit
 
+    spatial_smoothing : float, optional
+        How much to smooth the STA before fitting the ellipse (Default: 1.5)
+
+    tvd_penalty : float, optional
+        How much to denoise the STA using TVD denoising (Default: 0.)
+
     scale : float, optional
-        Scale factor for the ellipse (Default: 1.0)
+        Scale factor for the ellipse (Default: 1.5)
 
     Returns
     -------
@@ -375,7 +381,8 @@ def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=100, scale
 
     # Generate ellipse
     ell = Ellipse(xy=center, width=scale * widths[0],
-                   height=scale * widths[1], angle=theta, **kwargs)
+                  height=scale * widths[1], angle=theta, **kwargs)
+
     return ell
 
 
