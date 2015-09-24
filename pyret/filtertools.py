@@ -446,7 +446,7 @@ def filterpeak(sta):
     Parameters
     ----------
     sta : array_like
-        Filter of which to find the peak
+        Filter of which to find the peak (time, space, space)
 
     Returns
     -------
