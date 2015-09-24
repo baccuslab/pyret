@@ -106,7 +106,10 @@ def getstc(time, stimulus, spikes, filter_length):
     # triangle)
     stc = np.triu(stc_ut, 1).T + stc_ut
 
-    return stc
+    # compute the STA (to subtract it)
+    sta = getsta(time, stimulus, spikes, filter_length)[0].ravel()
+
+    return stc - np.outer(sta, sta)
 
 
 def lowranksta(f_orig, k=10):
