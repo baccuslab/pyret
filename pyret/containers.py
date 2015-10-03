@@ -11,79 +11,79 @@ __all__ = ['Experiment', 'Filter']
 
 
 class Experiment(object):
-    """
-    Sensory experiment data container
-    """
-
-    def __init__(self, stim, time, cells, dt):
         """
-        TODO: Docstring for __init__.
-
-        Parameters
-        ----------
-        stim : TODO
-        time : TODO
-        spikes : TODO
-
-        Returns
-        -------
-        TODO
-
+        Sensory experiment data container
         """
 
-        assert type(stim) == np.ndarray and stim.ndim == 3, \
-            "Stimulus must be a 3 dimensionsal (space x space x time) array"
+        def __init__(self, stim, time, cells, dt):
+            """
+            TODO: Docstring for __init__.
 
-        assert type(time) == np.ndarray and time.ndim == 1, \
-            "Time vector must be an one dimensional numpy array"
+            Parameters
+            ----------
+            stim : TODO
+            time : TODO
+            spikes : TODO
 
-        self.stim = stim
-        self.cells = cells
-        self.time = time
-        self.dt = dt
+            Returns
+            -------
+            TODO
 
-        spikes = list()
-        print('Spikes for {:d} cells'.format(len(cells)))
-        for cell in self.cells:
-            spikes.append(np.append(0, binspikes(cell, time=time)[0]))
-        self.spikes = np.vstack(spikes)
+            """
 
-    def __len__(self):
-        return len(self.time)
+            assert type(stim) == np.ndarray and stim.ndim == 3, \
+                "Stimulus must be a 3 dimensionsal (space x space x time) array"
 
-    @property
-    def tmax(self):
-        return self.time[-1]
+            assert type(time) == np.ndarray and time.ndim == 1, \
+                "Time vector must be an one dimensional numpy array"
 
-    @property
-    def ncells(self):
-        return self.spikes.shape[0]
+            self.stim = stim
+            self.cells = cells
+            self.time = time
+            self.dt = dt
 
-    def stim_sliced(self, history, batch_size=-1):
-        """Returns a view into the stimulus array"""
+            spikes = list()
+            print('Spikes for {:d} cells'.format(len(cells)))
+            for cell in self.cells:
+                spikes.append(np.append(0, binspikes(cell, time=time)[0]))
+            self.spikes = np.vstack(spikes)
 
-        sliced_array = np.rollaxis(rolling_window(self.stim, history), 3, 2)
+        def __len__(self):
+            return len(self.time)
 
-        if batch_size > 0:
-            return partition_last(sliced_array, batch_size)
-        else:
-            return sliced_array
+        @property
+        def tmax(self):
+            return self.time[-1]
 
-    def spike_history(self, history, offset=1, batch_size=-1):
-        """Returns a view into the spikes array, offset by some amount"""
-        arr = np.hstack((np.zeros((self.ncells, offset)),
-                         self.spikes[:, offset:]))
-        sliced_array = np.rollaxis(rolling_window(arr, history), 2, 1)
+        @property
+        def ncells(self):
+            return self.spikes.shape[0]
 
-        if batch_size > 0:
-            return partition_last(sliced_array, batch_size)
-        else:
-            return sliced_array
+        def stim_sliced(self, history, batch_size=-1):
+            """Returns a view into the stimulus array"""
 
-    def ste(self, stim_hist, ci):
-        return (self.stim[..., (t-stim_hist):t].astype('float')
-                for t in range(len(self))
-                if self.spikes[ci, t] > 0 and t >= stim_hist)
+            sliced_array = np.rollaxis(rolling_window(self.stim, history), 3, 2)
+
+            if batch_size > 0:
+                return partition_last(sliced_array, batch_size)
+            else:
+                return sliced_array
+
+        def spike_history(self, history, offset=1, batch_size=-1):
+            """Returns a view into the spikes array, offset by some amount"""
+            arr = np.hstack((np.zeros((self.ncells, offset)),
+                            self.spikes[:, offset:]))
+            sliced_array = np.rollaxis(rolling_window(arr, history), 2, 1)
+
+            if batch_size > 0:
+                return partition_last(sliced_array, batch_size)
+            else:
+                return sliced_array
+
+        def ste(self, stim_hist, ci):
+            return (self.stim[..., (t-stim_hist):t].astype('float')
+                    for t in range(len(self))
+                    if self.spikes[ci, t] > 0 and t >= stim_hist)
 
 
 class Filter(np.ndarray):
