@@ -579,7 +579,7 @@ def prinangles(u, v):
     return ang, mag
 
 
-def rolling_window(array, window):
+def rolling_window(array, window, time_axis=-1):
     """
     Make an ndarray with a rolling window of the last dimension
 
@@ -609,10 +609,23 @@ def rolling_window(array, window):
            [ 6.,  7.,  8.]])
 
     """
+
+    if time_axis==0:
+        array = array.T
+    elif time_axis==-1:
+        pass
+    else:
+        raise ValueError('Time axis must be first or last')
+
     assert window >= 1, "`window` must be at least 1."
     assert window < array.shape[-1], "`window` is too long."
 
-    # # with strides
+    # with strides
     shape = array.shape[:-1] + (array.shape[-1] - window, window)
     strides = array.strides + (array.strides[-1],)
-    return np.lib.stride_tricks.as_strided(array, shape=shape, strides=strides)
+    arr = np.lib.stride_tricks.as_strided(array, shape=shape, strides=strides)
+
+    if time_axis==0:
+        return np.rollaxis(arr.T, 1, 0)
+    else:
+        return arr
