@@ -16,7 +16,7 @@ def upsample_stim(stim, upsample_factor, time=None):
     Parameters
     ----------
     stim : array_like
-        The actual stimulus to be upsampled.
+        The actual stimulus to be upsampled. dimensions: (time, space, space)
 
     upsample_factor : int
         The upsample factor.
@@ -34,12 +34,8 @@ def upsample_stim(stim, upsample_factor, time=None):
 
     """
 
-    # Compute old and new sizes
-    oldsz   = stim.shape
-    newsz   = oldsz[:-1] + (upsample_factor * oldsz[-1],)
-
     # Upsample the stimulus array
-    stim_us = (stim.reshape((-1, 1)) * np.ones((1, upsample_factor))).reshape(newsz)
+    stim_us = np.repeat(stim, 3, axis=0)
 
     # Upsample the time vecctor if given
     if time is not None:
