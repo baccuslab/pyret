@@ -7,7 +7,7 @@ API Reference
 filtertools
 -----------
 
-.. automodule:: filtertools
+.. automodule:: pyret.filtertools
     :members:
     :undoc-members:
     :show-inheritance:
@@ -15,7 +15,7 @@ filtertools
 nonlinearities
 --------------
 
-.. automodule:: nonlinearities
+.. automodule:: pyret.nonlinearities
     :members:
     :undoc-members:
     :show-inheritance:
@@ -23,7 +23,7 @@ nonlinearities
 spiketools
 ----------
 
-.. automodule:: spiketools
+.. automodule:: pyret.spiketools
     :members:
     :undoc-members:
     :show-inheritance:
@@ -31,7 +31,7 @@ spiketools
 stimulustools
 -------------
 
-.. automodule:: stimulustools
+.. automodule:: pyret.stimulustools
     :members:
     :undoc-members:
     :show-inheritance:
@@ -39,7 +39,7 @@ stimulustools
 visualizations
 --------------
 
-.. automodule:: visualizations
+.. automodule:: pyret.visualizations
     :members:
     :undoc-members:
     :show-inheritance:

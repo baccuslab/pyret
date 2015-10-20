@@ -9,7 +9,7 @@ import seaborn as sns
 from . import filtertools as ft
 from matplotlib import animation as animation
 
-__all__ = ['raster', 'psth', 'rasterandpsth', 'playsta', 'spatial', 'temporal',
+__all__ = ['raster', 'psth', 'rasterandpsth', 'spatial', 'temporal',
            'plotsta', 'playsta', 'ellipse', 'plotcells', 'playrates']
 
 
@@ -197,7 +197,7 @@ def rasterandpsth(spikes, trial_length=None, binsize=0.01, fig=None):
     return fig
 
 
-def playsta(sta, repeat=True, frametime=100, cmap='gray', clim=None):
+def playsta(sta, repeat=True, frametime=100, cmap='seismic', clim=None):
     """
     Plays a spatiotemporal spike-triggered average as a movie
 
@@ -225,26 +225,33 @@ def playsta(sta, repeat=True, frametime=100, cmap='gray', clim=None):
     """
 
     # Initial frame
-    initial_frame = sta[:, :, 0]
+    initial_frame = sta[0]
 
     # Set up the figure
     fig = plt.figure()
-    ax = plt.axes(xlim=(0, sta.shape[0]), ylim=(0, sta.shape[1]))
+    plt.axis('equal')
+    ax = plt.axes(xlim=(0, sta.shape[1]), ylim=(0, sta.shape[2]))
     img = plt.imshow(initial_frame)
+    ax.set_xticks([])
+    ax.set_yticks([])
 
     # Set up the colors
     img.set_cmap(cmap)
     img.set_interpolation('nearest')
     if clim is not None:
         img.set_clim(clim)
+    else:
+        maxval = np.max(np.abs(sta))
+        img.set_clim([-maxval, maxval])
 
     # Animation function (called sequentially)
     def animate(i):
         ax.set_title('Frame {0:#d}'.format(i + 1))
-        img.set_data(sta[:, :, i])
+        img.set_data(sta[i])
 
     # Call the animator
-    anim = animation.FuncAnimation(fig, animate, np.arange(sta.shape[-1]), interval=frametime, repeat=repeat)
+    anim = animation.FuncAnimation(fig, animate, np.arange(sta.shape[0]),
+                                   interval=frametime, repeat=repeat)
     plt.show()
     plt.draw()
 
