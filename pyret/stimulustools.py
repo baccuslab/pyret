@@ -43,15 +43,18 @@ def upsample_stim(stim, upsample_factor, time=None):
         xp      = np.arange(0, upsample_factor * time.size, upsample_factor)
         time_us = np.interp(x, xp, np.squeeze(time))
 
-        # Check that last timestamp is valid. np.interp does no
+        # Check that last k timestamps are valid. np.interp does no
         # extrapolation, which may be necessary for the last
         # timepoint, given the method above
-        if time_us[-2] == time_us[-1]:
-            time_us[-1] += np.diff(time_us).mean()
+        modified_time_us = time_us.copy()
+        dt = np.diff(time_us).mean()
+        for k in reversed(np.arange(upsample_factor) + 1):
+            if np.allclose(time_us[-(k+1)], time_us[-k]):
+                modified_time_us[-k] = modified_time_us[-(k+1)] + dt
     else:
         time_us = None
 
-    return stim_us, time_us
+    return stim_us, modified_time_us
 
 
 def downsample_stim(stim, downsample_factor, time=None):
