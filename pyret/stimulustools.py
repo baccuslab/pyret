@@ -51,10 +51,12 @@ def upsample_stim(stim, upsample_factor, time=None):
         for k in reversed(np.arange(upsample_factor) + 1):
             if np.allclose(time_us[-(k+1)], time_us[-k]):
                 modified_time_us[-k] = modified_time_us[-(k+1)] + dt
+        time_us = modified_time_us.copy()
+
     else:
         time_us = None
 
-    return stim_us, modified_time_us
+    return stim_us, time_us
 
 
 def downsample_stim(stim, downsample_factor, time=None):
