@@ -108,14 +108,18 @@ def getsta(time, stimulus, spikes, filter_length):
     # get the iterator
     ste = getste(time, stimulus, spikes, filter_length)
 
-    # reduce
-    sta = reduce(lambda sta, x: np.add(sta, x), ste) / float(len(spikes))
-
     # time axis
     tax = time[:filter_length] - time[0]
 
-    return sta, tax
+    # reduce
+    try:
+        first = next(ste) # check for empty generators
+        sta = reduce(lambda sta, x: np.add(sta, x),
+                ste, first) / float(len(spikes))
+    except StopIteration:
+        return (np.nan * np.ones((filter_length,) + stimulus.shape[1:]), tax)
 
+    return sta, tax
 
 def getstc(time, stimulus, spikes, filter_length):
     """
@@ -147,10 +151,6 @@ def getstc(time, stimulus, spikes, filter_length):
 
     dimension_warning(stimulus)
 
-    # initialize
-    ndims = np.prod(stimulus.shape[1:]) * filter_length
-    stc_init = np.zeros((ndims, ndims))
-
     # get the blas function for computing the outer product
     assert stimulus.dtype == 'float64', 'Stimulus must be double precision'
     outer = get_blas_funcs('syr', dtype='d')
@@ -159,8 +159,14 @@ def getstc(time, stimulus, spikes, filter_length):
     ste = getste(time, stimulus, spikes, filter_length)
 
     # reduce, note that this only contains the upper triangular portion
-    stc_ut = reduce(lambda C, x: outer(1, x.ravel(), a=C),
-                    ste, stc_init) / float(len(spikes))
+    try:
+        first_slice = next(ste)
+        stc_init = np.triu(np.outer(first_slice.ravel(), first_slice.ravel()))
+        stc_ut = reduce(lambda C, x: outer(1, x.ravel(), a=C),
+                        ste, stc_init) / float(len(spikes))
+    except StopIteration:
+        ndims = np.prod(stimulus.shape[1:]) * filter_length
+        return np.nan * np.ones((ndims, ndims))
 
     # make the full STC matrix (copy the upper triangular portion to the lower
     # triangle)
@@ -413,7 +419,7 @@ def get_ellipse_params(tx, ty, sta_frame, spatial_smoothing=0.5, tvd_penalty=10)
     return _popt_to_ellipse(*popt)
 
 
-def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=0.5, tvd_penalty=10., scale=1.5, **kwargs):
+def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=1e2, scale=1.5, **kwargs):
     """
     Fit an ellipse to the given spatial receptive field
 
@@ -443,6 +449,9 @@ def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=0.5, tvd_penalty=10., scale
         A matplotlib.patches.Ellipse object
 
     """
+    if np.allclose(tvd_penalty, 0.):
+        warnings.warn('Denoising penalty cannot be zero, setting to 1e-3')
+        tvd_penalty = 1e-3
 
     # Get ellipse parameters
     center, widths, theta = get_ellipse_params(tx, ty, sta_frame,
