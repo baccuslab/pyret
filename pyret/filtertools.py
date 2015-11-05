@@ -337,8 +337,8 @@ def _smooth_spatial_profile(f, spatial_smoothing, tvd_penalty):
     """
 
     sgn = np.sign(skew(f.ravel()))
-    if sgn*skew(f.ravel()) < 0.1:
-        raise ValueError("Error! RF profile is too noisy!")
+    # if sgn*skew(f.ravel()) < 0.1:
+        # raise ValueError("Error! RF profile is too noisy!")
 
     H = denoise_tv_bregman(gaussian_filter(sgn * f, spatial_smoothing),
                            tvd_penalty)
@@ -370,7 +370,7 @@ def _initial_gaussian_params(sta_frame, xm, ym):
     return xc, yc, a, b, c
 
 
-def get_ellipse_params(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=100):
+def get_ellipse_params(tx, ty, sta_frame, spatial_smoothing=0.5, tvd_penalty=10):
     """
     Fit an ellipse to the given spatial receptive field and return parameters
 
@@ -398,10 +398,11 @@ def get_ellipse_params(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=100
 
     # preprocess
     ydata = _smooth_spatial_profile(sta_frame, spatial_smoothing, tvd_penalty)
+    ydata = ydata ** 2 / np.max(ydata)
 
     # get initial params
     xm, ym = np.meshgrid(tx, ty)
-    pinit = _initial_gaussian_params(ydata**2, xm, ym)
+    pinit = _initial_gaussian_params(ydata, xm, ym)
 
     # optimize
     xdata = np.vstack((xm.ravel(), ym.ravel()))
@@ -412,7 +413,7 @@ def get_ellipse_params(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=100
     return _popt_to_ellipse(*popt)
 
 
-def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=0., scale=1.5, **kwargs):
+def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=0.5, tvd_penalty=10., scale=1.5, **kwargs):
     """
     Fit an ellipse to the given spatial receptive field
 

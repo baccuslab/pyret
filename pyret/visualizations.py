@@ -302,7 +302,7 @@ def spatial(spatial_filter, ax=None, clim=None):
     ax.set_aspect('equal')
 
     # add colorbar
-    ax.get_figure().colorbar(img)
+    # ax.get_figure().colorbar(img)
 
     plt.show()
     plt.draw()
@@ -342,7 +342,7 @@ def temporal(time, temporal_filter, ax=None):
     return ax
 
 
-def plotsta(time, sta):
+def plotsta(time, sta, fig=None):
     """
     Plot a spatial and temporal filter
 
@@ -365,7 +365,9 @@ def plotsta(time, sta):
     """
 
     # create the figure object
-    fig = plt.figure()
+    if fig is None:
+        fig = plt.figure()
+
     sns.set(style='white')
 
     # plot 1D temporal filter
@@ -401,9 +403,12 @@ def plotsta(time, sta):
 
         # plot spatial profile
         axspatial = spatial(spatial_profile, fig.add_subplot(121))
+        axspatial.set_xticks([])
+        axspatial.set_yticks([])
 
         # plot temporal profile
         axtemporal = temporal(time, temporal_filter, fig.add_subplot(122))
+        axtemporal.set_xlim(time[0], time[-1])
 
         # return handles
         ax = (axspatial, axtemporal)
@@ -449,7 +454,7 @@ def ellipse(ell, ax=None):
     return ax
 
 
-def plotcells(cells, ax=None, box_dims=None, start=None, scale=0.25):
+def plotcells(cells, box, ax=None, scale=0.25):
     """
     Plot the spatial receptive fields for multiple cells
 
@@ -493,7 +498,11 @@ def plotcells(cells, ax=None, box_dims=None, start=None, scale=0.25):
         _, _, tidx = ft.filterpeak(sta)
 
         # generate ellipse
-        ell = ft.fit_ellipse(sta[:, :, tidx], scale=scale)
+        # tx = np.linspace(-1388.8888, 1388.8888, sta.shape[1])
+        # ty = np.linspace(-1388.8888, 1388.8888, sta.shape[2])
+        tx = np.arange(sta.shape[1])
+        ty = np.arange(sta.shape[2])
+        ell = ft.fit_ellipse(tx, ty, sta[tidx, :, :], scale=scale)
 
         # add it to the plot
         ell.set_facecolor(colors[idx])
@@ -504,17 +513,13 @@ def plotcells(cells, ax=None, box_dims=None, start=None, scale=0.25):
         ax.add_artist(ell)
         ellipses.append(ell)
 
-    # add a box to mark the array
-    if start is None:
-        # noinspection PyTypeChecker
-        start = (1 - np.array(box_dims)) / 2.0
+    ax.add_patch(plt.Rectangle((10, 10), 30, 30,
+                               fill=False, edgecolor='Black', linestyle='solid'))
 
-    ax.add_patch(plt.Rectangle((start[0], start[1]), box_dims[0], box_dims[1],
-                               fill=False, edgecolor='Black', linestyle='dashed'))
-    plt.xlim(xmin=start[0], xmax=start[0] + box_dims[0])
-    plt.ylim(ymin=start[1], ymax=start[1] + box_dims[1])
+    plt.xlim(xmin=box[0], xmax=box[1])
+    plt.ylim(ymin=box[0], ymax=box[1])
 
-    sns.set_style('nogrid')
+    # sns.set_style('nogrid')
     ax.set_aspect('equal')
     ax.set_xticks([])
     ax.set_yticks([])
