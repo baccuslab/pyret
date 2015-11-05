@@ -418,7 +418,7 @@ def get_ellipse_params(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=100
     return _popt_to_ellipse(*popt)
 
 
-def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=0., scale=1.5, **kwargs):
+def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=1e2, scale=1.5, **kwargs):
     """
     Fit an ellipse to the given spatial receptive field
 
@@ -448,6 +448,9 @@ def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=0., scale=
         A matplotlib.patches.Ellipse object
 
     """
+    if np.allclose(tvd_penalty, 0.):
+        warnings.warn('Denoising penalty cannot be zero, setting to 1e-3')
+        tvd_penalty = 1e-3
 
     # Get ellipse parameters
     center, widths, theta = get_ellipse_params(tx, ty, sta_frame,
