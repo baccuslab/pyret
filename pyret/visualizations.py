@@ -5,9 +5,9 @@ Visualization functions for displaying spikes, filters, and cells.
 
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 from . import filtertools as ft
 from matplotlib import animation as animation
+from matplotlib.cm import Set1
 
 __all__ = ['raster', 'psth', 'rasterandpsth', 'spatial', 'temporal',
            'plotsta', 'playsta', 'ellipse', 'plotcells', 'playrates']
@@ -174,13 +174,11 @@ def rasterandpsth(spikes, trial_length=None, binsize=0.01, fig=None):
     psthax.set_title('psth and raster', fontdict={'fontsize':24})
     psthax.set_xlabel('time (s)', fontdict={'fontsize':20})
     psthax.set_ylabel('firing rate (Hz)', color='r', fontdict={'fontsize':20})
-    sns.set(style='white', context='notebook')
     for tick in psthax.get_yticklabels():
         tick.set_color('r')
 
     # Plot the raster
     rastax = psthax.twinx()
-    sns.set(style='white', context='notebook')
     plt.hold(True)
     for trial in range(ntrials):
         idx = np.bitwise_and(spikes > tbins[trial, 0], spikes <= tbins[trial, -1])
@@ -368,8 +366,6 @@ def plotsta(time, sta, fig=None):
     if fig is None:
         fig = plt.figure()
 
-    sns.set(style='white')
-
     # plot 1D temporal filter
     if sta.ndim == 1:
 
@@ -487,7 +483,7 @@ def plotcells(cells, box, ax=None, scale=0.25):
         ax = fig.add_subplot(111)
 
     # define the color palatte
-    colors = sns.color_palette("hls", len(cells))
+    colors = Set1(np.arange(len(cells)))
     np.random.shuffle(colors)
 
     # for each cell
