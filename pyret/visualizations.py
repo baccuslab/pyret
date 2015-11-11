@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from . import filtertools as ft
 from matplotlib import animation as animation
-from matplotlib.cm import Set1
+from matplotlib.cm import Set1, gray
 
 __all__ = ['raster', 'psth', 'rasterandpsth', 'spatial', 'temporal',
            'plotsta', 'playsta', 'ellipse', 'plotcells', 'playrates']
@@ -515,7 +515,6 @@ def plotcells(cells, box, ax=None, scale=0.25):
     plt.xlim(xmin=box[0], xmax=box[1])
     plt.ylim(ymin=box[0], ymax=box[1])
 
-    # sns.set_style('nogrid')
     ax.set_aspect('equal')
     ax.set_xticks([])
     ax.set_yticks([])
@@ -527,7 +526,7 @@ def plotcells(cells, box, ax=None, scale=0.25):
     return ax, ellipses
 
 
-def playrates(rates, patches, palette='gray', num_levels=255, time=None, repeat=True, frametime=100):
+def playrates(rates, patches, num_levels=255, time=None, repeat=True, frametime=100):
     """
     Plays a movie of the firing rate for N cells by updating the given patches (matplotlib handles)
     (useful in conjunction with the output of plotcells)
@@ -547,7 +546,7 @@ def playrates(rates, patches, palette='gray', num_levels=255, time=None, repeat=
     """
 
     # approximate necessary colormap
-    colors = sns.color_palette(palette, num_levels)
+    colors = gray(np.arange(num_levels))
     rscale = np.round( (num_levels - 1) * (rates - rates.min()) / (rates.max() - rates.min()) ).astype('int')
 
     # set up
