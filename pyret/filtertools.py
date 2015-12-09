@@ -19,7 +19,7 @@ from warnings import warn
 
 __all__ = ['getste', 'getsta', 'getstc', 'lowranksta', 'decompose',
            'get_ellipse_params', 'fit_ellipse', 'filterpeak', 'smoothfilter',
-           'cutout', 'prinangles', 'rolling_window']
+           'cutout', 'rolling_window']
 
 
 def dimension_warning(stim):
@@ -578,38 +578,6 @@ def cutout(arr, idx=None, width=5):
 
     # Extract and return the reduced array
     return arr[:, rmesh, cmesh]
-
-
-def prinangles(u, v):
-    """
-    Compute the principal angles between two subspaces. Useful for comparing
-    subspaces returned via spike-triggered covariance, for example.
-
-    Parameters
-    ----------
-    u, v : array_like
-        The subspaces to compare. They should be of the same size.
-
-    Returns
-    -------
-    ang : array_like
-        The angles between each dimension of the subspaces
-
-    mag : array_like
-        The magnitude of the overlap between each dimension of the subspace.
-
-    """
-
-    # Orthogonalize each subspace
-    qu, qv = np.linalg.qr(u)[0], np.linalg.qr(v)[0]
-
-    # singular values of the inner product between the orthogonalized spaces
-    mag = np.linalg.svd(qu.T.dot(qv), compute_uv=False, full_matrices=False)
-
-    # Compute the angles between each dimension
-    ang = np.rad2deg(np.arccos(mag))
-
-    return ang, mag
 
 
 def rolling_window(array, window, time_axis=0):
