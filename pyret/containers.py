@@ -64,7 +64,7 @@ class Experiment(object):
             """
 
             sta = ft.getsta(self.time, self.stim, self.spikes[cellidx], history)[0]
-            return Filter(sta, self.dt)
+            return Filter(np.flipud(sta), self.dt)
 
         def binspikes(self, cellidx):
             """
@@ -126,6 +126,20 @@ class Filter:
         self.dx = dx
         self.dy = dy
 
+    @property
+    def spatial(self):
+        """
+        Gets the spatial RF
+        """
+        return ft.decompose(self.data)[0]
+
+    @property
+    def temporal(self):
+        """
+        Gets the spatial RF
+        """
+        return ft.decompose(self.data)[1]
+
     def plot(self):
         """
         Plots the spatiotemporal filter
@@ -137,7 +151,7 @@ class Filter:
         Plays a movie of the spatiotemporal filter
         """
         assert self.ndim >= 2, "playsta only valid for spatiotemporal stimuli"
-        viz.playsta(self)
+        viz.playsta(self.data)
 
     def __repr__(self):
         return repr(self.data)
