@@ -612,7 +612,7 @@ def prinangles(u, v):
     return ang, mag
 
 
-def rolling_window(array, window, time_axis=-1):
+def rolling_window(array, window, time_axis=0):
     """
     Make an ndarray with a rolling window of the last dimension
 
