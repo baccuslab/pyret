@@ -5,11 +5,11 @@ Visualization functions for displaying spikes, filters, and cells.
 
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 from . import filtertools as ft
 from matplotlib import animation as animation
+from matplotlib.cm import Set1, gray
 
-__all__ = ['raster', 'psth', 'rasterandpsth', 'playsta', 'spatial', 'temporal',
+__all__ = ['raster', 'psth', 'rasterandpsth', 'spatial', 'temporal',
            'plotsta', 'playsta', 'ellipse', 'plotcells', 'playrates']
 
 
@@ -174,13 +174,11 @@ def rasterandpsth(spikes, trial_length=None, binsize=0.01, fig=None):
     psthax.set_title('psth and raster', fontdict={'fontsize':24})
     psthax.set_xlabel('time (s)', fontdict={'fontsize':20})
     psthax.set_ylabel('firing rate (Hz)', color='r', fontdict={'fontsize':20})
-    sns.set(style='white', context='notebook')
     for tick in psthax.get_yticklabels():
         tick.set_color('r')
 
     # Plot the raster
     rastax = psthax.twinx()
-    sns.set(style='white', context='notebook')
     plt.hold(True)
     for trial in range(ntrials):
         idx = np.bitwise_and(spikes > tbins[trial, 0], spikes <= tbins[trial, -1])
@@ -197,7 +195,7 @@ def rasterandpsth(spikes, trial_length=None, binsize=0.01, fig=None):
     return fig
 
 
-def playsta(sta, repeat=True, frametime=100, cmap='gray', clim=None):
+def playsta(sta, repeat=True, frametime=100, cmap='seismic', clim=None):
     """
     Plays a spatiotemporal spike-triggered average as a movie
 
@@ -225,26 +223,33 @@ def playsta(sta, repeat=True, frametime=100, cmap='gray', clim=None):
     """
 
     # Initial frame
-    initial_frame = sta[:, :, 0]
+    initial_frame = sta[0]
 
     # Set up the figure
     fig = plt.figure()
-    ax = plt.axes(xlim=(0, sta.shape[0]), ylim=(0, sta.shape[1]))
+    plt.axis('equal')
+    ax = plt.axes(xlim=(0, sta.shape[1]), ylim=(0, sta.shape[2]))
     img = plt.imshow(initial_frame)
+    ax.set_xticks([])
+    ax.set_yticks([])
 
     # Set up the colors
     img.set_cmap(cmap)
     img.set_interpolation('nearest')
     if clim is not None:
         img.set_clim(clim)
+    else:
+        maxval = np.max(np.abs(sta))
+        img.set_clim([-maxval, maxval])
 
     # Animation function (called sequentially)
     def animate(i):
         ax.set_title('Frame {0:#d}'.format(i + 1))
-        img.set_data(sta[:, :, i])
+        img.set_data(sta[i])
 
     # Call the animator
-    anim = animation.FuncAnimation(fig, animate, np.arange(sta.shape[-1]), interval=frametime, repeat=repeat)
+    anim = animation.FuncAnimation(fig, animate, np.arange(sta.shape[0]),
+                                   interval=frametime, repeat=repeat)
     plt.show()
     plt.draw()
 
@@ -295,7 +300,7 @@ def spatial(spatial_filter, ax=None, clim=None):
     ax.set_aspect('equal')
 
     # add colorbar
-    ax.get_figure().colorbar(img)
+    # ax.get_figure().colorbar(img)
 
     plt.show()
     plt.draw()
@@ -335,7 +340,7 @@ def temporal(time, temporal_filter, ax=None):
     return ax
 
 
-def plotsta(time, sta):
+def plotsta(time, sta, fig=None):
     """
     Plot a spatial and temporal filter
 
@@ -358,8 +363,8 @@ def plotsta(time, sta):
     """
 
     # create the figure object
-    fig = plt.figure()
-    sns.set(style='white')
+    if fig is None:
+        fig = plt.figure()
 
     # plot 1D temporal filter
     if sta.ndim == 1:
@@ -394,9 +399,12 @@ def plotsta(time, sta):
 
         # plot spatial profile
         axspatial = spatial(spatial_profile, fig.add_subplot(121))
+        axspatial.set_xticks([])
+        axspatial.set_yticks([])
 
         # plot temporal profile
         axtemporal = temporal(time, temporal_filter, fig.add_subplot(122))
+        axtemporal.set_xlim(time[0], time[-1])
 
         # return handles
         ax = (axspatial, axtemporal)
@@ -442,7 +450,7 @@ def ellipse(ell, ax=None):
     return ax
 
 
-def plotcells(cells, ax=None, box_dims=None, start=None, scale=0.25):
+def plotcells(cells, box, ax=None, scale=0.25):
     """
     Plot the spatial receptive fields for multiple cells
 
@@ -475,7 +483,7 @@ def plotcells(cells, ax=None, box_dims=None, start=None, scale=0.25):
         ax = fig.add_subplot(111)
 
     # define the color palatte
-    colors = sns.color_palette("hls", len(cells))
+    colors = Set1(np.arange(len(cells)))
     np.random.shuffle(colors)
 
     # for each cell
@@ -486,7 +494,11 @@ def plotcells(cells, ax=None, box_dims=None, start=None, scale=0.25):
         _, _, tidx = ft.filterpeak(sta)
 
         # generate ellipse
-        ell = ft.fit_ellipse(sta[:, :, tidx], scale=scale)
+        # tx = np.linspace(-1388.8888, 1388.8888, sta.shape[1])
+        # ty = np.linspace(-1388.8888, 1388.8888, sta.shape[2])
+        tx = np.arange(sta.shape[1])
+        ty = np.arange(sta.shape[2])
+        ell = ft.fit_ellipse(tx, ty, sta[tidx, :, :], scale=scale)
 
         # add it to the plot
         ell.set_facecolor(colors[idx])
@@ -497,17 +509,12 @@ def plotcells(cells, ax=None, box_dims=None, start=None, scale=0.25):
         ax.add_artist(ell)
         ellipses.append(ell)
 
-    # add a box to mark the array
-    if start is None:
-        # noinspection PyTypeChecker
-        start = (1 - np.array(box_dims)) / 2.0
+    ax.add_patch(plt.Rectangle((10, 10), 30, 30,
+                               fill=False, edgecolor='Black', linestyle='solid'))
 
-    ax.add_patch(plt.Rectangle((start[0], start[1]), box_dims[0], box_dims[1],
-                               fill=False, edgecolor='Black', linestyle='dashed'))
-    plt.xlim(xmin=start[0], xmax=start[0] + box_dims[0])
-    plt.ylim(ymin=start[1], ymax=start[1] + box_dims[1])
+    plt.xlim(xmin=box[0], xmax=box[1])
+    plt.ylim(ymin=box[0], ymax=box[1])
 
-    sns.set_style('nogrid')
     ax.set_aspect('equal')
     ax.set_xticks([])
     ax.set_yticks([])
@@ -519,7 +526,7 @@ def plotcells(cells, ax=None, box_dims=None, start=None, scale=0.25):
     return ax, ellipses
 
 
-def playrates(rates, patches, palette='gray', num_levels=255, time=None, repeat=True, frametime=100):
+def playrates(rates, patches, num_levels=255, time=None, repeat=True, frametime=100):
     """
     Plays a movie of the firing rate for N cells by updating the given patches (matplotlib handles)
     (useful in conjunction with the output of plotcells)
@@ -539,7 +546,7 @@ def playrates(rates, patches, palette='gray', num_levels=255, time=None, repeat=
     """
 
     # approximate necessary colormap
-    colors = sns.color_palette(palette, num_levels)
+    colors = gray(np.arange(num_levels))
     rscale = np.round( (num_levels - 1) * (rates - rates.min()) / (rates.max() - rates.min()) ).astype('int')
 
     # set up
