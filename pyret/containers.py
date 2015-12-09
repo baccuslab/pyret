@@ -1,8 +1,9 @@
 """
-Objects for holding relevant experimental data
+Containers for holding relevant experimental data
+
 """
 
-from .filtertools import rolling_window
+from . import filtertools as ft
 from .spiketools import binspikes
 from . import visualizations as viz
 import numpy as np
@@ -15,111 +16,172 @@ class Experiment(object):
         Sensory experiment data container
         """
 
-        def __init__(self, stim, time, cells, dt):
+        def __init__(self, stimulus, stim_time, spikes, dt):
             """
-            TODO: Docstring for __init__.
 
             Parameters
             ----------
-            stim : TODO
-            time : TODO
-            spikes : TODO
+            stimulus : array_like
 
-            Returns
-            -------
-            TODO
+            stim_time : array_like
+
+            spikes : list of array_like
+
+            dt : float
+                Temporal sampling rate (seconds)
 
             """
 
-            assert type(stim) == np.ndarray and stim.ndim == 3, \
-                "Stimulus must be a 3 dimensionsal (space x space x time) array"
+            assert type(stimulus) is np.ndarray, \
+                "Stimulus must be a numpy array"
 
-            assert type(time) == np.ndarray and time.ndim == 1, \
-                "Time vector must be an one dimensional numpy array"
+            assert type(stim_time) == np.ndarray and stim_time.ndim == 1, \
+                "Time vector must be a 1-D numpy array"
 
-            self.stim = stim
-            self.cells = cells
-            self.time = time
+            assert len(stim_time) == len(stimulus), \
+                "The stimulus time array must have the same length as the stimulus"
+
+            self.stim = stimulus
+            self.time = stim_time
+            self.spikes = spikes
             self.dt = dt
-
-            spikes = list()
-            print('Spikes for {:d} cells'.format(len(cells)))
-            for cell in self.cells:
-                spikes.append(np.append(0, binspikes(cell, time=time)[0]))
-            self.spikes = np.vstack(spikes)
 
         def __len__(self):
             return len(self.time)
 
+        def sta(self, cellidx, history):
+            """
+            Returns the STA for the given cell as a Filter object
+
+            Parameters
+            ----------
+            cellidx : int
+                The index of the cell to analyze
+
+            history : int
+                Number of samples of temporal history to include
+
+            """
+
+            sta = ft.getsta(self.time, self.stim, self.spikes[cellidx], history)[0]
+            return Filter(sta, self.dt)
+
+        def binspikes(self, cellidx):
+            """
+            Bin spike times for the given cell
+
+            Parameters
+            ----------
+            cellidx : int
+                Index of the cell
+
+            """
+
+            spk = self.spikes[cellidx]
+            return np.append(0, binspikes(spk, time=self.time)[0])
+
         @property
-        def tmax(self):
+        def length(self):
             return self.time[-1]
 
         @property
         def ncells(self):
-            return self.spikes.shape[0]
+            return len(self.spikes)
 
-        def stim_sliced(self, history, batch_size=-1):
+        def stim_sliced(self, history):
             """Returns a view into the stimulus array"""
-
-            sliced_array = np.rollaxis(rolling_window(self.stim, history), 3, 2)
-
-            if batch_size > 0:
-                return partition_last(sliced_array, batch_size)
-            else:
-                return sliced_array
-
-        def spike_history(self, history, offset=1, batch_size=-1):
-            """Returns a view into the spikes array, offset by some amount"""
-            arr = np.hstack((np.zeros((self.ncells, offset)),
-                            self.spikes[:, offset:]))
-            sliced_array = np.rollaxis(rolling_window(arr, history), 2, 1)
-
-            if batch_size > 0:
-                return partition_last(sliced_array, batch_size)
-            else:
-                return sliced_array
-
-        def ste(self, stim_hist, ci):
-            return (self.stim[..., (t-stim_hist):t].astype('float')
-                    for t in range(len(self))
-                    if self.spikes[ci, t] > 0 and t >= stim_hist)
+            return ft.rolling_window(self.stim, history, time_axis=0)
 
 
-class Filter(np.ndarray):
+class Filter:
     """
     Container for a spatiotemporal or temporal filter
+
     """
 
-    def __new__(cls, arr, dt, dx=None, dy=None, tstart=0.):
-        # Input array is an already formed ndarray instance
-        # We first cast to be our class type
-        obj = np.asarray(arr).view(cls)
+    def __init__(self, data, dt, dx=None, dy=None):
+        """
+        Creates a spatiotemporal filter object
 
-        # add the spatial and temporal resolutions
-        obj.dt = dt
-        obj.dx = dx
-        obj.dy = dy
+        Parameters
+        ----------
+        data : array_like
+            The spatiotemporal filter, either (time,) or (time, space) or
+            (time, space, space) depending on the number of spatial dimensions
 
-        # time at which the STA starts
-        obj.tstart = tstart
+        dt : float
 
-        # time array corresponding to this filter
-        obj.tax = np.linspace(obj.tstart, -dt*arr.shape[-1], arr.shape[-1])
+        dx : float, optional
+        dy : float, optional
 
-        # Finally, we must return the newly created object:
-        return obj
+        """
+
+        assert type(data) is np.ndarray, "Filter data must be a numpy ndarray"
+
+        # store the filter values
+        self.data = data
+
+        # sampling rates in time and each spatial dimension
+        self.dt = dt
+        self.dx = dx
+        self.dy = dy
+
+    def plot(self):
+        """
+        Plots the spatiotemporal filter
+        """
+        viz.plotsta(self.tax, self.data)
+
+    def play(self):
+        """
+        Plays a movie of the spatiotemporal filter
+        """
+        assert self.ndim >= 2, "playsta only valid for spatiotemporal stimuli"
+        viz.playsta(self)
+
+    def __repr__(self):
+        return repr(self.data)
+
+    def __str__(self):
+        return "{:0.0f} ms long filter with shape: {}" \
+            .format(1000 * self.length, self.shape)
+
+    def __len__(self):
+        """
+        Returns the length of the filter in samples
+        """
+        return len(self.data)
+
+    def __iter__(self):
+        """
+        Returns an iterator over the temporal frames in the filter
+        """
+        return iter(self.data)
 
     @property
     def length(self):
-        return len(self.tax) * self.dt
+        """
+        Returns the filter length in seconds
+        """
+        return len(self) * self.dt
 
-    def __str__(self):
-        return '{}s filter with {} spatial dimensions'.format(self.length,
-                                                              self.shape[1:])
+    @property
+    def shape(self):
+        """
+        Returns the shape of the filter
+        """
+        return self.data.shape
 
-    def plot(self):
-        viz.plotsta(self.tax, self)
+    @property
+    def ndim(self):
+        """
+        Returns the number of filter dimensions
+        """
+        return self.data.ndim
 
-    def play(self):
-        viz.playsta(self)
+    @property
+    def tax(self):
+        """
+        Creates a temporal axis for this filter
+        """
+        return np.arange(0, -self.length, -self.dt)

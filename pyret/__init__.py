@@ -11,6 +11,7 @@ filtertools     - Analysis of linear filters
 stimulustools   - Tools for getting stimulus history and statistics
 visualizations  - Tools for plotting receptive fields, filters, etc.
 nonlinearities  - Methods for estimating nonlinearities
+containers      - Objects for managing experimental data (stimuli and spikes)
 
 For more information, see the accompanying README.md
 
@@ -24,6 +25,7 @@ __all__ = [
     'filtertools',
     'containers'
     ]
+
 __version__ = '0.3.2'
 
 from pyret import *
