@@ -3,7 +3,7 @@ import pyret
 
 setup(name='pyret',
       version=pyret.__version__,
-      description='Tools for the analysis of neural data',
+      description='Tools for the analysis of neural electrophysiology data',
       author='Benjamin Naecker, Niru Maheshwaranathan',
       author_email='bnaecker@stanford.edu',
       url='https://github.com/baccuslab/pyret.git',
