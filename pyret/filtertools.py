@@ -152,30 +152,37 @@ def getstc(time, stimulus, spikes, filter_length):
     dimension_warning(stimulus)
 
     # get the blas function for computing the outer product
-    assert stimulus.dtype == 'float64', 'Stimulus must be double precision'
     outer = get_blas_funcs('syr', dtype='d')
 
     # get the iterator
     ste = getste(time, stimulus, spikes, filter_length)
 
-    # reduce, note that this only contains the upper triangular portion
-    try:
-        first_slice = next(ste)
-        stc_init = np.triu(np.outer(first_slice.ravel(), first_slice.ravel()))
-        stc_ut = reduce(lambda C, x: outer(1, x.ravel(), a=C),
-                        ste, stc_init) / float(len(spikes))
-    except StopIteration:
+    # check if empty
+    first = next(ste, None)
+
+    # if the spike-triggered ensemble is empty, return an array of NaN's
+    if first is None:
         ndims = np.prod(stimulus.shape[1:]) * filter_length
         return np.nan * np.ones((ndims, ndims))
 
-    # make the full STC matrix (copy the upper triangular portion to the lower
-    # triangle)
-    stc = np.triu(stc_ut, 1).T + stc_ut
+    # initialize the STC matrix using the outer product of the first sample
+    stc_init = np.triu(np.outer(first.ravel(), first.ravel()))
 
-    # compute the STA (to subtract it)
+    # reduce the stc using the BLAS outer product function
+    # (note: this only fills in the upper triangular part of the matrix)
+    stc_ut = reduce(lambda C, x: outer(1, x.ravel(), a=C), ste, stc_init)
+
+    # normalize by the number of spikes
+    stc_ut /= float(len(spikes))
+
+    # compute the STA (to remove it)
     sta = getsta(time, stimulus, spikes, filter_length)[0].ravel()
 
-    return stc - np.outer(sta, sta)
+    # fill in the lower triangular portion (by adding the transpose)
+    # and subtract off the STA to compute the full STC matrix
+    stc = np.triu(stc_ut, 1).T + stc_ut - np.outer(sta, sta)
+
+    return stc
 
 
 def lowranksta(f_orig, k=10):
