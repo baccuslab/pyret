@@ -6,14 +6,11 @@ spatiotemporal filters, and basic filter signal processing.
 """
 
 import numpy as np
+import scipy
 from matplotlib.patches import Ellipse
 from numpy.linalg import LinAlgError
-from scipy.linalg.blas import get_blas_funcs
-from scipy import ndimage
-from scipy.stats import skew
 from skimage.restoration import denoise_tv_bregman
 from skimage.filters import gaussian_filter
-from scipy.optimize import curve_fit
 from functools import reduce
 from warnings import warn
 
@@ -152,7 +149,7 @@ def getstc(time, stimulus, spikes, filter_length):
     dimension_warning(stimulus)
 
     # get the blas function for computing the outer product
-    outer = get_blas_funcs('syr', dtype='d')
+    outer = scipy.linalg.blas.get_blas_funcs('syr', dtype='d')
 
     # get the iterator
     ste = getste(time, stimulus, spikes, filter_length)
@@ -349,11 +346,7 @@ def _smooth_spatial_profile(f, spatial_smoothing, tvd_penalty):
 
     """
 
-    sgn = np.sign(skew(f.ravel()))
-    # if sgn*skew(f.ravel()) < 0.1:
-        # raise ValueError("Error! RF profile is too noisy!")
-
-    H = denoise_tv_bregman(gaussian_filter(sgn * f, spatial_smoothing),
+    H = denoise_tv_bregman(gaussian_filter(f, spatial_smoothing),
                            tvd_penalty)
     return H / H.max()
 
@@ -419,8 +412,8 @@ def get_ellipse_params(tx, ty, sta_frame, spatial_smoothing=0.5, tvd_penalty=10)
 
     # optimize
     xdata = np.vstack((xm.ravel(), ym.ravel()))
-    popt, pcov = curve_fit(_gaussian_function_2d, xdata, ydata.ravel(),
-                           p0=pinit)
+    popt, pcov = scipy.optimize.curve_fit(_gaussian_function_2d, xdata, ydata.ravel(),
+                                          p0=pinit)
 
     # return ellipse parameters
     return _popt_to_ellipse(*popt)
@@ -530,8 +523,9 @@ def smoothfilter(f, spacesig=0.5, timesig=1):
         The smoothed filter, with the same shape as the input
 
     """
-    return ndimage.filters.gaussian_filter(f, (timesig, spacesig, spacesig),
-                                           order=0)
+    return scipy.ndimage.filters.gaussian_filter(f,
+                                                 (timesig, spacesig, spacesig),
+                                                 order=0)
 
 
 def cutout(arr, idx=None, width=5):
@@ -578,6 +572,26 @@ def cutout(arr, idx=None, width=5):
 
     # Extract and return the reduced array
     return arr[:, rmesh, cmesh]
+
+
+def resample(arr, scale_factor):
+    """
+    Resamples a 1-D or 2-D array
+    """
+
+    assert type(arr) is np.ndarray, "Input array must be a numpy array"
+    assert scale_factor > 0, "Scale factor must be non-negative"
+
+    if arr.ndim == 1:
+        return scipy.signal.resample(arr, int(np.ceil(scale_factor * arr.size)))
+
+    elif arr.ndim == 2:
+        assert arr.shape[0] == arr.shape[1], "Array must be square"
+        n = int(np.ceil(scale_factor * arr.shape[0]))
+        return scipy.signal.resample(scipy.signal.resample(arr, n, axis=0), n, axis=1)
+
+    else:
+        raise ValueError('Input array must be either 1-D or 2-D')
 
 
 def rolling_window(array, window, time_axis=0):
