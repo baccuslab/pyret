@@ -7,8 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from . import filtertools as ft
 from matplotlib import animation as animation
+from matplotlib import cm as cm
 from matplotlib.patches import Ellipse
-from matplotlib.cm import Set1, gray
 
 __all__ = ['raster', 'psth', 'rasterandpsth', 'spatial', 'temporal',
            'plotsta', 'playsta', 'ellipse', 'plotcells', 'playrates']
@@ -460,7 +460,7 @@ def ellipse(spatial_filter, scale=3.0, alpha=0.8, fc='none', ec='black', lw=3, a
     return ax
 
 
-def plotcells(cells, box, ax=None, scale=0.25):
+def plotcells(cells, ax=None):
     """
     Plot the spatial receptive fields for multiple cells
 
@@ -471,14 +471,6 @@ def plotcells(cells, box, ax=None, scale=0.25):
 
     ax : matplotlib Axes object, optional
         The axes onto which the ellipse should be plotted. Defaults to a new figure
-
-    box_dims : (float, float), optional
-        Dimensions of a box (to indicate the electrode array) to draw behind the cells. Should be a tuple containing the
-        (width,height) of the box. Defaults to
-
-    start : float, optional
-        Location of the lower left corner of the box to draw. If None, the box is centered on the plot. Only matters if
-        `box_dims` is not None.
 
     Returns
     ------
@@ -492,38 +484,16 @@ def plotcells(cells, box, ax=None, scale=0.25):
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
-    # define the color palatte
-    colors = Set1(np.arange(len(cells)))
-    np.random.shuffle(colors)
-
     # for each cell
     ellipses = list()
     for idx, sta in enumerate(cells):
 
         # get the spatial profile
-        _, _, tidx = ft.filterpeak(sta)
+        sp = ft.decompose(sta)[0]
 
-        # generate ellipse
-        # tx = np.linspace(-1388.8888, 1388.8888, sta.shape[1])
-        # ty = np.linspace(-1388.8888, 1388.8888, sta.shape[2])
-        tx = np.arange(sta.shape[1])
-        ty = np.arange(sta.shape[2])
-        ell = ft.fit_ellipse(tx, ty, sta[tidx, :, :], scale=scale)
-
-        # add it to the plot
-        ell.set_facecolor(colors[idx])
-        ell.set_edgecolor(colors[idx])
-        ell.set_linewidth(2)
-        ell.set_linestyle('solid')
-        ell.set_alpha(0.3)
-        ax.add_artist(ell)
-        ellipses.append(ell)
-
-    ax.add_patch(plt.Rectangle((10, 10), 30, 30,
-                               fill=False, edgecolor='Black', linestyle='solid'))
-
-    plt.xlim(xmin=box[0], xmax=box[1])
-    plt.ylim(ymin=box[0], ymax=box[1])
+        # plot ellipse
+        color = cm.Set1(np.random.randint(100))
+        ax = ellipse(sp, fc=color, ec=color, lw=2, alpha=0.3, ax=ax)
 
     ax.set_aspect('equal')
     ax.set_xticks([])
@@ -533,7 +503,7 @@ def plotcells(cells, box, ax=None, scale=0.25):
     plt.tight_layout()
     plt.show()
     plt.draw()
-    return ax, ellipses
+    return ax
 
 
 def playrates(rates, patches, num_levels=255, time=None, repeat=True, frametime=100):
@@ -556,7 +526,7 @@ def playrates(rates, patches, num_levels=255, time=None, repeat=True, frametime=
     """
 
     # approximate necessary colormap
-    colors = gray(np.arange(num_levels))
+    colors = cm.gray(np.arange(num_levels))
     rscale = np.round( (num_levels - 1) * (rates - rates.min()) / (rates.max() - rates.min()) ).astype('int')
 
     # set up
