@@ -527,7 +527,7 @@ def get_regionprops(spatial_filter, threshold=10.0):
     return regionprops(label(normalize_spatial(spatial_filter) >= threshold))
 
 
-def get_ellipse(tx, ty, spatial_filter, scale=3.0):
+def get_ellipse(tx, ty, spatial_filter, pvalue=0.6827):
     """
     Get the parameters of an ellipse fit to a spatial receptive field
 
@@ -542,7 +542,9 @@ def get_ellipse(tx, ty, spatial_filter, scale=3.0):
     spatial_filter : array_like
         The spatial receptive field to which the ellipse should be fit
 
-    scale : float
+    pvalue : float, optional
+        Determines the threshold of the ellipse contours. For example, a pvalue
+        of 0.95 corresponds to a 95% confidence ellipse. (Default: 0.6827)
 
     Returns
     -------
@@ -572,8 +574,46 @@ def get_ellipse(tx, ty, spatial_filter, scale=3.0):
                                           zdata,
                                           p0=pinit)
 
-    # return ellipse parameters
+    # return ellipse parameters, scaled by the appropriate scale factor
+    scale = 2 * np.sqrt(scipy.stats.chi2.ppf(pvalue, df=2))
     return _popt_to_ellipse(*popt, scale=scale)
+
+
+def rfsize(spatial_filter, dx, dy=None, pvalue=0.6827):
+    """
+    Computes the lenghts of an ellipse fit to the receptive field
+
+    Parameters
+    ----------
+
+    spatial_filter : array_like
+        The spatial receptive field to which the ellipse should be fit
+
+    dx : float
+        The spatial sampling along the x-dimension
+
+    dy : float
+        The spatial sampling along the y-dimension. If None, uses the same
+        value as dx. (Default: None)
+
+    pvalue : float, optional
+        Determines the threshold of the ellipse contours. For example, a pvalue
+        of 0.95 corresponds to a 95% confidence ellipse. (Default: 0.6827)
+
+    """
+
+    if dy is None:
+        dy = dx
+
+    # x- and y- sampling locations
+    tx = np.arange(spatial_filter.shape[0])
+    ty = np.arange(spatial_filter.shape[1])
+
+    # get ellipse parameters
+    widths = get_ellipse(tx, ty, spatial_filter, pvalue=pvalue)[1]
+
+    # return the scaled widths
+    return widths[0] * dx, widths[1] * dy
 
 
 def _gaussian_function(data, x0, y0, a, b, c):

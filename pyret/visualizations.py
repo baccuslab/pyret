@@ -414,14 +414,31 @@ def plotsta(time, sta, fig=None):
     return fig, ax
 
 
-def ellipse(spatial_filter, scale=3.0, alpha=0.8, fc='none', ec='black', lw=3, ax=None, **kwargs):
+def ellipse(spatial_filter, pvalue=0.6827, alpha=0.8, fc='none', ec='black', lw=3, ax=None, **kwargs):
     """
     Plot a given ellipse
 
     Parameters
     ----------
-    ell : matplotlib.patches.Ellipse object
-        The ellipse to be plotted
+    spatial_filter : array_like
+        A spatial filter (2D image) corresponding to the spatial profile of the
+        receptive field
+
+    pvalue : float, optional
+        Determines the threshold of the ellipse contours. For example, a pvalue
+        of 0.95 corresponds to a 95% confidence ellipse. (Default: 0.6827)
+
+    alpha : float, optional
+        The alpha blending value, between 0 (transparent) and 1 (opaque) (Default: 0.8)
+
+    fc : string, optional
+        Ellipse face color. (Default: none)
+
+    ec : string, optional
+        Ellipse edge color. (Default: black)
+
+    lw : int, optional
+        Line width. (Default: 3)
 
     ax : matplotlib Axes object, optional
         The axes onto which the ellipse should be plotted. Defaults to a new figure
@@ -437,7 +454,7 @@ def ellipse(spatial_filter, scale=3.0, alpha=0.8, fc='none', ec='black', lw=3, a
     center, widths, theta = ft.get_ellipse(np.arange(spatial_filter.shape[0]),
                                            np.arange(spatial_filter.shape[1]),
                                            spatial_filter,
-                                           scale=scale)
+                                           pvalue=pvalue)
 
     # create the ellipse
     ell = Ellipse(xy=center, width=widths[0], height=widths[1], angle=theta,
@@ -523,7 +540,8 @@ def playrates(rates, patches, num_levels=255, time=None, repeat=True, frametime=
 
     # approximate necessary colormap
     colors = cm.gray(np.arange(num_levels))
-    rscale = np.round( (num_levels - 1) * (rates - rates.min()) / (rates.max() - rates.min()) ).astype('int')
+    rscale = np.round((num_levels - 1) * (rates - rates.min()) /
+                      (rates.max() - rates.min())).astype('int')
 
     # set up
     fig = plt.gcf()
