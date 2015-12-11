@@ -7,26 +7,16 @@ spatiotemporal filters, and basic filter signal processing.
 
 import numpy as np
 import scipy
-from matplotlib.patches import Ellipse
 from numpy.linalg import LinAlgError
 from skimage.restoration import denoise_tv_bregman
 from skimage.filters import gaussian_filter
+from skimage.measure import label, regionprops, find_contours
 from functools import reduce
-from warnings import warn
 
 __all__ = ['getste', 'getsta', 'getstc', 'lowranksta', 'decompose',
-           'get_ellipse_params', 'fit_ellipse', 'filterpeak', 'smoothfilter',
-           'cutout', 'rolling_window']
-
-
-def dimension_warning(stim):
-    """
-    Warning for mis-shaped stimuli (due to the time axis flip in pyret v0.3.1)
-    """
-    if np.argmax(stim.shape) != 0:
-        warn('''Your stimulus seems to have the wrong shape.
-             Check to make sure that the time dimension is the first dimension
-             (new in v0.3.1)''', DeprecationWarning, stacklevel=2)
+           'filterpeak', 'smooth', 'cutout', 'rolling_window', 'resample',
+           'get_ellipse', 'get_contours', 'get_regionprops',
+           'normalize_spatial']
 
 
 def getste(time, stimulus, spikes, filter_length):
@@ -54,8 +44,6 @@ def getste(time, stimulus, spikes, filter_length):
         A generator that yields samples from the spike-triggered ensemble
 
     """
-
-    dimension_warning(stimulus)
 
     # Bin spikes
     (hist, bins) = np.histogram(spikes, time)
@@ -100,8 +88,6 @@ def getsta(time, stimulus, spikes, filter_length):
 
     """
 
-    dimension_warning(stimulus)
-
     # get the iterator
     ste = getste(time, stimulus, spikes, filter_length)
 
@@ -112,11 +98,12 @@ def getsta(time, stimulus, spikes, filter_length):
     try:
         first = next(ste) # check for empty generators
         sta = reduce(lambda sta, x: np.add(sta, x),
-                ste, first) / float(len(spikes))
+                     ste, first) / float(len(spikes))
     except StopIteration:
         return (np.nan * np.ones((filter_length,) + stimulus.shape[1:]), tax)
 
     return sta, tax
+
 
 def getstc(time, stimulus, spikes, filter_length):
     """
@@ -145,8 +132,6 @@ def getstc(time, stimulus, spikes, filter_length):
         The spike-triggered covariance (STC) matrix
 
     """
-
-    dimension_warning(stimulus)
 
     # get the blas function for computing the outer product
     outer = scipy.linalg.blas.get_blas_funcs('syr', dtype='d')
@@ -272,199 +257,6 @@ def decompose(sta):
     return v[0].reshape(sta.shape[1:]), u[:, 0]
 
 
-def _gaussian_function_2d(x, x0, y0, a, b, c):
-    """
-    A 2D gaussian function
-
-    Parameters
-    ----------
-    x : array_like
-        A (2 by N) array of N data points
-
-    x0 : float
-        The x center
-
-    y0 : float
-        The y center
-
-    a : float
-        The upper left number in the precision matrix
-
-    b : float
-        The upper right / lower left number in the precision matrix
-
-    c : float
-        The lower right number in the precision matrix
-
-    """
-
-    # center the data
-    xn = x[0, :] - x0
-    yn = x[1, :] - y0
-
-    # gaussian function
-    return np.exp(-0.5*(a*xn**2 + 2*b*xn*yn + c*yn**2))
-
-
-def _popt_to_ellipse(x0, y0, a, b, c):
-    """
-    Converts the parameters for the 2D gaussian function (see `fgauss`) into
-    ellipse parameters
-    """
-
-    # convert precision matrix parameters to ellipse parameters
-    u, v = np.linalg.eigh(np.array([[a, b], [b, c]]))
-
-    # standard deviations
-    sigmas = np.sqrt(1/u)
-
-    # rotation angle
-    theta = np.rad2deg(np.arccos(v[1, 1]))
-
-    return (x0, y0), sigmas, theta
-
-
-def _smooth_spatial_profile(f, spatial_smoothing, tvd_penalty):
-    """
-    Smooths a 2D spatial RF profile using a gaussian filter and total variation
-    denoising
-
-    Parameters
-    ----------
-    f : array_like
-        2D profile to smooth
-
-    spatial_smoothing : float
-        width of the gaussian filter
-
-    tvd_penalty : float
-        TV penalty strength (note: larger values indicate a weaker penalty)
-
-    Notes
-    -----
-    Raises a ValueError if the RF profile is too noisy
-
-    """
-
-    H = denoise_tv_bregman(gaussian_filter(f, spatial_smoothing),
-                           tvd_penalty)
-    return H / H.max()
-
-
-def _initial_gaussian_params(sta_frame, xm, ym):
-    """
-    Guesses the initial 2D Gaussian parameters
-    """
-
-    # normalize
-    wn = (sta_frame / np.sum(sta_frame)).ravel()
-
-    # estimate means
-    xc = np.sum(wn * xm.ravel())
-    yc = np.sum(wn * ym.ravel())
-
-    # estimate covariance
-    data = np.vstack(((xm.ravel() - xc), (ym.ravel() - yc)))
-    Q = data.dot(np.diag(wn).dot(data.T)) / (1 - np.sum(wn**2))
-
-    # compute precision matrix
-    P = np.linalg.inv(Q)
-    a = P[0, 0]
-    b = P[0, 1]
-    c = P[1, 1]
-
-    return xc, yc, a, b, c
-
-
-def get_ellipse_params(tx, ty, sta_frame, spatial_smoothing=0.5, tvd_penalty=10):
-    """
-    Fit an ellipse to the given spatial receptive field and return parameters
-
-    Parameters
-    ----------
-    sta_frame : array_like
-        The spatial receptive field to which the ellipse should be fit
-
-    spatial_smoothing : float, optional
-
-    tvd_penalty : float, optional
-
-    Returns
-    -------
-    center : (float,float)
-        The receptive field center (location stored as an (x,y) tuple)
-
-    widths : [float,float]
-        Two-element list of the size of each principal axis of the RF ellipse
-
-    theta : float
-        angle of rotation of the ellipse from the vertical axis, in radians
-
-    """
-
-    # preprocess
-    ydata = _smooth_spatial_profile(sta_frame, spatial_smoothing, tvd_penalty)
-    ydata = ydata ** 2 / np.max(ydata)
-
-    # get initial params
-    xm, ym = np.meshgrid(tx, ty)
-    pinit = _initial_gaussian_params(ydata, xm, ym)
-
-    # optimize
-    xdata = np.vstack((xm.ravel(), ym.ravel()))
-    popt, pcov = scipy.optimize.curve_fit(_gaussian_function_2d, xdata, ydata.ravel(),
-                                          p0=pinit)
-
-    # return ellipse parameters
-    return _popt_to_ellipse(*popt)
-
-
-def fit_ellipse(tx, ty, sta_frame, spatial_smoothing=1.5, tvd_penalty=1e2, scale=1.5, **kwargs):
-    """
-    Fit an ellipse to the given spatial receptive field
-
-    Parameters
-    ----------
-    tx : array_like
-        A 1-D array that specifies the x-locations of the STA frame
-
-    ty : array_like
-        A 1-D array that specifies the y-locations of the STA frame
-
-    sta_frame : array_like
-        The spatial receptive field to which the ellipse should be fit
-
-    spatial_smoothing : float, optional
-        How much to smooth the STA before fitting the ellipse (Default: 1.5)
-
-    tvd_penalty : float, optional
-        How much to denoise the STA using TVD denoising (Default: 0.)
-
-    scale : float, optional
-        Scale factor for the ellipse (Default: 1.5)
-
-    Returns
-    -------
-    ell:
-        A matplotlib.patches.Ellipse object
-
-    """
-    if np.allclose(tvd_penalty, 0.):
-        warnings.warn('Denoising penalty cannot be zero, setting to 1e-3')
-        tvd_penalty = 1e-3
-
-    # Get ellipse parameters
-    center, widths, theta = get_ellipse_params(tx, ty, sta_frame,
-                                               spatial_smoothing=spatial_smoothing,
-                                               tvd_penalty=tvd_penalty)
-
-    # Generate ellipse
-    ell = Ellipse(xy=center, width=scale * widths[0],
-                  height=scale * widths[1], angle=theta, **kwargs)
-
-    return ell
-
-
 def filterpeak(sta):
     """
     Find the peak (single point in space/time) of a smoothed filter
@@ -498,7 +290,7 @@ def filterpeak(sta):
     return idx, sidx, tidx
 
 
-def smoothfilter(f, spacesig=0.5, timesig=1):
+def smooth(f, spacesig=0.5, timesig=1):
     """
 
     Smooths a 3D spatiotemporal linear filter using a multi-dimensional
@@ -625,9 +417,9 @@ def rolling_window(array, window, time_axis=0):
 
     """
 
-    if time_axis==0:
+    if time_axis == 0:
         array = array.T
-    elif time_axis==-1:
+    elif time_axis == -1:
         pass
     else:
         raise ValueError('Time axis must be first or last')
@@ -640,7 +432,257 @@ def rolling_window(array, window, time_axis=0):
     strides = array.strides + (array.strides[-1],)
     arr = np.lib.stride_tricks.as_strided(array, shape=shape, strides=strides)
 
-    if time_axis==0:
+    if time_axis == 0:
         return np.rollaxis(arr.T, 1, 0)
     else:
         return arr
+
+
+def normalize_spatial(spatial_filter, scale_factor=1.0):
+    """
+    Normalizes a spatial frame by doing the following:
+    1. mean subtraction using a robust estimate of the mean (ignoring outliers)
+    2. sign adjustment so it is always an 'on' feature
+    3. scaling such that the std. dev. of the pixel values is 1.0
+
+    Parameters
+    ----------
+    spatial_filter : array_like
+
+    scale_factor : float, optional
+        The given filter is resampled at a sampling rate of this ratio times
+        the original sampling rate (default: 1.0)
+
+    """
+
+    # work with a copy of the given filter
+    rf = spatial_filter.copy()
+    rf -= rf.mean()
+
+    # compute the mean of pixels within +/- 5 std. deviations of the mean
+    outlier_threshold = 5 * np.std(rf.ravel())
+    mu = rf[(rf <= outlier_threshold) & (rf >= -outlier_threshold)].mean()
+
+    # remove this mean and multiply by the sign of the skew (which forces
+    # the polarity of the filter to be an 'ON' feature)
+    rf_centered = (rf - mu) * np.sign(scipy.stats.skew(rf.ravel()))
+
+    # normalize by the standard deviation of the pixel values
+    rf_centered /= rf_centered.std()
+
+    # return this normalized filter, resampled by the given amount
+    return resample(rf_centered, scale_factor)
+
+
+def get_contours(spatial_filter, threshold=10.0):
+    """
+    Gets contours of a 2D spatial filter
+
+    Usage
+    -----
+    >>> rr, cc = get_contours(sta_spatial)
+    >>> plt.plot(rr, cc)
+
+    Parameters
+    ----------
+    spatial_filter : array_like
+        The spatial receptive field to which the ellipse should be fit
+
+    threshold : float, optional
+        Threshold value (Default: 10.0)
+
+    Returns
+    -------
+    rr, cc : array_like
+        List of contour indices
+
+    """
+    return find_contours(normalize_spatial(spatial_filter), threshold)
+
+
+def get_regionprops(spatial_filter, threshold=10.0):
+    """
+    Gets region properties of a 2D spatial filter
+
+    Usage
+    -----
+    >>> regions = get_regionprops(sta_spatial)
+    >>> print(regions[0].area) # prints the area of the first region
+
+    Parameters
+    ----------
+    spatial_filter : array_like
+        The spatial receptive field to which the ellipse should be fit
+
+    threshold : float, optional
+        Threshold value (Default: 10.0)
+
+    Returns
+    -------
+    regions : list
+        List of region properties (see scikit-image regionprops for more
+        information)
+
+    """
+    return regionprops(label(normalize_spatial(spatial_filter) >= threshold))
+
+
+def get_ellipse(tx, ty, spatial_filter, scale=3.0):
+    """
+    Get the parameters of an ellipse fit to a spatial receptive field
+
+    Parameters
+    ----------
+    tx : array_like
+        spatial sampling along the x-axis
+
+    ty : array_like
+        spatial sampling along the y-axis
+
+    spatial_filter : array_like
+        The spatial receptive field to which the ellipse should be fit
+
+    scale : float
+
+    Returns
+    -------
+    center : (float,float)
+        The receptive field center (location stored as an (x,y) tuple)
+
+    widths : [float,float]
+        Two-element list of the size of each principal axis of the RF ellipse
+
+    theta : float
+        angle of rotation of the ellipse from the vertical axis, in radians
+
+    """
+
+    # preprocess
+    zdata = normalize_spatial(spatial_filter).ravel()
+    zdata /= np.max(zdata)
+
+    # get initial parameters
+    xm, ym = np.meshgrid(tx, ty)
+    pinit = _initial_gaussian_params(xm, ym, zdata)
+
+    # optimize
+    data = np.vstack((xm.ravel(), ym.ravel()))
+    popt, pcov = scipy.optimize.curve_fit(_gaussian_function,
+                                          data,
+                                          zdata,
+                                          p0=pinit)
+
+    # return ellipse parameters
+    return _popt_to_ellipse(*popt, scale=scale)
+
+
+def _gaussian_function(data, x0, y0, a, b, c):
+    """
+    A 2D gaussian function (used for fitting an ellipse to RFs)
+
+    Parameters
+    ----------
+    data : array_like
+        A (2 by N) array of N data points
+
+    x0 : float
+        The x-location of the center of the ellipse
+
+    y0 : float
+        The y-location of the center of the ellipse
+
+    a : float
+        The upper left number in the precision matrix
+
+    b : float
+        The upper right / lower left number in the precision matrix
+
+    c : float
+        The lower right number in the precision matrix
+
+    Returns
+    -------
+    z : array_like
+        The (unnormalized) values of the 2D gaussian function with the given
+        parameters
+
+    """
+
+    # center the data
+    xc = data[0] - x0
+    yc = data[1] - y0
+
+    # gaussian function
+    return np.exp(-0.5*(a*xc**2 + 2*b*xc*yc + c*yc**2))
+
+
+def _popt_to_ellipse(x0, y0, a, b, c, scale=3.0):
+    """
+    Converts the parameters (center and terms in the precision matrix) for a 2D
+    gaussian function into ellipse parameters (center, widths, and rotation)
+
+    Parameters
+    ----------
+    x0 : float
+        The x-location of the center of the ellipse
+
+    y0 : float
+        The y-location of the center of the ellipse
+
+    a : float
+        The upper left number in the precision matrix
+
+    b : float
+        The upper right / lower left number in the precision matrix
+
+    c : float
+        The lower right number in the precision matrix
+
+    Returns
+    -------
+    (x0, y0) : tuple
+        A tuple containing the center of the ellipse
+
+    sigmas : tuple
+        A tuple containing the length of each principal axis of the ellipse
+
+    theta : float
+        The angle of rotation of the ellipse, in degrees
+
+    """
+
+    # convert precision matrix parameters to ellipse parameters
+    u, v = np.linalg.eigh(np.array([[a, b], [b, c]]))
+
+    # convert precision standard deviations
+    sigmas = scale * np.sqrt(1 / u)
+
+    # rotation angle
+    theta = 180 - np.rad2deg(np.arccos(v[1, 1]))
+
+    return (x0, y0), sigmas, theta
+
+
+def _initial_gaussian_params(xm, ym, z):
+    """
+    Guesses the initial 2D Gaussian parameters given a spatial filter
+    """
+
+    # normalize
+    zn = (z / np.sum(z)).ravel()
+
+    # estimate means
+    xc = np.sum(zn * xm.ravel())
+    yc = np.sum(zn * ym.ravel())
+
+    # estimate covariance
+    data = np.vstack(((xm.ravel() - xc), (ym.ravel() - yc)))
+    Q = data.dot(np.diag(zn).dot(data.T)) / (1 - np.sum(zn ** 2))
+
+    # compute precision matrix
+    P = np.linalg.inv(Q)
+    a = P[0, 0]
+    b = P[0, 1]
+    c = P[1, 1]
+
+    return xc, yc, a, b, c
