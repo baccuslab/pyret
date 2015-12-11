@@ -658,7 +658,7 @@ def _popt_to_ellipse(x0, y0, a, b, c, scale=3.0):
     sigmas = scale * np.sqrt(1 / u)
 
     # rotation angle
-    theta = 180 - np.rad2deg(np.arccos(v[1, 1]))
+    theta = np.rad2deg(np.arccos(v[1, 1]))
 
     return (x0, y0), sigmas, theta
 

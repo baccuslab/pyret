@@ -1,8 +1,6 @@
 """
 Tools for fitting nonlinear functions to data
 
-.. warning:: These functions have not been tested
-
 """
 
 import numpy as np

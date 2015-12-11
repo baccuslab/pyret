@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from . import filtertools as ft
 from matplotlib import animation as animation
+from matplotlib.patches import Ellipse
 from matplotlib.cm import Set1, gray
 
 __all__ = ['raster', 'psth', 'rasterandpsth', 'spatial', 'temporal',
@@ -256,7 +257,7 @@ def playsta(sta, repeat=True, frametime=100, cmap='seismic', clim=None):
     return anim
 
 
-def spatial(spatial_filter, ax=None, clim=None):
+def spatial(spatial_filter, ax=None, maxval=None, **kwargs):
     """
     Plot a spatial filter on a given axes
 
@@ -282,22 +283,24 @@ def spatial(spatial_filter, ax=None, clim=None):
         ax = plt.figure().add_subplot(111)
 
     # adjust color limits if necessary
-    if not clim:
+    if not maxval:
 
         # normalize
         spatial_filter -= np.mean(spatial_filter)
 
         # find max abs value
-        maxabs = np.max(np.abs(spatial_filter))
-
-        # set clim
-        clim = (-maxabs, maxabs)
+        maxval = np.max(np.abs(spatial_filter))
 
     # plot the spatial frame
-    img = ax.imshow(spatial_filter, cmap='bwr', interpolation='nearest')
-    img.set_clim(clim)
+    img = ax.imshow(spatial_filter,
+                    cmap='RdBu_r',
+                    interpolation='nearest',
+                    aspect='equal',
+                    vmin=-maxval,
+                    vmax=maxval,
+                    **kwargs)
+
     ax.set_title('Spatial RF')
-    ax.set_aspect('equal')
 
     # add colorbar
     # ax.get_figure().colorbar(img)
@@ -415,7 +418,7 @@ def plotsta(time, sta, fig=None):
     return fig, ax
 
 
-def ellipse(ell, ax=None):
+def ellipse(spatial_filter, scale=3.0, alpha=0.8, fc='none', ec='black', lw=3, ax=None, **kwargs):
     """
     Plot a given ellipse
 
@@ -434,19 +437,26 @@ def ellipse(ell, ax=None):
 
     """
 
-    # Set some properties
-    ell.set_facecolor('green')
-    ell.set_alpha(0.5)
-    ell.set_edgecolor('black')
+    # get the ellipse parameters
+    center, widths, theta = ft.get_ellipse(np.arange(spatial_filter.shape[0]),
+                                           np.arange(spatial_filter.shape[1]),
+                                           spatial_filter,
+                                           scale=scale)
+
+    # create the ellipse
+    ell = Ellipse(xy=center, width=widths[0], height=widths[1], angle=theta,
+                  alpha=alpha, ec=ec, fc=fc, lw=lw, **kwargs)
 
     # Create axes or add to given
     if not ax:
         fig = plt.figure()
         ax = fig.add_subplot(111)
-    ax.add_artist(ell)
 
+    ax.add_artist(ell)
+    ax.set_xlim(0, spatial_filter.shape[0])
+    ax.set_ylim(0, spatial_filter.shape[1])
     plt.show()
-    plt.draw()
+
     return ax
 
 

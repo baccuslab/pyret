@@ -23,7 +23,7 @@ For a demo of how to do analysis using `pyret`, check out the html file and corr
 
 Contributing
 ------------
-Pull requests are welcome! We follow the [NumPy/SciPy documentation standards](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#docstring-standard), and [Sphinx](http://sphinx-doc.org/index.html) for generating documentation.
+Pull requests are welcome! We follow the [Numpy/Scipy documentation standards](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#docstring-standard), and [Sphinx](http://sphinx-doc.org/index.html) for generating documentation.
 
 Testing
 -------
