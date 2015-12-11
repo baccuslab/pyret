@@ -6,8 +6,7 @@ Visualization functions for displaying spikes, filters, and cells.
 import numpy as np
 import matplotlib.pyplot as plt
 from . import filtertools as ft
-from matplotlib import animation as animation
-from matplotlib import cm as cm
+from matplotlib import gridspec, animation, cm
 from matplotlib.patches import Ellipse
 
 __all__ = ['raster', 'psth', 'rasterandpsth', 'spatial', 'temporal',
@@ -196,7 +195,7 @@ def rasterandpsth(spikes, trial_length=None, binsize=0.01, fig=None):
     return fig
 
 
-def playsta(sta, repeat=True, frametime=100, cmap='seismic', clim=None):
+def playsta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None):
     """
     Plays a spatiotemporal spike-triggered average as a movie
 
@@ -223,13 +222,17 @@ def playsta(sta, repeat=True, frametime=100, cmap='seismic', clim=None):
 
     """
 
+    # mean subtract
+    X = sta.copy()
+    X -= X.mean()
+
     # Initial frame
-    initial_frame = sta[0]
+    initial_frame = X[0]
 
     # Set up the figure
     fig = plt.figure()
     plt.axis('equal')
-    ax = plt.axes(xlim=(0, sta.shape[1]), ylim=(0, sta.shape[2]))
+    ax = plt.axes(xlim=(0, X.shape[1]), ylim=(0, X.shape[2]))
     img = plt.imshow(initial_frame)
     ax.set_xticks([])
     ax.set_yticks([])
@@ -240,16 +243,16 @@ def playsta(sta, repeat=True, frametime=100, cmap='seismic', clim=None):
     if clim is not None:
         img.set_clim(clim)
     else:
-        maxval = np.max(np.abs(sta))
+        maxval = np.max(np.abs(X))
         img.set_clim([-maxval, maxval])
 
     # Animation function (called sequentially)
     def animate(i):
         ax.set_title('Frame {0:#d}'.format(i + 1))
-        img.set_data(sta[i])
+        img.set_data(X[i])
 
     # Call the animator
-    anim = animation.FuncAnimation(fig, animate, np.arange(sta.shape[0]),
+    anim = animation.FuncAnimation(fig, animate, np.arange(X.shape[0]),
                                    interval=frametime, repeat=repeat)
     plt.show()
     plt.draw()
@@ -293,17 +296,12 @@ def spatial(spatial_filter, ax=None, maxval=None, **kwargs):
 
     # plot the spatial frame
     img = ax.imshow(spatial_filter,
-                    cmap='RdBu_r',
+                    cmap='seismic_r',
                     interpolation='nearest',
                     aspect='equal',
                     vmin=-maxval,
                     vmax=maxval,
                     **kwargs)
-
-    ax.set_title('Spatial RF')
-
-    # add colorbar
-    # ax.get_figure().colorbar(img)
 
     plt.show()
     plt.draw()
@@ -367,13 +365,13 @@ def plotsta(time, sta, fig=None):
 
     # create the figure object
     if fig is None:
-        fig = plt.figure()
+        fig = plt.figure(figsize=(6, 10))
 
     # plot 1D temporal filter
     if sta.ndim == 1:
 
         # plot temporal profile
-        ax = temporal(time, sta, fig.add_subplot(111))
+        ax = temporal(time, sta, ax=fig.add_subplot(111))
 
     # plot 2D spatiotemporal filter
     elif sta.ndim == 2:
@@ -383,30 +381,26 @@ def plotsta(time, sta, fig=None):
         lim = np.max(np.abs(stan)) * 1.2
 
         # create new axes
-        ax = fig.add_subplot(111)
-
-        im = ax.imshow(stan)
-        ax.set_aspect('equal')
+        ax = spatial(stan, ax=fig.add_subplot(111))
         ax.axes.get_yaxis().set_visible(False)
         ax.axes.get_xaxis().set_visible(False)
-        im.set_clim(-lim, lim)
-        im.set_cmap('seismic')
-        plt.show()
-        plt.draw()
 
     # plot 3D spatiotemporal filter
     elif sta.ndim == 3:
+
+        # build the figure
+        gs = gridspec.GridSpec(2, 1, height_ratios=[2, 1])
 
         # decompose
         spatial_profile, temporal_filter = ft.decompose(sta)
 
         # plot spatial profile
-        axspatial = spatial(spatial_profile, fig.add_subplot(121))
+        axspatial = spatial(spatial_profile, ax=fig.add_subplot(gs[0]))
         axspatial.set_xticks([])
         axspatial.set_yticks([])
 
         # plot temporal profile
-        axtemporal = temporal(time, temporal_filter, fig.add_subplot(122))
+        axtemporal = temporal(time, temporal_filter, ax=fig.add_subplot(gs[1]))
         axtemporal.set_xlim(time[0], time[-1])
 
         # return handles
@@ -415,6 +409,8 @@ def plotsta(time, sta, fig=None):
     else:
         raise ValueError('The sta parameter has an invalid number of dimensions (must be 1-3)')
 
+    plt.show()
+    plt.draw()
     return fig, ax
 
 
