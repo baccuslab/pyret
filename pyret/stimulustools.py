@@ -16,7 +16,7 @@ def upsample_stim(stim, upsample_factor, time=None):
     Parameters
     ----------
     stim : array_like
-        The actual stimulus to be upsampled.
+        The actual stimulus to be upsampled. dimensions: (time, space, space)
 
     upsample_factor : int
         The upsample factor.
@@ -34,26 +34,27 @@ def upsample_stim(stim, upsample_factor, time=None):
 
     """
 
-    # Compute old and new sizes
-    oldsz   = stim.shape
-    newsz   = oldsz[:-1] + (upsample_factor * oldsz[-1],)
-
     # Upsample the stimulus array
-    stim_us = (stim.reshape((-1, 1)) * np.ones((1, upsample_factor))).reshape(newsz)
+    stim_us = np.repeat(stim, upsample_factor, axis=0)
+
+    # if time vector is not given
+    if time is None:
+        return stim_us, None
 
     # Upsample the time vecctor if given
-    if time is not None:
-        x       = np.arange(0, upsample_factor * time.size)
-        xp      = np.arange(0, upsample_factor * time.size, upsample_factor)
-        time_us = np.interp(x, xp, np.squeeze(time))
+    x = np.arange(0, upsample_factor * time.size)
+    xp = np.arange(0, upsample_factor * time.size, upsample_factor)
+    time_us = np.interp(x, xp, np.squeeze(time))
 
-        # Check that last timestamp is valid. np.interp does no
-        # extrapolation, which may be necessary for the last
-        # timepoint, given the method above
-        if time_us[-2] == time_us[-1]:
-            time_us[-1] += np.diff(time_us).mean()
-    else:
-        time_us = None
+    # Check that last k timestamps are valid. np.interp does no
+    # extrapolation, which may be necessary for the last
+    # timepoint, given the method above
+    modified_time_us = time_us.copy()
+    dt = np.diff(time_us).mean()
+    for k in reversed(np.arange(upsample_factor) + 1):
+        if np.allclose(time_us[-(k+1)], time_us[-k]):
+            modified_time_us[-k] = modified_time_us[-(k+1)] + dt
+    time_us = modified_time_us.copy()
 
     return stim_us, time_us
 

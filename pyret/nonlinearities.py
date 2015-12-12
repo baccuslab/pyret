@@ -1,8 +1,6 @@
 """
 Tools for fitting nonlinear functions to data
 
-.. warning:: These functions have not been tested
-
 """
 
 import numpy as np
@@ -90,7 +88,7 @@ def fitgaussian(xpts, ypts, p0=None):
     return popt, yhat, pcov
 
 
-def fitsigmoid(xpts, ypts):
+def fitsigmoid(xpts, ypts, **kwargs):
     """
     Fit a sigmoidal function to noisy data
 
@@ -102,6 +100,11 @@ def fitsigmoid(xpts, ypts):
 
     ypts : array_like
         y-values of the data to fit
+
+    kwargs
+        Optional keyword arguments are passed to `scipy.optimize.curve_fit`, and
+        can be used to control the fitting procedure more carefully. This may be
+        needed, e.g., if the nonlinearities are quite noisy.
 
     Returns
     -------
@@ -120,7 +123,7 @@ def fitsigmoid(xpts, ypts):
     p0 = (np.mean(xpts), 1, np.max(ypts), np.min(ypts))
 
     # get parameters
-    popt, pcov = curve_fit(sigmoid, xpts, ypts, p0)
+    popt, pcov = curve_fit(sigmoid, xpts, ypts, p0, **kwargs)
 
     # evaluate fit
     yhat = sigmoid(xpts, *popt)

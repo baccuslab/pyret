@@ -12,7 +12,44 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-__all__ = ['binspikes', 'estfr', 'sample', 'detectevents', 'peakdet', 'SpikingEvent']
+__all__ = ['binspikes', 'estfr', 'sample', 'detectevents', 'peakdet',
+           'split_trials', 'SpikingEvent']
+
+
+def split_trials(spikes, trial_length=None, fig=None):
+    """
+    Plot a raster of spike times from an array of spike times
+
+    Notes
+    -----
+    The `triallength` keyword specifies the length of time for each trial, and the
+    `spikes` array is split up into segments of that length. These groups are then
+    plotted on top of one another, as individual trials.
+
+    Parameters
+    ----------
+    spikes : array_like
+        An array of spike times
+
+    triallength : float
+        The length of each trial to stack, in seconds.
+
+    Returns
+    -------
+    spiketimes : array_like
+        An array of spike times relative to the start of each trial.
+
+    trials : array_like
+        An array of labels corresponding to the trial associated with each
+        spike in the spiketimes array.
+
+    """
+
+    # Compute a trial index for each spike
+    trials = map(lambda s: np.floor(s, trial_length) + 1, spikes)
+
+    return np.mod(spikes, trial_length), np.array(list(trials))
+
 
 def binspikes(spk, tmax=None, binsize=0.01, time=None, num_trials=1):
     """
