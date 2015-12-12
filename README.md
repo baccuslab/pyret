@@ -1,5 +1,8 @@
 # pyret
 
+[![Documentation Status](https://readthedocs.org/projects/pyret/badge/?version=latest)](http://pyret.readthedocs.org/en/latest/?badge=latest)
+[![PyPi version](https://img.shields.io/pypi/v/pyret.svg)](https://pypi.python.org/pypi/pyret)
+
 ### A Python package for analyzing retinal data
 Benjamin Naecker, Niru Maheswaranthan, Pablo Jadzinsky
 
