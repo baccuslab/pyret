@@ -24,4 +24,10 @@ standards to adhere to.
     api
     changelog
 
+An example receptive field visualized using pyret:
+
+.. image:: https://cloud.githubusercontent.com/assets/904854/11761236/e77e2bd2-a06e-11e5-8b54-0c70f40089ab.gif
+    :height: 256 px
+    :width: 256 px
+
 :ref:`genindex` of all functions.
