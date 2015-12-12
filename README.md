@@ -6,7 +6,7 @@
 ### A Python package for analyzing retinal data
 Benjamin Naecker, Niru Maheswaranthan, Pablo Jadzinsky
 
-<img src="https://cloud.githubusercontent.com/assets/904854/5329965/f91ee8e2-7d81-11e4-873f-d4253165bce9.png" height="256">
+<img src="https://cloud.githubusercontent.com/assets/904854/11761236/e77e2bd2-a06e-11e5-8b54-0c70f40089ab.gif" height="256">
 
 Brief description
 -----------------
