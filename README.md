@@ -1,6 +1,6 @@
 # pyret
 
-[![Documentation Status](https://readthedocs.org/projects/pyret/badge/?version=master)](http://pyret.readthedocs.org/en/latest/?badge=master)
+[![Documentation Status](https://readthedocs.org/projects/pyret/badge/?version=master)](http://pyret.readthedocs.org/en/master/?badge=master)
 [![PyPi version](https://img.shields.io/pypi/v/pyret.svg)](https://pypi.python.org/pypi/pyret)
 
 ### A Python package for analyzing retinal data
@@ -29,4 +29,4 @@ Pull requests are welcome! We follow the [Numpy/Scipy documentation standards](h
 
 Testing
 -------
-Testing is done via [nose](https://nose.readthedocs.org/en/latest/). Once installed (e.g. with `pip install nose`) then simply run `nosetests -v` at the top level directory to run the tests. Test functions are located in the `tests/` folder.
+Testing is done via [nose](https://nose.readthedocs.org/). Once installed (e.g. with `pip install nose`) then simply run `nosetests -v` at the top level directory to run the tests. Test functions are located in the `tests/` folder.
