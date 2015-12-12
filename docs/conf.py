@@ -15,15 +15,7 @@
 # hack to deal with imports that have C extensions
 import sys
 import os
-from unittest import mock
 import sphinx_rtd_theme
-MOCK_MODULES = ['scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy.optimize',
-                'scipy.linalg.blas', 'scipy.signal', 'scipy.fftpack', 'skimage',
-                'skimage.restoration', 'skimage.measure', 'skimage.filters',
-                'matplotlib.patches']
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
-
 import pyret
 
 # If extensions (or modules to document with autodoc) are in another directory,
