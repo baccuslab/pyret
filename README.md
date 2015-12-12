@@ -17,7 +17,7 @@ analyses, and visualization tools.
 
 Documentation
 -------------
-For more info and documentation, see the [pyret documentation](http://pyret.readthedocs.org/en/latest/)
+For more info and documentation, see the [pyret documentation](http://pyret.readthedocs.org/en/latest/).
 
 Demo
 ----
