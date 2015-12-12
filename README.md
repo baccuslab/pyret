@@ -3,8 +3,7 @@
 ### A Python package for analyzing retinal data
 Benjamin Naecker, Niru Maheswaranthan, Pablo Jadzinsky
 
-![receptive field](https://cloud.githubusercontent.com/assets/904854/5329965/f91ee8e2-7d81-11e4-873f-d4253165bce9.png)
-![spikes](https://cloud.githubusercontent.com/assets/904854/5329966/f91f8090-7d81-11e4-92ea-746a659ea285.png)
+<img src="https://cloud.githubusercontent.com/assets/904854/5329965/f91ee8e2-7d81-11e4-873f-d4253165bce9.png" height="256">
 
 Brief description
 -----------------
@@ -15,11 +14,11 @@ analyses, and visualization tools.
 
 Documentation
 -------------
-For more info and documentation, see the [pyret website](http://baccuslab.github.io/pyret/)
+For more info and documentation, see the [pyret documentation](http://pyret.readthedocs.org/en/latest/)
 
 Demo
 ----
-For a demo of how to do analysis using `pyret`, check out the html file and corresponding ipython notebook in the `demo/` folder.
+(coming soon) For a demo of how to do analysis using `pyret`, check out the html file and corresponding ipython notebook in the `demo/` folder.
 
 Contributing
 ------------
