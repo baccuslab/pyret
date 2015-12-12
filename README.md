@@ -1,6 +1,6 @@
 # pyret
 
-[![Documentation Status](https://readthedocs.org/projects/pyret/badge/?version=latest)](http://pyret.readthedocs.org/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/pyret/badge/?version=master)](http://pyret.readthedocs.org/en/latest/?badge=master)
 [![PyPi version](https://img.shields.io/pypi/v/pyret.svg)](https://pypi.python.org/pypi/pyret)
 
 ### A Python package for analyzing retinal data
@@ -17,7 +17,7 @@ analyses, and visualization tools.
 
 Documentation
 -------------
-For more info and documentation, see the [pyret documentation](http://pyret.readthedocs.org/en/latest/).
+For more info and documentation, see the [pyret documentation](http://pyret.readthedocs.org/en/master/).
 
 Demo
 ----
