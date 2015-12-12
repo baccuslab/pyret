@@ -26,10 +26,8 @@ Pyret requires the following dependencies:
 
 - ``matplotlib``
 
-- ``seaborn``
-
 Development
 -----------
 
 To contribute to ``pyret``, you'll need to also install ``sphinx`` and ``numpydoc`` for documentation and
-``nose`` for testing. We adhere to the `NumPy/SciPy documentation standards <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#docstring-standard>`_.
+``pytest`` for testing. We adhere to the `NumPy/SciPy documentation standards <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#docstring-standard>`_.

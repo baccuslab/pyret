@@ -4,12 +4,10 @@ Quickstart
 
 Overview
 --------
-
 Coming soon
 
 Demo
 ----
-
 Coming soon
 
 Bugs
