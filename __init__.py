@@ -18,10 +18,10 @@ For more information, see the accompanying README.md
 """
 
 __all__ = [
-        'spiketools', 
-        'filtertools', 
-        'stimulustools', 
-        'visualizations', 
+        'spiketools',
+        'filtertools',
+        'stimulustools',
+        'visualizations',
         'nonlinearities']
 __version__ = '0.2'
 

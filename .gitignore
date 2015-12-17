@@ -7,6 +7,9 @@
 *.o
 *.so
 *.pyc
+build/
+_build/
+dist/
 
 # Packages #
 ############

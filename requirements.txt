@@ -1,4 +1,4 @@
-scipy
 numpy
+scipy
+scikit-image
 matplotlib
-seaborn

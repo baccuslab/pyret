@@ -3,32 +3,37 @@ Visualization functions for displaying spikes, filters, and cells.
 
 """
 
-import numpy as _np
-import matplotlib.pyplot as _plt
-import seaborn as _sns
-import filtertools as _ft
-from matplotlib import animation as _animation
+import numpy as np
+import matplotlib.pyplot as plt
+from . import filtertools as ft
+from matplotlib import gridspec, animation, cm
+from matplotlib.patches import Ellipse
 
-def raster(spikes, trial_length=None, fig=None):
+__all__ = ['raster', 'psth', 'rasterandpsth', 'spatial', 'temporal',
+           'plotsta', 'playsta', 'ellipse', 'plotcells', 'playrates']
+
+
+def raster(spikes, labels, title='Spike raster', marker_string='ko', fig=None, **kwargs):
     """
-    Plot a raster of spike times from an array of spike times
-
-    Notes
-    -----
-    The `triallength` keyword specifies the length of time for each trial, and the
-    `spikes` array is split up into segments of that length. These groups are then
-    plotted on top of one another, as individual trials.
+    Plot a raster of spike times
 
     Parameters
     ----------
     spikes : array_like
         An array of spike times
 
-    triallength : float
-        The length of each trial to stack, in seconds.
+    labels : array_like
+        An array of labels corresponding to each spike in spikes. For example,
+        this can indicate which cell or trial each spike came from
 
-    fig : matplotlib Figure object
-        The figure into which the raster is plotted.
+    title : string, optional
+        An optional title for the plot (Default: 'Spike raster').
+
+    marker_string : string, optional
+        The marker string passed to matplotlib's plot function (Default: 'ko').
+
+    kwargs : dict
+        Optional keyword arguments are passed to matplotlib's plot function
 
     Returns
     -------
@@ -37,34 +42,22 @@ def raster(spikes, trial_length=None, fig=None):
 
     """
 
-    # Parse time input
-    if trial_length is None:
-        # Compute the time indices of the start and stop of the spikes
-        times = _np.array([spikes.min(), spikes.max()])
-    else:
-        # Compute the time indices of each trial
-        times = _np.array([_np.array([0, trial_length]) + trial_length * i
-                           for i in _np.arange(_np.ceil(spikes.max() / trial_length))])
+    # data checking
+    assert len(spikes) == len(labels), "Spikes and labels must have the same length"
 
     # Make a new figure
-    if not fig or type(fig) is not _plt.Figure:
-        fig = _plt.figure()
+    if not fig or type(fig) is not plt.Figure:
+        fig = plt.figure()
 
-    # Plot each trial
+    # Plot the spikes
     ax = fig.add_subplot(111)
-    _plt.hold(True)
-    for trial in range(times.shape[0]):
-        idx = _np.bitwise_and(spikes > times[trial, 0], spikes <= times[trial, 1])
-        ax.plot(spikes[idx] - times[trial, 0], (trial + 1) * _np.ones((idx.sum(), 1)),
-                color='k', linestyle='none', marker='.')
+    ax.plot(spikes, labels, marker_string, **kwargs)
 
     # Labels, etc.
-    _plt.title('spike raster', fontdict={'fontsize': 24})
-    _plt.xlabel('time (s)', fontdict={'fontsize': 20})
-    _plt.ylabel('trial #', fontdict={'fontsize': 20})
-    _plt.ylim(ymin=0, ymax=times.shape[0] + 1)
-    _plt.show()
-    _plt.draw()
+    plt.title(title, fontdict={'fontsize': 24})
+    plt.xlabel('Time (s)', fontdict={'fontsize': 20})
+    plt.show()
+    plt.draw()
 
     return fig
 
@@ -99,32 +92,32 @@ def psth(spikes, trial_length=None, binsize=0.01, fig=None):
         trial_length = spikes.max()
 
     # Compute the histogram bins to use
-    ntrials = int(_np.ceil(spikes.max() / trial_length))
-    basebins = _np.arange(0, trial_length + binsize, binsize)
-    tbins = _np.tile(basebins, (ntrials, 1)) + (_np.tile(_np.arange(0, ntrials), (basebins.size, 1)).T * trial_length)
+    ntrials = int(np.ceil(spikes.max() / trial_length))
+    basebins = np.arange(0, trial_length + binsize, binsize)
+    tbins = np.tile(basebins, (ntrials, 1)) + (np.tile(np.arange(0, ntrials), (basebins.size, 1)).T * trial_length)
 
     # Bin the spikes in each time bin
-    bspk = _np.empty((tbins.shape[0], tbins.shape[1] - 1))
+    bspk = np.empty((tbins.shape[0], tbins.shape[1] - 1))
     for trial in range(ntrials):
-        bspk[trial, :], _ = _np.histogram(spikes, bins=tbins[trial, :])
+        bspk[trial, :], _ = np.histogram(spikes, bins=tbins[trial, :])
 
     # Compute the mean over each trial, and multiply by the binsize
-    fr = _np.mean(bspk, axis=0) / binsize
+    fr = np.mean(bspk, axis=0) / binsize
 
     # Make a figure
-    if not fig or type(fig) is not _plt.Figure:
-        fig = _plt.figure()
+    if not fig or type(fig) is not plt.Figure:
+        fig = plt.figure()
 
     # Plot the PSTH
     ax = fig.add_subplot(111)
     ax.plot(tbins[0, :-1], fr, color='k', marker=None, linestyle='-', linewidth=2)
 
     # Labels etc
-    _plt.title('psth', fontdict={'fontsize':24})
-    _plt.xlabel('time (s)', fontdict={'fontsize':20})
-    _plt.ylabel('firing rate (Hz)', fontdict={'fontsize':20})
-    _plt.show()
-    _plt.draw()
+    plt.title('psth', fontdict={'fontsize':24})
+    plt.xlabel('time (s)', fontdict={'fontsize':20})
+    plt.ylabel('firing rate (Hz)', fontdict={'fontsize':20})
+    plt.show()
+    plt.draw()
 
     return fig
 
@@ -159,21 +152,21 @@ def rasterandpsth(spikes, trial_length=None, binsize=0.01, fig=None):
         trial_length = spikes.max()
 
     # Compute the histogram bins to use
-    ntrials = int(_np.ceil(spikes.max() / trial_length))
-    basebins = _np.arange(0, trial_length + binsize, binsize)
-    tbins = _np.tile(basebins, (ntrials, 1)) + (_np.tile(_np.arange(0, ntrials), (basebins.size, 1)).T * trial_length)
+    ntrials = int(np.ceil(spikes.max() / trial_length))
+    basebins = np.arange(0, trial_length + binsize, binsize)
+    tbins = np.tile(basebins, (ntrials, 1)) + (np.tile(np.arange(0, ntrials), (basebins.size, 1)).T * trial_length)
 
     # Bin the spikes in each time bin
-    bspk = _np.empty((tbins.shape[0], tbins.shape[1] - 1))
+    bspk = np.empty((tbins.shape[0], tbins.shape[1] - 1))
     for trial in range(ntrials):
-        bspk[trial, :], _ = _np.histogram(spikes, bins=tbins[trial, :])
+        bspk[trial, :], _ = np.histogram(spikes, bins=tbins[trial, :])
 
     # Compute the mean over each trial, and multiply by the binsize
-    fr = _np.mean(bspk, axis=0) / binsize
+    fr = np.mean(bspk, axis=0) / binsize
 
     # Make a figure
-    if not fig or type(fig) is not _plt.Figure:
-        fig = _plt.figure()
+    if not fig or type(fig) is not plt.Figure:
+        fig = plt.figure()
 
     # Plot the PSTH
     psthax = fig.add_subplot(111)
@@ -181,30 +174,28 @@ def rasterandpsth(spikes, trial_length=None, binsize=0.01, fig=None):
     psthax.set_title('psth and raster', fontdict={'fontsize':24})
     psthax.set_xlabel('time (s)', fontdict={'fontsize':20})
     psthax.set_ylabel('firing rate (Hz)', color='r', fontdict={'fontsize':20})
-    _sns.set(style='white', context='notebook')
     for tick in psthax.get_yticklabels():
         tick.set_color('r')
 
     # Plot the raster
     rastax = psthax.twinx()
-    _sns.set(style='white', context='notebook')
-    _plt.hold(True)
+    plt.hold(True)
     for trial in range(ntrials):
-        idx = _np.bitwise_and(spikes > tbins[trial, 0], spikes <= tbins[trial, -1])
-        rastax.plot(spikes[idx] - tbins[trial, 0], trial * _np.ones(spikes[idx].shape),
+        idx = np.bitwise_and(spikes > tbins[trial, 0], spikes <= tbins[trial, -1])
+        rastax.plot(spikes[idx] - tbins[trial, 0], trial * np.ones(spikes[idx].shape),
                     color='k', marker='.', linestyle='none')
     rastax.set_ylabel('trial #', color='k', fontdict={'fontsize':20})
     for tick in psthax.get_yticklabels():
         tick.set_color('k')
 
     # Show the figure
-    _plt.show()
-    _plt.draw()
+    plt.show()
+    plt.draw()
 
     return fig
 
 
-def playsta(sta, repeat=True, frametime=100):
+def playsta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None):
     """
     Plays a spatiotemporal spike-triggered average as a movie
 
@@ -219,38 +210,57 @@ def playsta(sta, repeat=True, frametime=100):
     frametime : float, optional
         Length of time each frame is displayed for in milliseconds (default is 100)
 
+    cmap : string, optional
+        Name of the colormap to use (Default: gray)
+
+    clim : array_like, optional
+        2 Dimensional color limit for animation; e.g. [0, 255]
+
     Returns
     -------
     None
 
     """
 
+    # mean subtract
+    X = sta.copy()
+    X -= X.mean()
+
     # Initial frame
-    initial_frame = sta[:, :, 0]
+    initial_frame = X[0]
 
     # Set up the figure
-    fig = _plt.figure()
-    ax = _plt.axes(xlim=(0, sta.shape[0]), ylim=(0, sta.shape[1]))
-    img = _plt.imshow(initial_frame)
+    fig = plt.figure()
+    plt.axis('equal')
+    ax = plt.axes(xlim=(0, X.shape[1]), ylim=(0, X.shape[2]))
+    img = plt.imshow(initial_frame)
+    ax.set_xticks([])
+    ax.set_yticks([])
 
     # Set up the colors
-    img.set_cmap('gray')
+    img.set_cmap(cmap)
     img.set_interpolation('nearest')
+    if clim is not None:
+        img.set_clim(clim)
+    else:
+        maxval = np.max(np.abs(X))
+        img.set_clim([-maxval, maxval])
 
     # Animation function (called sequentially)
     def animate(i):
         ax.set_title('Frame {0:#d}'.format(i + 1))
-        img.set_data(sta[:, :, i])
+        img.set_data(X[i])
 
     # Call the animator
-    anim = _animation.FuncAnimation(fig, animate, _np.arange(sta.shape[-1]), interval=frametime, repeat=repeat)
-    _plt.show()
-    _plt.draw()
+    anim = animation.FuncAnimation(fig, animate, np.arange(X.shape[0]),
+                                   interval=frametime, repeat=repeat)
+    plt.show()
+    plt.draw()
 
     return anim
 
 
-def spatial(spatial_filter, ax=None, clim=None):
+def spatial(spatial_filter, ax=None, maxval=None, **kwargs):
     """
     Plot a spatial filter on a given axes
 
@@ -273,31 +283,28 @@ def spatial(spatial_filter, ax=None, clim=None):
     """
 
     if not ax:
-        ax = _plt.figure().add_subplot(111)
+        ax = plt.figure().add_subplot(111)
 
     # adjust color limits if necessary
-    if not clim:
+    if not maxval:
 
         # normalize
-        spatial_filter -= _np.mean(spatial_filter)
+        spatial_filter -= np.mean(spatial_filter)
 
         # find max abs value
-        maxabs = _np.max(_np.abs(spatial_filter))
-
-        # set clim
-        clim = (-maxabs, maxabs)
+        maxval = np.max(np.abs(spatial_filter))
 
     # plot the spatial frame
-    img = ax.imshow(spatial_filter, cmap='bwr', interpolation='nearest')
-    img.set_clim(clim)
-    ax.set_title('Spatial RF')
-    ax.set_aspect('equal')
+    img = ax.imshow(spatial_filter,
+                    cmap='seismic_r',
+                    interpolation='nearest',
+                    aspect='equal',
+                    vmin=-maxval,
+                    vmax=maxval,
+                    **kwargs)
 
-    # add colorbar
-    ax.get_figure().colorbar(img)
-
-    _plt.show()
-    _plt.draw()
+    plt.show()
+    plt.draw()
 
     return ax
 
@@ -325,16 +332,16 @@ def temporal(time, temporal_filter, ax=None):
     """
 
     if not ax:
-        ax = _plt.figure().add_subplot(111)
+        ax = plt.figure().add_subplot(111)
 
     ax.plot(time, temporal_filter, linestyle='-', linewidth=2, color='LightCoral')
-    _plt.show()
-    _plt.draw()
+    plt.show()
+    plt.draw()
 
     return ax
 
 
-def plotsta(time, sta):
+def plotsta(time, sta, fig=None):
     """
     Plot a spatial and temporal filter
 
@@ -357,45 +364,44 @@ def plotsta(time, sta):
     """
 
     # create the figure object
-    fig = _plt.figure()
-    _sns.set(style='white')
+    if fig is None:
+        fig = plt.figure(figsize=(6, 10))
 
     # plot 1D temporal filter
     if sta.ndim == 1:
 
         # plot temporal profile
-        ax = temporal(time, sta, fig.add_subplot(111))
+        ax = temporal(time, sta, ax=fig.add_subplot(111))
 
     # plot 2D spatiotemporal filter
     elif sta.ndim == 2:
 
         # normalize
-        stan = (sta - _np.mean(sta)) / _np.var(sta)
-        lim = _np.max(_np.abs(stan)) * 1.2
+        stan = (sta - np.mean(sta)) / np.var(sta)
+        lim = np.max(np.abs(stan)) * 1.2
 
         # create new axes
-        ax = fig.add_subplot(111)
-
-        im = ax.imshow(stan)
-        ax.set_aspect('equal')
+        ax = spatial(stan, ax=fig.add_subplot(111))
         ax.axes.get_yaxis().set_visible(False)
         ax.axes.get_xaxis().set_visible(False)
-        im.set_clim(-lim, lim)
-        im.set_cmap('seismic')
-        _plt.show()
-        _plt.draw()
 
     # plot 3D spatiotemporal filter
     elif sta.ndim == 3:
 
+        # build the figure
+        gs = gridspec.GridSpec(2, 1, height_ratios=[2, 1])
+
         # decompose
-        spatial_profile, temporal_filter = _ft.decompose(sta)
+        spatial_profile, temporal_filter = ft.decompose(sta)
 
         # plot spatial profile
-        axspatial = spatial(spatial_profile, fig.add_subplot(121))
+        axspatial = spatial(spatial_profile, ax=fig.add_subplot(gs[0]))
+        axspatial.set_xticks([])
+        axspatial.set_yticks([])
 
         # plot temporal profile
-        axtemporal = temporal(time, temporal_filter, fig.add_subplot(122))
+        axtemporal = temporal(time, temporal_filter, ax=fig.add_subplot(gs[1]))
+        axtemporal.set_xlim(time[0], time[-1])
 
         # return handles
         ax = (axspatial, axtemporal)
@@ -403,16 +409,36 @@ def plotsta(time, sta):
     else:
         raise ValueError('The sta parameter has an invalid number of dimensions (must be 1-3)')
 
+    plt.show()
+    plt.draw()
     return fig, ax
 
-def ellipse(ell, ax=None):
+
+def ellipse(spatial_filter, pvalue=0.6827, alpha=0.8, fc='none', ec='black', lw=3, ax=None, **kwargs):
     """
     Plot a given ellipse
 
     Parameters
     ----------
-    ell : matplotlib.patches.Ellipse object
-        The ellipse to be plotted
+    spatial_filter : array_like
+        A spatial filter (2D image) corresponding to the spatial profile of the
+        receptive field
+
+    pvalue : float, optional
+        Determines the threshold of the ellipse contours. For example, a pvalue
+        of 0.95 corresponds to a 95% confidence ellipse. (Default: 0.6827)
+
+    alpha : float, optional
+        The alpha blending value, between 0 (transparent) and 1 (opaque) (Default: 0.8)
+
+    fc : string, optional
+        Ellipse face color. (Default: none)
+
+    ec : string, optional
+        Ellipse edge color. (Default: black)
+
+    lw : int, optional
+        Line width. (Default: 3)
 
     ax : matplotlib Axes object, optional
         The axes onto which the ellipse should be plotted. Defaults to a new figure
@@ -424,23 +450,30 @@ def ellipse(ell, ax=None):
 
     """
 
-    # Set some properties
-    ell.set_facecolor('green')
-    ell.set_alpha(0.5)
-    ell.set_edgecolor('black')
+    # get the ellipse parameters
+    center, widths, theta = ft.get_ellipse(np.arange(spatial_filter.shape[0]),
+                                           np.arange(spatial_filter.shape[1]),
+                                           spatial_filter,
+                                           pvalue=pvalue)
+
+    # create the ellipse
+    ell = Ellipse(xy=center, width=widths[0], height=widths[1], angle=theta,
+                  alpha=alpha, ec=ec, fc=fc, lw=lw, **kwargs)
 
     # Create axes or add to given
     if not ax:
-        fig = _plt.figure()
+        fig = plt.figure()
         ax = fig.add_subplot(111)
-    ax.add_artist(ell)
 
-    _plt.show()
-    _plt.draw()
+    ax.add_artist(ell)
+    ax.set_xlim(0, spatial_filter.shape[0])
+    ax.set_ylim(0, spatial_filter.shape[1])
+    plt.show()
+
     return ax
 
 
-def plotcells(cells, ax=None, box_dims=None, start=None, scale=0.25):
+def plotcells(cells, ax=None):
     """
     Plot the spatial receptive fields for multiple cells
 
@@ -452,14 +485,6 @@ def plotcells(cells, ax=None, box_dims=None, start=None, scale=0.25):
     ax : matplotlib Axes object, optional
         The axes onto which the ellipse should be plotted. Defaults to a new figure
 
-    box_dims : (float, float), optional
-        Dimensions of a box (to indicate the electrode array) to draw behind the cells. Should be a tuple containing the
-        (width,height) of the box. Defaults to
-
-    start : float, optional
-        Location of the lower left corner of the box to draw. If None, the box is centered on the plot. Only matters if
-        `box_dims` is not None.
-
     Returns
     ------
     ax : matplotlib Axes object
@@ -469,55 +494,32 @@ def plotcells(cells, ax=None, box_dims=None, start=None, scale=0.25):
 
     # Create axes or add to given
     if not ax:
-        fig = _plt.figure()
+        fig = plt.figure()
         ax = fig.add_subplot(111)
-
-    # define the color palatte
-    colors = _sns.color_palette("hls", len(cells))
-    _np.random.shuffle(colors)
 
     # for each cell
     ellipses = list()
     for idx, sta in enumerate(cells):
 
         # get the spatial profile
-        _, _, tidx = _ft.filterpeak(sta)
+        sp = ft.decompose(sta)[0]
 
-        # generate ellipse
-        ell = _ft.fit_ellipse(sta[:,:,tidx], scale=scale)
+        # plot ellipse
+        color = cm.Set1(np.random.randint(100))
+        ax = ellipse(sp, fc=color, ec=color, lw=2, alpha=0.3, ax=ax)
 
-        # add it to the plot
-        ell.set_facecolor(colors[idx])
-        ell.set_edgecolor(colors[idx])
-        ell.set_linewidth(2)
-        ell.set_linestyle('solid')
-        ell.set_alpha(0.3)
-        ax.add_artist(ell)
-        ellipses.append(ell)
-
-    # add a box to mark the array
-    if start is None:
-        # noinspection PyTypeChecker
-        start = (1 - _np.array(box_dims)) / 2.0
-
-    ax.add_patch(_plt.Rectangle((start[0], start[1]), box_dims[0], box_dims[1],
-                                fill=False, edgecolor='Black', linestyle='dashed'))
-    _plt.xlim(xmin=start[0], xmax=start[0] + box_dims[0])
-    _plt.ylim(ymin=start[1], ymax=start[1] + box_dims[1])
-
-    _sns.set_style('nogrid')
     ax.set_aspect('equal')
     ax.set_xticks([])
     ax.set_yticks([])
 
-    _plt.box('off')
-    _plt.tight_layout()
-    _plt.show()
-    _plt.draw()
-    return ax, ellipses
+    plt.box('off')
+    plt.tight_layout()
+    plt.show()
+    plt.draw()
+    return ax
 
 
-def playrates(rates, patches, palette='gray', num_levels=255, time=None, repeat=True, frametime=100):
+def playrates(rates, patches, num_levels=255, time=None, repeat=True, frametime=100):
     """
     Plays a movie of the firing rate for N cells by updating the given patches (matplotlib handles)
     (useful in conjunction with the output of plotcells)
@@ -537,14 +539,15 @@ def playrates(rates, patches, palette='gray', num_levels=255, time=None, repeat=
     """
 
     # approximate necessary colormap
-    colors = _sns.color_palette(palette, num_levels)
-    rscale = _np.round( (num_levels - 1) * (rates - rates.min()) / (rates.max() - rates.min()) ).astype('int')
+    colors = cm.gray(np.arange(num_levels))
+    rscale = np.round((num_levels - 1) * (rates - rates.min()) /
+                      (rates.max() - rates.min())).astype('int')
 
     # set up
-    fig = _plt.gcf()
-    ax = _plt.gca()
+    fig = plt.gcf()
+    ax = plt.gca()
     if time is None:
-        time = _np.arange(rscale.shape[1])
+        time = np.arange(rscale.shape[1])
 
     # Animation function (called sequentially)
     def animate(t):
@@ -553,7 +556,7 @@ def playrates(rates, patches, palette='gray', num_levels=255, time=None, repeat=
         ax.set_title('Time: %0.2f seconds' % (time[t]), fontsize=20)
 
     # Call the animator
-    anim = _animation.FuncAnimation(fig, animate, _np.arange(rscale.shape[1]), interval=frametime, repeat=repeat)
-    _plt.show()
-    _plt.draw()
+    anim = animation.FuncAnimation(fig, animate, np.arange(rscale.shape[1]), interval=frametime, repeat=repeat)
+    plt.show()
+    plt.draw()
     return anim

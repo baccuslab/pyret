@@ -1,0 +1,26 @@
+=======================
+v0.4 (December 11 2015)
+=======================
+
+New features
+------------
+- Adds a `containers` module  that contains two classes, and `Experiment` and a
+  `Filter` class, for managing stimuli and spikes (`Experiment`) and spike-triggered averages (`Filter`).
+- New and improved ellipse and contour fitting code (`filtertools.rfsize`,
+  `filtertools.get_ellipse`, `visualizations.ellipse`)
+- New function `filtertools.resample` which is a thin wrapper around `scipy.signal.resample`
+
+API changes
+-----------
+- Flipped the expected dimensions of stimuli and filters to have the temporal dimension first. E.g. functions now expect (time, space, space) or (time, space) instead of (space, space, time) or (space, time).
+- Changes the default value of the argument in `rolling_window` to `time_axis=0`, to be consistent with the rest of pyret (after the flipped dimensions switch)
+- Removes the `prinangles` function (does not really belong in the `filtertools` module, or even in pyret at all)
+- Updated `pyret.plotsta` function
+- Reworked `filtertools.getste` to be a generator, and modified `getsta` and `getstc` to consume that generator.
+
+Issues closed
+-------------
+- `#62 bug in filtertools.decompose <https://github.com/baccuslab/pyret/issues/62>`_.
+- `#63 better ellipse fitting tools <https://github.com/baccuslab/pyret/issues/63>`_.
+- `#60 custom classes for filter <https://github.com/baccuslab/pyret/issues/60>`_.
+- `#53 simplifying filtertools <https://github.com/baccuslab/pyret/issues/53>`_.

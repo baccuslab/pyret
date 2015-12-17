@@ -1,10 +1,12 @@
 # pyret
 
+[![Documentation Status](https://readthedocs.org/projects/pyret/badge/?version=master)](http://pyret.readthedocs.org/en/master/?badge=master)
+[![PyPi version](https://img.shields.io/pypi/v/pyret.svg)](https://pypi.python.org/pypi/pyret)
+
 ### A Python package for analyzing retinal data
 Benjamin Naecker, Niru Maheswaranthan, Pablo Jadzinsky
 
-![receptive field](https://cloud.githubusercontent.com/assets/904854/5329965/f91ee8e2-7d81-11e4-873f-d4253165bce9.png)
-![spikes](https://cloud.githubusercontent.com/assets/904854/5329966/f91f8090-7d81-11e4-92ea-746a659ea285.png)
+<img src="https://cloud.githubusercontent.com/assets/904854/11761236/e77e2bd2-a06e-11e5-8b54-0c70f40089ab.gif" height="256">
 
 Brief description
 -----------------
@@ -15,16 +17,16 @@ analyses, and visualization tools.
 
 Documentation
 -------------
-For more info and documentation, see the [pyret website](http://baccuslab.github.io/pyret/)
+For more info and documentation, see the [pyret documentation](http://pyret.readthedocs.org/en/master/).
 
 Demo
 ----
-For a demo of how to do analysis using `pyret`, check out the html file and corresponding ipython notebook in the `demo/` folder.
+(coming soon) For a demo of how to do analysis using `pyret`, check out the html file and corresponding ipython notebook in the `demo/` folder.
 
 Contributing
 ------------
-Pull requests are welcome! We follow the [NumPy/SciPy documentation standards](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#docstring-standard), and [Sphinx](http://sphinx-doc.org/index.html) for generating documentation.
+Pull requests are welcome! We follow the [Numpy/Scipy documentation standards](https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt#docstring-standard), and [Sphinx](http://sphinx-doc.org/index.html) for generating documentation.
 
 Testing
 -------
-Testing is done via [nose](https://nose.readthedocs.org/en/latest/). Once installed (e.g. with `pip install nose`) then simply run `nosetests -v` at the top level directory to run the tests. Test functions are located in the `tests/` folder.
+Testing is done via [nose](https://nose.readthedocs.org/). Once installed (e.g. with `pip install nose`) then simply run `nosetests -v` at the top level directory to run the tests. Test functions are located in the `tests/` folder.

@@ -3,8 +3,11 @@ Tools for dealing with spatiotemporal stimuli
 
 """
 
-import numpy as _np
+import numpy as np
 from scipy.linalg.blas import get_blas_funcs
+
+__all__ = ['upsample_stim', 'downsample_stim', 'slicestim', 'getcov']
+
 
 def upsample_stim(stim, upsample_factor, time=None):
     """
@@ -13,7 +16,7 @@ def upsample_stim(stim, upsample_factor, time=None):
     Parameters
     ----------
     stim : array_like
-        The actual stimulus to be upsampled.
+        The actual stimulus to be upsampled. dimensions: (time, space, space)
 
     upsample_factor : int
         The upsample factor.
@@ -31,28 +34,30 @@ def upsample_stim(stim, upsample_factor, time=None):
 
     """
 
-    # Compute old and new sizes
-    oldsz   = stim.shape
-    newsz   = oldsz[:-1] + (upsample_factor * oldsz[-1],)
-
     # Upsample the stimulus array
-    stim_us = (stim.reshape((-1, 1)) * _np.ones((1, upsample_factor))).reshape(newsz)
+    stim_us = np.repeat(stim, upsample_factor, axis=0)
+
+    # if time vector is not given
+    if time is None:
+        return stim_us, None
 
     # Upsample the time vecctor if given
-    if time is not None:
-        x       = _np.arange(0, upsample_factor * time.size)
-        xp      = _np.arange(0, upsample_factor * time.size, upsample_factor)
-        time_us = _np.interp(x, xp, _np.squeeze(time))
+    x = np.arange(0, upsample_factor * time.size)
+    xp = np.arange(0, upsample_factor * time.size, upsample_factor)
+    time_us = np.interp(x, xp, np.squeeze(time))
 
-        # Check that last timestamp is valid. np.interp does no
-        # extrapolation, which may be necessary for the last 
-        # timepoint, given the method above
-        if time_us[-2] == time_us[-1]:
-            time_us[-1] += _np.diff(time_us).mean()
-    else:
-        time_us = None
+    # Check that last k timestamps are valid. np.interp does no
+    # extrapolation, which may be necessary for the last
+    # timepoint, given the method above
+    modified_time_us = time_us.copy()
+    dt = np.diff(time_us).mean()
+    for k in reversed(np.arange(upsample_factor) + 1):
+        if np.allclose(time_us[-(k+1)], time_us[-k]):
+            modified_time_us[-k] = modified_time_us[-(k+1)] + dt
+    time_us = modified_time_us.copy()
 
     return stim_us, time_us
+
 
 def downsample_stim(stim, downsample_factor, time=None):
     """
@@ -80,8 +85,8 @@ def downsample_stim(stim, downsample_factor, time=None):
     """
 
     # Downsample the stimulus array
-    stim_ds = _np.take(stim, _np.arange(0, stim.shape[-1], downsample_factor), axis=-1)
-    
+    stim_ds = np.take(stim, np.arange(0, stim.shape[-1], downsample_factor), axis=-1)
+
     # Downsample the time vector, if given
     time_ds = time[::downsample_factor] if time is not None else None
 
@@ -111,7 +116,7 @@ def slicestim(stimulus, history, locations=None, tproj=None):
     Returns
     ------
     slices : array_like
-        Array of stimulus slices, with all stimulus dimensions collapsed into one. 
+        Array of stimulus slices, with all stimulus dimensions collapsed into one.
         That is, it has shape (np.prod(stimulus.shape), `history`)
 
     """
@@ -126,8 +131,8 @@ def slicestim(stimulus, history, locations=None, tproj=None):
 
     # Compute spatial locations to take
     if locations is None:
-        locations = _np.ones(cstim.shape[-1])
-    
+        locations = np.ones(cstim.shape[-1])
+
     # Don't include first `history` frames regardless
     locations[:history] = False
 
@@ -135,25 +140,26 @@ def slicestim(stimulus, history, locations=None, tproj=None):
     if tproj is None:
 
         # Preallocate
-        slices = _np.empty((int(history * cstim.shape[0]), int(_np.sum(locations[history:]))))
+        slices = np.empty((int(history * cstim.shape[0]), int(np.sum(locations[history:]))))
 
         # Loop over requested time points
-        for idx in _np.where(locations)[0]:
+        for idx in np.where(locations)[0]:
             slices[:, idx - history] = cstim[:, idx - history:idx].ravel()
 
     # Construct projected stimulus slice array
     else:
 
         # Preallocate
-        slices = _np.empty((int(tproj.shape[1] * cstim.shape[0]), int(_np.sum(locations[history:]))))
+        slices = np.empty((int(tproj.shape[1] * cstim.shape[0]), int(np.sum(locations[history:]))))
 
         # Loop over requested time points
-        for idx in _np.where(locations)[0]:
+        for idx in np.where(locations)[0]:
 
             # Project onto temporal basis
             slices[:, idx - history] = (cstim[:, idx - history:idx].dot(tproj)).ravel()
 
     return slices
+
 
 def getcov(stimulus, history, tproj=None, verbose=False):
     """
@@ -169,7 +175,7 @@ def getcov(stimulus, history, tproj=None, verbose=False):
 
     history : int
         Integer number of time points to keep in each slice.
-    
+
     tproj : array_like, optional
         Temporal basis set to use. Must have # of rows (first dimension) equal to history.
         Each extracted stimulus slice is projected onto this basis set, which reduces the size
@@ -187,7 +193,7 @@ def getcov(stimulus, history, tproj=None, verbose=False):
 
     # temporal basis (if not given, use the identity matrix)
     if tproj is None:
-        tproj = _np.eye(history)
+        tproj = np.eye(history)
 
     if tproj.shape[0] != history:
         raise ValueError('The first dimension of the basis set tproj must equal history')
@@ -196,13 +202,13 @@ def getcov(stimulus, history, tproj=None, verbose=False):
     cstim = stimulus.reshape(-1, stimulus.shape[-1])
 
     # store mean + covariance matrix
-    mean = _np.zeros(cstim.shape[0] * tproj.shape[1])
-    stim_cov = _np.zeros((cstim.shape[0] * tproj.shape[1], cstim.shape[0] * tproj.shape[1]))
+    mean = np.zeros(cstim.shape[0] * tproj.shape[1])
+    stim_cov = np.zeros((cstim.shape[0] * tproj.shape[1], cstim.shape[0] * tproj.shape[1]))
 
     # pick some indices to go through
-    indices = _np.arange(history,cstim.shape[1])
-    numpts  = _np.min(( cstim.shape[0] * tproj.shape[1] * 10, indices.size ))
-    _np.random.shuffle(indices)
+    indices = np.arange(history,cstim.shape[1])
+    numpts  = np.min(( cstim.shape[0] * tproj.shape[1] * 10, indices.size ))
+    np.random.shuffle(indices)
 
     # get blas function
     blas_ger_fnc = get_blas_funcs(('ger',), (stim_cov,))[0]
@@ -213,14 +219,14 @@ def getcov(stimulus, history, tproj=None, verbose=False):
         # pick which index to use
         idx = indices[j]
         if verbose:
-            if _np.mod(j,100) == 0:
+            if np.mod(j,100) == 0:
                 print('[%i of %i]' % (j,numpts))
 
         # get this stimulus slice, projected onto the basis set tproj
         stimslice = cstim[:, idx - history:idx].dot(tproj).reshape(-1,1)
 
         # update the mean
-        mean += _np.squeeze(stimslice)
+        mean += np.squeeze(stimslice)
 
         # add it to the covariance matrix (using low-level BLAS operation)
         blas_ger_fnc(1, stimslice, stimslice, a=stim_cov.T, overwrite_a=True)
