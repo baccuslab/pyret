@@ -6,7 +6,8 @@ Tools for dealing with spatiotemporal stimuli
 import numpy as np
 from scipy.linalg.blas import get_blas_funcs
 
-__all__ = ['upsample_stim', 'downsample_stim', 'slicestim', 'getcov']
+__all__ = ['upsample_stim', 'downsample_stim', 'slicestim', 'getcov',
+           'rolling_window']
 
 
 def upsample_stim(stim, upsample_factor, time=None):
@@ -52,8 +53,8 @@ def upsample_stim(stim, upsample_factor, time=None):
     modified_time_us = time_us.copy()
     dt = np.diff(time_us).mean()
     for k in reversed(np.arange(upsample_factor) + 1):
-        if np.allclose(time_us[-(k+1)], time_us[-k]):
-            modified_time_us[-k] = modified_time_us[-(k+1)] + dt
+        if np.allclose(time_us[-(k + 1)], time_us[-k]):
+            modified_time_us[-k] = modified_time_us[-(k + 1)] + dt
     time_us = modified_time_us.copy()
 
     return stim_us, time_us
@@ -206,8 +207,8 @@ def getcov(stimulus, history, tproj=None, verbose=False):
     stim_cov = np.zeros((cstim.shape[0] * tproj.shape[1], cstim.shape[0] * tproj.shape[1]))
 
     # pick some indices to go through
-    indices = np.arange(history,cstim.shape[1])
-    numpts  = np.min(( cstim.shape[0] * tproj.shape[1] * 10, indices.size ))
+    indices = np.arange(history, cstim.shape[1])
+    numpts = np.min((cstim.shape[0] * tproj.shape[1] * 10, indices.size))
     np.random.shuffle(indices)
 
     # get blas function
@@ -219,11 +220,11 @@ def getcov(stimulus, history, tproj=None, verbose=False):
         # pick which index to use
         idx = indices[j]
         if verbose:
-            if np.mod(j,100) == 0:
-                print('[%i of %i]' % (j,numpts))
+            if np.mod(j, 100) == 0:
+                print('[%i of %i]' % (j, numpts))
 
         # get this stimulus slice, projected onto the basis set tproj
-        stimslice = cstim[:, idx - history:idx].dot(tproj).reshape(-1,1)
+        stimslice = cstim[:, idx - history:idx].dot(tproj).reshape(-1, 1)
 
         # update the mean
         mean += np.squeeze(stimslice)
@@ -233,9 +234,67 @@ def getcov(stimulus, history, tproj=None, verbose=False):
 
     # normalize and compute the mean outer product
     mean = mean / numpts
-    mean_op = mean.reshape(-1,1).dot(mean.reshape(1,-1))
+    mean_op = mean.reshape(-1, 1).dot(mean.reshape(1, -1))
 
     # mean-subtract and normalize the STC by the number of points
     stim_cov = (stim_cov / (numpts - 1)) - mean_op
 
     return stim_cov
+
+
+def rolling_window(array, window, time_axis=0):
+    """
+    Make an ndarray with a rolling window of the last dimension
+
+    Parameters
+    ----------
+    array : array_like
+        Array to add rolling window to
+
+    window : int
+        Size of rolling window
+
+    time_axis : int, optional
+        The axis of the temporal dimension, either 0 or -1 (Default: 0)
+
+    Returns
+    -------
+    Array that is a view of the original array with a added dimension
+    of size w.
+
+    Examples
+    --------
+    >>> x=np.arange(10).reshape((2,5))
+    >>> rolling_window(x, 3)
+    array([[[0, 1, 2], [1, 2, 3], [2, 3, 4]],
+           [[5, 6, 7], [6, 7, 8], [7, 8, 9]]])
+
+    Calculate rolling mean of last dimension:
+
+    >>> np.mean(rolling_window(x, 3), -1)
+    array([[ 1.,  2.,  3.],
+           [ 6.,  7.,  8.]])
+
+    """
+
+    if time_axis == 0:
+        array = array.T
+
+    elif time_axis == -1:
+        pass
+
+    else:
+        raise ValueError('Time axis must be 0 (first dimension) or -1 (last)')
+
+    assert window >= 1, "`window` must be at least 1."
+    assert window < array.shape[-1], "`window` is too long."
+
+    # with strides
+    shape = array.shape[:-1] + (array.shape[-1] - window, window)
+    strides = array.strides + (array.strides[-1],)
+    arr = np.lib.stride_tricks.as_strided(array, shape=shape, strides=strides)
+
+    if time_axis == 0:
+        return np.rollaxis(arr.T, 1, 0)
+    else:
+        return arr
