@@ -203,7 +203,7 @@ def playsta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None):
     Parameters
     ----------
     sta : array_like
-        Spike-triggered average array, shaped as (npix, npix, nframes)
+        Spike-triggered average array, shaped as (nframes, npix, npix)
 
     repeat : boolean, optional
         Whether or not to repeat the animation (default is True)
