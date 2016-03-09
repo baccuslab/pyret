@@ -57,3 +57,5 @@ Thumbs.db
 *.mat
 *.npz
 .cache/*
+.coverage
+htmlcov/
