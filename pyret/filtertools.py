@@ -8,8 +8,6 @@ spatiotemporal filters, and basic filter signal processing.
 import numpy as np
 import scipy
 from numpy.linalg import LinAlgError
-from skimage.restoration import denoise_tv_bregman
-from skimage.filters import gaussian_filter
 from skimage.measure import label, regionprops, find_contours
 from functools import reduce
 
@@ -96,7 +94,7 @@ def getsta(time, stimulus, spikes, filter_length):
 
     # reduce
     try:
-        first = next(ste) # check for empty generators
+        first = next(ste)  # check for empty generators
         sta = reduce(lambda sta, x: np.add(sta, x),
                      ste, first) / float(len(spikes))
     except StopIteration:
@@ -386,59 +384,12 @@ def resample(arr, scale_factor):
         raise ValueError('Input array must be either 1-D or 2-D')
 
 
-def rolling_window(array, window, time_axis=0):
-    """
-    Make an ndarray with a rolling window of the last dimension
-
-    Parameters
-    ----------
-    array : array_like
-        Array to add rolling window to
-    window : int
-        Size of rolling window
-
-    Returns
-    -------
-    Array that is a view of the original array with a added dimension
-    of size w.
-
-    Examples
-    --------
-    >>> x=np.arange(10).reshape((2,5))
-    >>> rolling_window(x, 3)
-    array([[[0, 1, 2], [1, 2, 3], [2, 3, 4]],
-           [[5, 6, 7], [6, 7, 8], [7, 8, 9]]])
-
-    Calculate rolling mean of last dimension:
-
-    >>> np.mean(rolling_window(x, 3), -1)
-    array([[ 1.,  2.,  3.],
-           [ 6.,  7.,  8.]])
-
-    """
-
-    if time_axis == 0:
-        array = array.T
-    elif time_axis == -1:
-        pass
-    else:
-        raise ValueError('Time axis must be first or last')
-
-    assert window >= 1, "`window` must be at least 1."
-    assert window < array.shape[-1], "`window` is too long."
-
-    # with strides
-    shape = array.shape[:-1] + (array.shape[-1] - window, window)
-    strides = array.strides + (array.strides[-1],)
-    arr = np.lib.stride_tricks.as_strided(array, shape=shape, strides=strides)
-
-    if time_axis == 0:
-        return np.rollaxis(arr.T, 1, 0)
-    else:
-        return arr
+def rolling_window(*args, **kwargs):
+    """Raise DeprecationWarning until next pyret release (0.4.1)"""
+    raise DeprecationWarning('The filtertools.rolling_window function has been moved.\nPlease use stimulustools.rolling_window instead!')
 
 
-def normalize_spatial(spatial_filter, scale_factor=1.0):
+def normalize_spatial(spatial_filter, scale_factor=1.0, clip_negative=False):
     """
     Normalizes a spatial frame by doing the following:
     1. mean subtraction using a robust estimate of the mean (ignoring outliers)
@@ -451,7 +402,10 @@ def normalize_spatial(spatial_filter, scale_factor=1.0):
 
     scale_factor : float, optional
         The given filter is resampled at a sampling rate of this ratio times
-        the original sampling rate (default: 1.0)
+        the original sampling rate (Default: 1.0)
+
+    clip_negative : boolean, optional
+        Whether or not to clip negative values to 0. (Default: True)
 
     """
 
@@ -470,8 +424,14 @@ def normalize_spatial(spatial_filter, scale_factor=1.0):
     # normalize by the standard deviation of the pixel values
     rf_centered /= rf_centered.std()
 
-    # return this normalized filter, resampled by the given amount
-    return resample(rf_centered, scale_factor)
+    # resample by the given amount
+    rf_resampled = resample(rf_centered, scale_factor)
+
+    # clip negative values
+    if clip_negative:
+        rf_resampled = np.maximum(rf_resampled, 0)
+
+    return rf_resampled
 
 
 def get_contours(spatial_filter, threshold=10.0):
@@ -560,8 +520,8 @@ def get_ellipse(tx, ty, spatial_filter, pvalue=0.6827):
     """
 
     # preprocess
-    zdata = normalize_spatial(spatial_filter).ravel()
-    zdata /= np.max(zdata)
+    zdata = normalize_spatial(spatial_filter, clip_negative=True).ravel()
+    zdata /= zdata.max()
 
     # get initial parameters
     xm, ym = np.meshgrid(tx, ty)
@@ -653,7 +613,7 @@ def _gaussian_function(data, x0, y0, a, b, c):
     yc = data[1] - y0
 
     # gaussian function
-    return np.exp(-0.5*(a*xc**2 + 2*b*xc*yc + c*yc**2))
+    return np.exp(-0.5 * (a * xc**2 + 2 * b * xc * yc + c * yc**2))
 
 
 def _popt_to_ellipse(x0, y0, a, b, c, scale=3.0):

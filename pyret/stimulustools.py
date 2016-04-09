@@ -3,10 +3,13 @@ Tools for dealing with spatiotemporal stimuli
 
 """
 
+import warnings
+
 import numpy as np
 from scipy.linalg.blas import get_blas_funcs
 
-__all__ = ['upsample_stim', 'downsample_stim', 'slicestim', 'getcov']
+__all__ = ['upsample_stim', 'downsample_stim', 'slicestim', 'getcov',
+           'rolling_window']
 
 
 def upsample_stim(stim, upsample_factor, time=None):
@@ -52,8 +55,8 @@ def upsample_stim(stim, upsample_factor, time=None):
     modified_time_us = time_us.copy()
     dt = np.diff(time_us).mean()
     for k in reversed(np.arange(upsample_factor) + 1):
-        if np.allclose(time_us[-(k+1)], time_us[-k]):
-            modified_time_us[-k] = modified_time_us[-(k+1)] + dt
+        if np.allclose(time_us[-(k + 1)], time_us[-k]):
+            modified_time_us[-k] = modified_time_us[-(k + 1)] + dt
     time_us = modified_time_us.copy()
 
     return stim_us, time_us
@@ -85,7 +88,7 @@ def downsample_stim(stim, downsample_factor, time=None):
     """
 
     # Downsample the stimulus array
-    stim_ds = np.take(stim, np.arange(0, stim.shape[-1], downsample_factor), axis=-1)
+    stim_ds = np.take(stim, np.arange(0, stim.shape[0], downsample_factor), axis=0)
 
     # Downsample the time vector, if given
     time_ds = time[::downsample_factor] if time is not None else None
@@ -93,7 +96,7 @@ def downsample_stim(stim, downsample_factor, time=None):
     return stim_ds, time_ds
 
 
-def slicestim(stimulus, history, locations=None, tproj=None):
+def slicestim(stimulus, history):
     """
     Slices a spatiotemporal stimulus array (over time) into overlapping frames.
 
@@ -101,64 +104,45 @@ def slicestim(stimulus, history, locations=None, tproj=None):
     ----------
     stimulus : array_like
         The spatiotemporal or temporal stimulus to slices. Should have shape
-        (n, n, t) or (t,).
+        (t, ...), so that the time axis is first. The ellipses indicate the 
+        spatial dimensions of the stimulus, if any.
 
     history : int
         Integer number of time points to keep in each slice.
 
-    locations : array_like of booleans
-        Boolean array of temporal locations at which slices are taken. If unspecified,
-        use all time points.
-
-    tproj : array_like, optional
-        Matrix of temporal filters to project stimuli onto
-
     Returns
     ------
     slices : array_like
-        Array of stimulus slices, with all stimulus dimensions collapsed into one.
-        That is, it has shape (np.prod(stimulus.shape), `history`)
+        A view onto the original stimulus array, giving the overlapping slices
+        of the stimulus. The full shape of the returned array is:
+        (history, stimulus.shape[0] - history, ...). As above, the ellipses
+        indicate any spatial dimensions to the stimulus.
 
+    Examples
+    --------
+    >>> x=np.arange(10).reshape((2,5))
+    >>> rolling_window(x, 3)
+    array([[[0, 1, 2], [1, 2, 3], [2, 3, 4]],
+           [[5, 6, 7], [6, 7, 8], [7, 8, 9]]])
+
+    Calculate rolling mean of last dimension:
+
+    >>> np.mean(rolling_window(x, 3), -1)
+    array([[ 1.,  2.,  3.],
+           [ 6.,  7.,  8.]])
     """
 
-    # Collapse any spatial dimensions of the stimulus array
-    cstim = stimulus.reshape(-1, stimulus.shape[-1])
-
-    # Check history is an int
-    if history != int(history):
-        raise ValueError('"history" must be an integer')
+    if not (1 <= history <= stimulus.shape[0]):
+        raise ValueError(
+                '`history` must be between 1 and {0:#d}'.format(
+                stimulus.shape[0]))
     history = int(history)
 
-    # Compute spatial locations to take
-    if locations is None:
-        locations = np.ones(cstim.shape[-1])
-
-    # Don't include first `history` frames regardless
-    locations[:history] = False
-
-    # Construct full stimulus slice array
-    if tproj is None:
-
-        # Preallocate
-        slices = np.empty((int(history * cstim.shape[0]), int(np.sum(locations[history:]))))
-
-        # Loop over requested time points
-        for idx in np.where(locations)[0]:
-            slices[:, idx - history] = cstim[:, idx - history:idx].ravel()
-
-    # Construct projected stimulus slice array
-    else:
-
-        # Preallocate
-        slices = np.empty((int(tproj.shape[1] * cstim.shape[0]), int(np.sum(locations[history:]))))
-
-        # Loop over requested time points
-        for idx in np.where(locations)[0]:
-
-            # Project onto temporal basis
-            slices[:, idx - history] = (cstim[:, idx - history:idx].dot(tproj)).ravel()
-
-    return slices
+    # Use strides to create view onto array
+    shape = (history, stimulus.shape[0] - history) + stimulus.shape[1:]
+    strides = (stimulus.strides[0],) + stimulus.strides
+    return np.lib.stride_tricks.as_strided(stimulus, 
+            shape=shape, strides=strides)
 
 
 def getcov(stimulus, history, tproj=None, verbose=False):
@@ -171,15 +155,16 @@ def getcov(stimulus, history, tproj=None, verbose=False):
     ----------
     stimulus : array_like
         The spatiotemporal or temporal stimulus to slices. Should have shape
-        (n, n, t) or (t,).
+        (t, ...), where the ellipses indicate any spatial dimensions.
 
     history : int
         Integer number of time points to keep in each slice.
 
     tproj : array_like, optional
-        Temporal basis set to use. Must have # of rows (first dimension) equal to history.
-        Each extracted stimulus slice is projected onto this basis set, which reduces the size
-        of the corresponding covariance matrix to store.
+        Temporal basis set to use. Size of the second dimension must be equal
+        to `history`. Each extracted stimulus slice is projected onto this 
+        basis set, which reduces the size of the corresponding covariance 
+        matrix to store.
 
     verbose : boolean, optional
         If True, print out progress of the computation. (defaults to False)
@@ -190,52 +175,86 @@ def getcov(stimulus, history, tproj=None, verbose=False):
         (n*n*t by n*n*t) Covariance matrix
 
     """
+    if not (1 <= history < stimulus.shape[0]):
+        raise ValueError('`history` must be in [1, {0:#d})'.format(
+                stimulus.shape[0]))
 
-    # temporal basis (if not given, use the identity matrix)
-    if tproj is None:
-        tproj = np.eye(history)
-
-    if tproj.shape[0] != history:
-        raise ValueError('The first dimension of the basis set tproj must equal history')
-
-    # Collapse any spatial dimensions of the stimulus array
-    cstim = stimulus.reshape(-1, stimulus.shape[-1])
+    # Collapse spatial dimensions
+    cstim = stimulus.reshape(stimulus.shape[0], -1)
 
     # store mean + covariance matrix
-    mean = np.zeros(cstim.shape[0] * tproj.shape[1])
-    stim_cov = np.zeros((cstim.shape[0] * tproj.shape[1], cstim.shape[0] * tproj.shape[1]))
+    mean = np.zeros(cstim.shape[-1] * history)
+    stim_cov = np.zeros((cstim.shape[-1] * history,) * 2)
 
-    # pick some indices to go through
-    indices = np.arange(history,cstim.shape[1])
-    numpts  = np.min(( cstim.shape[0] * tproj.shape[1] * 10, indices.size ))
+    # Update covariance matrix from random points in the stimulus
+    indices = np.arange(history, cstim.shape[0])
+    numpts = np.min((cstim.shape[1] * 10, indices.size))
     np.random.shuffle(indices)
 
-    # get blas function
+    # BLAS rank-1 covariance update function
     blas_ger_fnc = get_blas_funcs(('ger',), (stim_cov,))[0]
 
-    # loop over temporal indices
     for j in range(numpts):
-
-        # pick which index to use
         idx = indices[j]
-        if verbose:
-            if np.mod(j,100) == 0:
-                print('[%i of %i]' % (j,numpts))
+        if verbose and np.mod(j, 100) == 0:
+            print('[%i of %i]' % (j, numpts))
 
-        # get this stimulus slice, projected onto the basis set tproj
-        stimslice = cstim[:, idx - history:idx].dot(tproj).reshape(-1,1)
+        stimslice = np.reshape(cstim[idx - history : idx, :], 
+                (-1, 1), order='F')
 
-        # update the mean
         mean += np.squeeze(stimslice)
 
-        # add it to the covariance matrix (using low-level BLAS operation)
-        blas_ger_fnc(1, stimslice, stimslice, a=stim_cov.T, overwrite_a=True)
+        # Update covariance matrix
+        blas_ger_fnc(1, stimslice, stimslice, 
+                a=stim_cov.T, overwrite_a=True)
 
-    # normalize and compute the mean outer product
-    mean = mean / numpts
-    mean_op = mean.reshape(-1,1).dot(mean.reshape(1,-1))
+    # Normalize and compute the mean outer product
+    mean /= numpts
+    mean_op = mean.reshape(-1, 1).dot(mean.reshape(1, -1))
 
-    # mean-subtract and normalize the STC by the number of points
+    # Return normalized covariance matrix
     stim_cov = (stim_cov / (numpts - 1)) - mean_op
 
     return stim_cov
+
+
+def rolling_window(array, window, time_axis=0):
+    """
+    Make an ndarray with a rolling window of the last dimension
+
+    Parameters
+    ----------
+    array : array_like
+        Array to add rolling window to
+
+    window : int
+        Size of rolling window
+
+    time_axis : int, optional
+        The axis of the temporal dimension, either 0 or -1 (Default: 0)
+
+    Returns
+    -------
+    Array that is a view of the original array with a added dimension
+    of size w.
+
+    Examples
+    --------
+    >>> x=np.arange(10).reshape((2,5))
+    >>> rolling_window(x, 3)
+    array([[[0, 1, 2], [1, 2, 3], [2, 3, 4]],
+           [[5, 6, 7], [6, 7, 8], [7, 8, 9]]])
+
+    Calculate rolling mean of last dimension:
+
+    >>> np.mean(rolling_window(x, 3), -1)
+    array([[ 1.,  2.,  3.],
+           [ 6.,  7.,  8.]])
+
+    """
+    with warnings.catch_warnings():
+        warnings.simplefilter('always')
+        warnings.warn('`rolling_window` is deprecated and will be removed' +
+                ' in future releases. Use `stimulustools.slicestim` instead.',
+                DeprecationWarning)
+    return slicestim(array, window)
