@@ -184,8 +184,7 @@ def rasterandpsth(spikes, trial_length=None, binsize=0.01, **kwargs):
         tick.set_color('k')
 
 
-@plotwrapper
-def playsta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None, **kwargs):
+def playsta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None):
     """
     Plays a spatiotemporal spike-triggered average as a movie
 
@@ -208,10 +207,8 @@ def playsta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None, **kwar
 
     Returns
     -------
-    None
+    anim : matplotlib animation object
     """
-    fig, ax = kwargs['fig'], kwargs['ax']
-
     # mean subtract
     X = sta.copy()
     X -= X.mean()
@@ -251,7 +248,7 @@ def playsta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None, **kwar
 
 
 @plotwrapper
-def spatial(spatial_filter, ax=None, maxval=None, **kwargs):
+def spatial(spatial_filter, maxval=None, **kwargs):
     """
     Plot a spatial filter on a given axes
 
@@ -271,7 +268,7 @@ def spatial(spatial_filter, ax=None, maxval=None, **kwargs):
     ax : matplotlib Axes object
         Axes into which the frame is plotted
     """
-    ax = kwargs['ax']
+    _, ax = kwargs.pop('fig'), kwargs.pop('ax')
 
     # adjust color limits if necessary
     if not maxval:
@@ -316,8 +313,7 @@ def temporal(time, temporal_filter, **kwargs):
     kwargs['ax'].plot(time, temporal_filter, linestyle='-', linewidth=2, color='LightCoral')
 
 
-@plotwrapper
-def plotsta(time, sta, **kwargs):
+def plotsta(time, sta):
     """
     Plot a spatial and temporal filter
 
@@ -337,13 +333,13 @@ def plotsta(time, sta, **kwargs):
     ax : matplotlib Axes object
         Axes into which the STA is plotted
     """
-    fig, ax = kwargs['fig'], kwargs['ax']
+    fig = plt.figure()
 
     # plot 1D temporal filter
     if sta.ndim == 1:
 
         # plot temporal profile
-        ax = temporal(time, sta, ax=fig.add_subplot(111))
+        fig, ax = temporal(time, sta, ax=fig.add_subplot(111))
 
     # plot 2D spatiotemporal filter
     elif sta.ndim == 2:
@@ -352,7 +348,7 @@ def plotsta(time, sta, **kwargs):
         stan = (sta - np.mean(sta)) / np.var(sta)
 
         # create new axes
-        ax = spatial(stan, ax=fig.add_subplot(111))
+        fig, ax = spatial(stan, ax=fig.add_subplot(111))
         ax.axes.get_yaxis().set_visible(False)
         ax.axes.get_xaxis().set_visible(False)
 
@@ -366,12 +362,12 @@ def plotsta(time, sta, **kwargs):
         spatial_profile, temporal_filter = ft.decompose(sta)
 
         # plot spatial profile
-        axspatial = spatial(spatial_profile, ax=fig.add_subplot(gs[0]))
+        _, axspatial = spatial(spatial_profile, ax=fig.add_subplot(gs[0]))
         axspatial.set_xticks([])
         axspatial.set_yticks([])
 
         # plot temporal profile
-        axtemporal = temporal(time, temporal_filter, ax=fig.add_subplot(gs[1]))
+        fig, axtemporal = temporal(time, temporal_filter, ax=fig.add_subplot(gs[1]))
         axtemporal.set_xlim(time[0], time[-1])
 
         # return handles
@@ -379,6 +375,8 @@ def plotsta(time, sta, **kwargs):
 
     else:
         raise ValueError('The sta parameter has an invalid number of dimensions (must be 1-3)')
+
+    return fig, ax
 
 
 @plotwrapper
@@ -431,9 +429,6 @@ def ellipse(spatial_filter, pvalue=0.6827, alpha=0.8, fc='none', ec='black', lw=
     ax.add_artist(ell)
     ax.set_xlim(0, spatial_filter.shape[0])
     ax.set_ylim(0, spatial_filter.shape[1])
-    plt.show()
-
-    return ax
 
 
 @plotwrapper
