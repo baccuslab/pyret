@@ -43,11 +43,3 @@ visualizations
     :members:
     :undoc-members:
     :show-inheritance:
-
-containers
-----------
-
-.. automodule:: pyret.containers
-    :members:
-    :undoc-members:
-    :show-inheritance:
