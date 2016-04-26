@@ -333,12 +333,10 @@ def plotsta(time, sta):
     ax : matplotlib Axes object
         Axes into which the STA is plotted
     """
-    fig = plt.figure()
 
     # plot 1D temporal filter
     if sta.ndim == 1:
-
-        # plot temporal profile
+        fig = plt.figure(figsize=(12, 8))
         fig, ax = temporal(time, sta, ax=fig.add_subplot(111))
 
     # plot 2D spatiotemporal filter
@@ -348,6 +346,7 @@ def plotsta(time, sta):
         stan = (sta - np.mean(sta)) / np.var(sta)
 
         # create new axes
+        fig = plt.figure(figsize=(10, 10))
         fig, ax = spatial(stan, ax=fig.add_subplot(111))
         ax.axes.get_yaxis().set_visible(False)
         ax.axes.get_xaxis().set_visible(False)
@@ -356,7 +355,8 @@ def plotsta(time, sta):
     elif sta.ndim == 3:
 
         # build the figure
-        gs = gridspec.GridSpec(2, 1, height_ratios=[2, 1])
+        fig = plt.figure(figsize=(8, 10))
+        gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
 
         # decompose
         spatial_profile, temporal_filter = ft.decompose(sta)
@@ -369,6 +369,10 @@ def plotsta(time, sta):
         # plot temporal profile
         fig, axtemporal = temporal(time, temporal_filter, ax=fig.add_subplot(gs[1]))
         axtemporal.set_xlim(time[0], time[-1])
+        axtemporal.spines['right'].set_color('none')
+        axtemporal.spines['top'].set_color('none')
+        axtemporal.yaxis.set_ticks_position('left')
+        axtemporal.xaxis.set_ticks_position('bottom')
 
         # return handles
         ax = (axspatial, axtemporal)
