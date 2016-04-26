@@ -13,11 +13,9 @@ __all__ = ['Sigmoid', 'Binterp']
 
 
 class Nonlinearity:
-    def __init__(self):
-        pass
-
-    def plot(self, start, stop, n=100):
-        x = np.linspace(start, stop, n)
+    def plot(self, span=(-5, 5), n=100):
+        """Creates a 1D plot of the nonlinearity"""
+        x = np.linspace(span[0], span[1], n)
         plt.plot(x, self.predict(x))
 
     def fit(self, x, y):
@@ -124,7 +122,7 @@ class Binterp(Nonlinearity):
 
     @staticmethod
     def _grouper(iterable, n, fillvalue=None):
-        "Collect data into fixed-length chunks or blocks"
+        """Collect data into fixed-length chunks or blocks"""
         # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
         args = [iter(iterable)] * n
 
@@ -145,4 +143,5 @@ class Binterp(Nonlinearity):
         return self
 
     def predict(self, x):
+        """Placeholder, this method gets overwritten when fit() is called"""
         raise RuntimeError('No estimated parameters, call fit() first')

@@ -487,18 +487,12 @@ def get_regionprops(spatial_filter, threshold=10.0):
     return regionprops(label(normalize_spatial(spatial_filter) >= threshold))
 
 
-def get_ellipse(tx, ty, spatial_filter, pvalue=0.6827):
+def get_ellipse(spatial_filter, pvalue=0.6827):
     """
     Get the parameters of an ellipse fit to a spatial receptive field
 
     Parameters
     ----------
-    tx : array_like
-        spatial sampling along the x-axis
-
-    ty : array_like
-        spatial sampling along the y-axis
-
     spatial_filter : array_like
         The spatial receptive field to which the ellipse should be fit
 
@@ -516,7 +510,6 @@ def get_ellipse(tx, ty, spatial_filter, pvalue=0.6827):
 
     theta : float
         angle of rotation of the ellipse from the vertical axis, in radians
-
     """
 
     # preprocess
@@ -524,7 +517,8 @@ def get_ellipse(tx, ty, spatial_filter, pvalue=0.6827):
     zdata /= zdata.max()
 
     # get initial parameters
-    xm, ym = np.meshgrid(tx, ty)
+    nx, ny = spatial_filter.shape
+    xm, ym = np.meshgrid(np.arange(nx), np.arange(ny))
     pinit = _initial_gaussian_params(xm, ym, zdata)
 
     # optimize
