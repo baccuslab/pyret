@@ -610,7 +610,7 @@ def _gaussian_function(data, x0, y0, a, b, c):
     return np.exp(-0.5 * (a * xc**2 + 2 * b * xc * yc + c * yc**2))
 
 
-def _popt_to_ellipse(x0, y0, a, b, c, scale=3.0):
+def _popt_to_ellipse(y0, x0, a, b, c, scale=3.0):
     """
     Converts the parameters (center and terms in the precision matrix) for a 2D
     gaussian function into ellipse parameters (center, widths, and rotation)
