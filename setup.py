@@ -20,5 +20,5 @@ setup(name='pyret',
           'Operating System :: MacOS :: MacOS X',
           'Topic :: Scientific/Engineering :: Information Analysis'],
       packages=find_packages(),
-      license='LICENSE.md'
+      license='MIT'
       )
