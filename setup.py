@@ -18,7 +18,8 @@ setup(name='pyret',
       classifiers=[
           'Intended Audience :: Science/Research',
           'Operating System :: MacOS :: MacOS X',
-          'Topic :: Scientific/Engineering :: Information Analysis'],
+          'Topic :: Scientific/Engineering :: Information Analysis'
+      ],
       packages=find_packages(),
-      license='MIT'
+      license='MIT',
       )
