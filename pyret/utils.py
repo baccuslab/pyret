@@ -22,7 +22,6 @@ def plotwrapper(func):
                 kwargs['fig'] = kwargs['ax'].get_figure()
 
         func(*args, **kwargs)
-        plt.tight_layout()
         plt.show()
         plt.draw()
         return kwargs['fig'], kwargs['ax']
