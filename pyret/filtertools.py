@@ -513,7 +513,7 @@ def get_ellipse(spatial_filter, pvalue=0.6827):
     """
 
     # preprocess
-    zdata = normalize_spatial(spatial_filter, clip_negative=True).ravel()
+    zdata = normalize_spatial(spatial_filter, clip_negative=True)
     zdata /= zdata.max()
 
     # get initial parameters
@@ -525,7 +525,7 @@ def get_ellipse(spatial_filter, pvalue=0.6827):
     data = np.vstack((xm.ravel(), ym.ravel()))
     popt, pcov = scipy.optimize.curve_fit(_gaussian_function,
                                           data,
-                                          zdata,
+                                          zdata.ravel(),
                                           p0=pinit)
 
     # return ellipse parameters, scaled by the appropriate scale factor
@@ -657,26 +657,29 @@ def _popt_to_ellipse(y0, x0, a, b, c, scale=3.0):
     return (x0, y0), sigmas, theta
 
 
-def _initial_gaussian_params(xm, ym, z):
+def _initial_gaussian_params(xm, ym, z, width=5):
     """
     Guesses the initial 2D Gaussian parameters given a spatial filter
+
+    Parameters
+    ----------
+    xm : array_like
+    ym : array_like
+    z : array_like
+
+    width : float, optional
+        The expected 1 s.d. width of the RF in checkers. (Default: 5)
     """
 
-    # normalize
-    zn = (z / np.sum(z)).ravel()
-
     # estimate means
-    xc = np.sum(zn * xm.ravel())
-    yc = np.sum(zn * ym.ravel())
+    xi = z.sum(axis=0).argmax()
+    yi = z.sum(axis=1).argmax()
+    yc = xm[xi, yi]
+    xc = ym[xi, yi]
 
-    # estimate covariance
-    data = np.vstack(((xm.ravel() - xc), (ym.ravel() - yc)))
-    Q = data.dot(np.diag(zn).dot(data.T)) / (1 - np.sum(zn ** 2))
-
-    # compute precision matrix
-    P = np.linalg.inv(Q)
-    a = P[0, 0]
-    b = P[0, 1]
-    c = P[1, 1]
+    # compute precision matrix entries
+    a = 1/width
+    b = 0
+    c = 1/width
 
     return xc, yc, a, b, c
