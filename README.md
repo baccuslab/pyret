@@ -29,4 +29,4 @@ Pull requests are welcome! We follow the [Numpy/Scipy documentation standards](h
 
 Testing
 -------
-Testing is done via [nose](https://nose.readthedocs.org/). Once installed (e.g. with `pip install nose`) then simply run `nosetests -v` at the top level directory to run the tests. Test functions are located in the `tests/` folder.
+Testing is done via [py.test](http://pytest.org/latest/). Once installed (e.g. with `pip install pytest`) then simply run `make test` at the top level directory to run the tests. Test functions are located in the `tests/` folder.
