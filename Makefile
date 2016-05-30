@@ -15,5 +15,8 @@ clean:
 	rm -f pyret/*.pyc
 	rm -rf pyret/__pycache__
 
+build:
+	python setup.py bdist_wininst
+
 upload:
-	python setup.py sdist bdist_wininst upload
+	twine upload dist/*

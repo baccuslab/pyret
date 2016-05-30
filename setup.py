@@ -6,7 +6,7 @@ setup(name='pyret',
       description='Tools for the analysis of neural electrophysiology data',
       author='Benjamin Naecker, Niru Maheshwaranathan',
       author_email='bnaecker@stanford.edu',
-      url='https://github.com/baccuslab/pyret.git',
+      url='https://github.com/baccuslab/pyret',
       requires=['scipy', 'skimage', 'numpy', 'matplotlib'],
       long_description='''
           The pyret package contains tools for analyzing neural
@@ -21,5 +21,6 @@ setup(name='pyret',
           'Topic :: Scientific/Engineering :: Information Analysis'
       ],
       packages=find_packages(),
+      install_requires=['numpy', 'scipy', 'matplotlib', 'scikit-image'],
       license='MIT',
       )
