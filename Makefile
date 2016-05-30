@@ -14,9 +14,10 @@ clean:
 	rm -rf pyret.egg-info
 	rm -f pyret/*.pyc
 	rm -rf pyret/__pycache__
+	rm -rf dist/
 
 build:
-	python setup.py bdist_wininst
+	python setup.py bdist_wheel
 
 upload:
 	twine upload dist/*
