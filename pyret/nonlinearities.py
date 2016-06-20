@@ -9,7 +9,12 @@ from scipy.interpolate import interp1d
 from functools import wraps
 from itertools import zip_longest
 
-__all__ = ['Sigmoid', 'Binterp']
+try:
+    import GPy
+except ImportError:
+    print("You must install GPy (pip install GPy) to fit the GP regression nonlinearity.")
+
+__all__ = ['Sigmoid', 'Binterp', 'GaussianProcess']
 
 
 class Nonlinearity:
@@ -48,6 +53,29 @@ class Nonlinearity:
     @wraps(predict)
     def __call__(self, x):
         return self.predict(x)
+
+
+class GaussianProcess(Nonlinearity):
+    def __init__(self, variance=1., lengthscale=1.):
+        """A nonlinearity fit using Gaussian Process (GP) regression.
+        """
+
+        # Defines the kernel to use
+        self.kernel = GPy.kern.RBF(input_dim=1, variance=variance, lengthscale=lengthscale)
+
+    def fit(self, x, y):
+        """Fits the GP regression model."""
+        self.model = GPy.models.GPRegression(x[:, np.newaxis], y[:, np.newaxis], self.kernel)
+        self.model.optimize()
+        return self
+
+    def predict(self, x):
+        """Gets the mean prediction at the given values."""
+        return self.model.predict(x[:, np.newaxis])[0]
+
+    def predict_full(self, x):
+        """Predicts the mean and variance at the given values."""
+        return self.model.predict(x[:, np.newaxis])
 
 
 class Sigmoid(Nonlinearity):
