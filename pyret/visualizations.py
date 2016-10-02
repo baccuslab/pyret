@@ -13,7 +13,7 @@ __all__ = ['raster', 'psth', 'rasterandpsth', 'spatial', 'temporal',
            'plotsta', 'playsta', 'ellipse', 'plotcells', 'playrates']
 
 
-def raster(spikes, labels, title='Spike raster', marker_string='ko', fig=None, ax=None, **kwargs):
+def raster(spikes, labels, title='Spike raster', marker_string='ko', fig=None, ax=None, xlim=None, **kwargs):
     """
     Plot a raster of spike times
 
@@ -53,6 +53,8 @@ def raster(spikes, labels, title='Spike raster', marker_string='ko', fig=None, a
     if not ax:
         ax = fig.add_subplot(111)
     ax.plot(spikes, labels, marker_string, **kwargs)
+    if xlim is not None:
+        ax.set_xlim(xlim)
 
     # Labels, etc.
     plt.title(title, fontdict={'fontsize': 24})
