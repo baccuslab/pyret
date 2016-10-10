@@ -18,10 +18,28 @@ __all__ = ['Sigmoid', 'Binterp', 'GaussianProcess']
 
 
 class Nonlinearity:
-    def plot(self, span=(-5, 5), n=100):
-        """Creates a 1D plot of the nonlinearity"""
+    def plot(self, span=(-5, 5), n=100, **kwargs):
+        """Creates a 1D plot of the nonlinearity
+
+        Parameters
+        ----------
+        span : 2-element array_like
+            The span of the x-axis to plot.
+
+        n : integer_like
+            The number of points to plot.
+
+        kwargs : mapping
+            Keyword arguments passed directly to `matplotlib.pyplot.plot()`
+
+        Returns
+        -------
+
+        line : matplotlib.lines.Line2D
+            The line object that represents this nonlinearity.
+        """
         x = np.linspace(span[0], span[1], n)
-        plt.plot(x, self.predict(x))
+        return plt.plot(x, self.predict(x), **kwargs)
 
     def fit(self, x, y):
         """Fits the parameters of the nonlinearity

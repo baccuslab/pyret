@@ -4,3 +4,4 @@ _build/
 *.egg-info/
 tags
 dist/
+*.swp

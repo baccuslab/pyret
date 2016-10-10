@@ -7,9 +7,12 @@ spatiotemporal filters, and basic filter signal processing.
 
 import numpy as np
 import scipy
+from scipy.signal import fftconvolve
 from numpy.linalg import LinAlgError
 from skimage.measure import label, regionprops, find_contours
 from functools import reduce
+
+from pyret.stimulustools import slicestim
 
 __all__ = ['getste', 'getsta', 'getstc', 'lowranksta', 'decompose',
            'filterpeak', 'smooth', 'cutout', 'rolling_window', 'resample',
@@ -219,7 +222,7 @@ def lowranksta(f_orig, k=10):
 
     # get out the temporal filter at the RF center
     peakidx = filterpeak(f)[1]
-    tsta = f[:, peakidx[1], peakidx[0]].reshape(-1, 1)
+    tsta = f[:, peakidx[-1::]].reshape(-1, 1)
     tsta -= np.mean(tsta)
 
     # project onto the temporal filters and keep the sign
@@ -269,8 +272,8 @@ def filterpeak(sta):
     idx : int
         Linear index of the maximal point
 
-    sidx : int
-        Spatial index of the maximal point
+    sidx : 1- or 2-element tuple
+        Spatial index of the maximal point. For a 1D spatiotemporal
 
     tidx : int
         Temporal index of the maximal point
@@ -569,6 +572,114 @@ def rfsize(spatial_filter, dx, dy=None, pvalue=0.6827):
     # return the scaled widths
     return widths[0] * dx, widths[1] * dy
 
+
+def linear_prediction(filt, stim):
+    """
+    Compute the predicted linear response of a receptive field to a stimulus.
+
+    Parameters
+    ----------
+
+    filt : array_like
+        The linear filter whose response is to be computed. The array should
+        have shape ``(t, ...)``, where ``t`` is the number of time points in the 
+        filter and the ellipsis indicates any remaining spatial dimenions.
+        The number of dimensions and the sizes of the spatial dimensions
+        must match that of ``stim``.
+
+    stim : array_like
+        The stimulus to which the predicted response is computed. The array
+        should have shape (T,...), where ``T`` is the number of time points 
+        in the stimulus and the ellipsis indicates any remaining spatial
+        dimensions. The number of dimensions and the sizes of the spatial
+        dimenions must match that of ``filt``.
+
+    Returns
+    -------
+
+    pred : array_like
+        The predicted linear response. The shape is (T,) where T is the 
+        number of time points in the input stimulus array.
+
+    Raises
+    ------
+
+    ValueError : If the number of dimensions of ``stim`` and ``filt`` do not
+        match, or if the spatial dimensions differ.
+
+    """
+    
+    if (filt.ndim != stim.ndim) or (filt.shape[1:] != stim.shape[1:]):
+        raise ValueError("The filter and stimulus must have the same " +
+                "number of dimensions and match in size along spatial dimensions")
+
+    slices = slicestim(stim, filt.shape[0])
+    dim_start = ord('i')
+    indices = ''.join(map(chr, range(dim_start, dim_start + slices.ndim)))
+    subscripts = '{0},{1}{2}->{3}'.format(indices, indices[0], 
+            indices[2:], indices[1])
+    return np.einsum(subscripts, slices, filt)
+
+
+def revco(response, stimulus, filter_length, norm=False):
+    """
+    Compute the reverse-correlation between a stimulus and a response.
+
+    This returns the best-fitting linear filter which predicts the given
+    response from the stimulus. It is analogous to the spike-triggered
+    average for continuous variables. ``response`` is most often a membrane
+    potential.
+
+    Parameters
+    ----------
+
+    response : array_like
+        A continuous output response correlated with the stimulus. Must
+        be one-dimensional.
+
+    stimulus : array_like 
+        A input stimulus correlated with the ``response``. Must be
+        one-dimensional.
+
+    filter_length : int
+        The length of the returned filter, in samples of the ``stimulus`` and
+        ``response`` arrays.
+
+    norm : bool [optional]
+        If True, normalize the computed filter to a unit vector. Defaults
+        to False.
+
+    Returns
+    -------
+
+    filt : array_like
+        An array of shape ``(filter_length,)`` containing the best-fitting
+        linear filter which predicts the response from the stimulus.
+
+    Raises
+    ------
+
+    ValueError : If the ``stimulus`` and ``response`` arrays are of different
+    shapes.
+
+    Notes
+    -----
+
+    The ``response`` and ``stimulus`` arrays must share the same sampling
+    rate. As the stimulus often has a lower sampling rate, one can use
+    ``stimulustools.upsamplestim`` to upsample it.
+
+    """
+
+    if response.ndim > 1 or stimulus.ndim > 1:
+        raise ValueError("The `response` and `stimulus` must be 1-dimensional")
+    if response.shape != stimulus.shape:
+        raise ValueError("The `response` and `stimulus` must have the same shape")
+
+    filt = fftconvolve(response, stimulus[::-1], mode='full')
+    mid = int(filt.size / 2) + np.mod(filt.size, 2) # Account for odd-sized arrays
+    filt = filt[mid - filter_length : mid]
+    return filt / np.linalg.norm(filt) if norm else filt
 
 def _gaussian_function(data, x0, y0, a, b, c):
     """
