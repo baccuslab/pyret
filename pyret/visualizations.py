@@ -144,7 +144,7 @@ def rasterandpsth(spikes, trial_length=None, binsize=0.01, **kwargs):
     fig : matplotlib Figure handle
         Matplotlib figure handle
     """
-    fig, ax = kwargs['fig'], kwargs['ax']
+    ax = kwargs['ax']
 
     # Input-checking
     if not trial_length:
@@ -164,23 +164,22 @@ def rasterandpsth(spikes, trial_length=None, binsize=0.01, **kwargs):
     fr = np.mean(bspk, axis=0) / binsize
 
     # Plot the PSTH
-    psthax = fig.add_subplot(111)
-    psthax.plot(tbins[0, :-1], fr, color='r', marker=None, linestyle='-', linewidth=2)
-    psthax.set_title('psth and raster', fontdict={'fontsize':24})
-    psthax.set_xlabel('time (s)', fontdict={'fontsize':20})
-    psthax.set_ylabel('firing rate (Hz)', color='r', fontdict={'fontsize':20})
-    for tick in psthax.get_yticklabels():
+    ax.plot(tbins[0, :-1], fr, color='r', marker=None, linestyle='-', linewidth=2)
+    ax.set_title('psth and raster', fontdict={'fontsize': 24})
+    ax.set_xlabel('time (s)', fontdict={'fontsize': 20})
+    ax.set_ylabel('firing rate (Hz)', color='r', fontdict={'fontsize': 20})
+    for tick in ax.get_yticklabels():
         tick.set_color('r')
 
     # Plot the raster
-    rastax = psthax.twinx()
+    rastax = ax.twinx()
     plt.hold(True)
     for trial in range(ntrials):
         idx = np.bitwise_and(spikes > tbins[trial, 0], spikes <= tbins[trial, -1])
         rastax.plot(spikes[idx] - tbins[trial, 0], trial * np.ones(spikes[idx].shape),
                     color='k', marker='.', linestyle='none')
-    rastax.set_ylabel('trial #', color='k', fontdict={'fontsize':20})
-    for tick in psthax.get_yticklabels():
+    rastax.set_ylabel('trial #', color='k', fontdict={'fontsize': 20})
+    for tick in ax.get_yticklabels():
         tick.set_color('k')
 
 
