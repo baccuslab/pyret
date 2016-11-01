@@ -58,7 +58,7 @@ def test_revco_1d():
     response = flt.linear_prediction(true, stimulus)
 
     # Reverse correlation
-    filt = flt.revco(response, stimulus, filter_length, norm=True)
+    filt = flt.revco(response, stimulus, filter_length)
     tol = 0.1
     assert np.allclose(true, filt, atol=tol)
 
@@ -76,6 +76,6 @@ def test_revco_nd():
     response = flt.linear_prediction(true, stimulus)
 
     # Reverse correlation
-    filt = flt.revco(response, stimulus, filter_length, norm=True)
+    filt = flt.revco(response, stimulus, filter_length)
     tol = 0.1
     assert np.allclose(true, filt, atol=tol)
