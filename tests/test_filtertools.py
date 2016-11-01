@@ -9,8 +9,9 @@ import pytest
 from pyret import filtertools as flt
 from pyret.stimulustools import slicestim
 
+
 def test_linear_prediction_one_dim():
-    """Test method for computing linear prediction from a 
+    """Test method for computing linear prediction from a
     filter to a one-dimensional stimulus.
     """
     filt = np.random.randn(100,)
@@ -20,8 +21,9 @@ def test_linear_prediction_one_dim():
     sl = slicestim(stim, filt.shape[0])
     assert np.allclose(filt.reshape(1, -1).dot(sl), pred)
 
+
 def test_linear_prediction_multi_dim():
-    """Test method for computing linear prediction from a 
+    """Test method for computing linear prediction from a
     filter to a multi-dimensional stimulus.
     """
     for ndim in range(2, 4):
@@ -37,11 +39,13 @@ def test_linear_prediction_multi_dim():
 
         assert np.allclose(tmp, pred)
 
+
 def test_linear_prediction_raises():
     """Test raising ValueErrors with incorrect inputs"""
     with pytest.raises(ValueError):
         flt.linear_prediction(np.random.randn(10,), np.random.randn(10,2))
         flt.linear_prediction(np.random.randn(10, 2), np.random.randn(10, 3))
+
 
 def test_revco():
     """Test computation of a linear filter by reverse correlation"""
@@ -60,4 +64,3 @@ def test_revco():
     filt = flt.revco(response, stimulus, filter_length, norm=True)
     tol = 0.1
     assert np.allclose(true, filt, atol=tol)
-

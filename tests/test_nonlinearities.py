@@ -3,53 +3,39 @@ Test code for pyret's nonlinearities module.
 (C) 2016 The Baccus Lab
 """
 import numpy as np
+import pytest
+import pyret.nonlinearities as nln
 
-from pyret import nonlinearities
 
-def test_sigmoid():
-    """Test the Sigmoid nonlinearity class"""
-    # True parameters
+nonlinearities = [
+    (nln.Sigmoid, (), 1234, 0.1),
+    (nln.Binterp, (50,), 1234, 0.1),
+    (nln.GaussianProcess, (), 1234, 0.1),
+    (nln.Sigmoid, (), 5678, 0.5),
+    (nln.Binterp, (25,), 5678, 0.5),
+    (nln.GaussianProcess, (), 5678, 0.5),
+]
+
+
+@pytest.mark.parametrize("nln_cls,args,seed,noise_stdev", nonlinearities)
+def test_fitting(nln_cls, args, seed, noise_stdev):
+    """Test the fit method of each nonlinearity"""
+    np.random.seed(seed)
+
+    # simulate a noisy nonlinearity
     thresh = 0.5
     slope = 2
     peak = 1.5
     baseline = 0.2
-    n = 1000        # Number of simulate data points
-    xscale = 2      # Scale factor for input range
-    noise = 0.1     # Standard deviation of AWGN
-
-    # Simulate data
+    n = 1000            # Number of simulate data points
+    xscale = 2          # Scale factor for input range
     x = np.random.randn(n,) * xscale
-    y = nonlinearities.Sigmoid._sigmoid(x, thresh, slope,
-            peak, baseline) + np.random.randn(n,) * noise
+    y = nln.Sigmoid._sigmoid(x, thresh, slope, peak, baseline)
+    y_obs = y + np.random.randn(n,) * noise_stdev
 
-    # Fit nonlinearity and compare
-    y_hat = nonlinearities.Sigmoid().fit(x, y).predict(x)
-    norm = (np.linalg.norm(y - y_hat) / np.linalg.norm(y))
-    if (norm > (noise * 1.5)):
-        raise AssertionError("Fitting a Sigmoid nonlinearity seems " + 
-                "to have failed, relative error = {0:#0.3f}".format(norm))
+    # fit nonlinearity to the observed (noisy) data
+    y_hat = nln_cls(*args).fit(x, y_obs).predict(x)
 
-def test_binterp():
-    """Test the Binterp nonlinearity class"""
-    # True parameters
-    thresh = 0.5
-    slope = 2
-    peak = 1.5
-    baseline = 0.2
-    n = 1000        # Number of simulate data points
-    xscale = 2      # Scale factor for input range
-    noise = 0.1     # Standard deviation of AWGN
-    nbins = 25      # Number of bins in the Binterp nonlienarity
-
-    # Simulate data
-    x = np.random.randn(n,) * xscale
-    y = nonlinearities.Sigmoid._sigmoid(x, thresh, slope,
-            peak, baseline) + np.random.randn(n,) * noise
-
-    # Fit nonlinearity and compare
-    y_hat = nonlinearities.Binterp(nbins).fit(x, y).predict(x)
-    norm = (np.linalg.norm(y - y_hat) / np.linalg.norm(y))
-    if (norm > (noise * 1.5)):
-        raise AssertionError("Fitting a Sigmoid nonlinearity seems " + 
-                "to have failed, relative error = {0:#0.3f}".format(norm))
-
+    # compute relative error
+    rel_error = np.linalg.norm(y - y_hat) / np.linalg.norm(y)
+    assert rel_error < (0.5 * noise_stdev)

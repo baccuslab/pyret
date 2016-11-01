@@ -5,3 +5,6 @@ _build/
 tags
 dist/
 *.swp
+.coverage
+htmlcov/
+.cache/

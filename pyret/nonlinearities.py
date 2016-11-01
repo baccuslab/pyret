@@ -8,16 +8,17 @@ from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
 from functools import wraps
 from itertools import zip_longest
+from sklearn.base import BaseEstimator, RegressorMixin
 
 try:
     import GPy
-except ImportError:
+except ImportError:     # pragma: no cover
     print("You must install GPy (pip install GPy) to fit the GP regression nonlinearity.")
 
 __all__ = ['Sigmoid', 'Binterp', 'GaussianProcess']
 
 
-class Nonlinearity:
+class Nonlinearity(BaseEstimator, RegressorMixin):
     def plot(self, span=(-5, 5), n=100, **kwargs):
         """Creates a 1D plot of the nonlinearity
 
@@ -74,12 +75,17 @@ class Nonlinearity:
 
 
 class GaussianProcess(Nonlinearity):
-    def __init__(self, variance=1., lengthscale=1.):
+    def __init__(self, variance=1., length_scale=None):
         """A nonlinearity fit using Gaussian Process (GP) regression.
+
+        Parameters
+        ----------
+        variance (optional): float
+        length_scale (optional): float
         """
 
         # Defines the kernel to use
-        self.kernel = GPy.kern.RBF(input_dim=1, variance=variance, lengthscale=lengthscale)
+        self.kernel = GPy.kern.RBF(input_dim=1, variance=variance, lengthscale=length_scale)
 
     def fit(self, x, y):
         """Fits the GP regression model."""
@@ -89,11 +95,12 @@ class GaussianProcess(Nonlinearity):
 
     def predict(self, x):
         """Gets the mean prediction at the given values."""
-        return self.model.predict(x[:, np.newaxis])[0]
+        return self.predict_full(x)[0]
 
     def predict_full(self, x):
         """Predicts the mean and variance at the given values."""
-        return self.model.predict(x[:, np.newaxis])
+        mean, stdev = self.model.predict(x[:, np.newaxis])
+        return np.squeeze(mean), np.squeeze(stdev)
 
 
 class Sigmoid(Nonlinearity):
