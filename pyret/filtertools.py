@@ -17,7 +17,7 @@ from pyret.stimulustools import slicestim
 __all__ = ['getste', 'getsta', 'getstc', 'lowranksta', 'decompose',
            'filterpeak', 'smooth', 'cutout', 'rolling_window', 'resample',
            'get_ellipse', 'get_contours', 'get_regionprops',
-           'normalize_spatial']
+           'normalize_spatial', 'linear_prediction', 'revco']
 
 
 def getste(time, stimulus, spikes, filter_length):
@@ -621,7 +621,7 @@ def linear_prediction(filt, stim):
     return np.einsum(subscripts, slices, filt)
 
 
-def revco(response, stimulus, filter_length, norm=False):
+def revco(response, stimulus, filter_length):
     """
     Compute the reverse-correlation between a stimulus and a response.
 
@@ -638,23 +638,20 @@ def revco(response, stimulus, filter_length, norm=False):
         be one-dimensional.
 
     stimulus : array_like 
-        A input stimulus correlated with the ``response``. Must be
-        one-dimensional.
+        A input stimulus correlated with the ``response``. Must be of shape
+        (t, ...), where t is the time and ... indicates any spatial dimensions.
 
     filter_length : int
         The length of the returned filter, in samples of the ``stimulus`` and
         ``response`` arrays.
 
-    norm : bool [optional]
-        If True, normalize the computed filter to a unit vector. Defaults
-        to False.
-
     Returns
     -------
 
     filt : array_like
-        An array of shape ``(filter_length,)`` containing the best-fitting
-        linear filter which predicts the response from the stimulus.
+        An array of shape ``(filter_length, ...)`` containing the best-fitting
+        linear filter which predicts the response from the stimulus. The ellipses
+        indicates spatial dimensions of the filter.
 
     Raises
     ------
@@ -671,15 +668,18 @@ def revco(response, stimulus, filter_length, norm=False):
 
     """
 
-    if response.ndim > 1 or stimulus.ndim > 1:
-        raise ValueError("The `response` and `stimulus` must be 1-dimensional")
-    if response.shape != stimulus.shape:
-        raise ValueError("The `response` and `stimulus` must have the same shape")
-
-    filt = fftconvolve(response, stimulus[::-1], mode='full')
-    mid = int(filt.size / 2) + np.mod(filt.size, 2) # Account for odd-sized arrays
-    filt = filt[mid - filter_length : mid]
-    return filt / np.linalg.norm(filt) if norm else filt
+    if response.ndim > 1:
+        raise ValueError("The `response` must be 1-dimensional")
+    if response.size != (stimulus.shape[0] - filter_length):
+        raise ValueError(("`stimulus` must have {:#d} time points " + 
+                "(`response.size` + `filter_length`").format(response.size + filter_length))
+    
+    slices = slicestim(stimulus, filter_length)
+    dim_start = ord('i')
+    indices = ''.join(map(chr, range(dim_start, dim_start + slices.ndim)))
+    subscripts = '{0},{1}->{2}{3}'.format(indices, indices[1], indices[0], indices[2:])
+    recovered = np.einsum(subscripts, slices, response)
+    return recovered
 
 def _gaussian_function(data, x0, y0, a, b, c):
     """

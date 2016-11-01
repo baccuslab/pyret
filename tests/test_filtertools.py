@@ -9,9 +9,10 @@ import pytest
 from pyret import filtertools as flt
 from pyret.stimulustools import slicestim
 
+import utils
 
-def test_linear_prediction_one_dim():
-    """Test method for computing linear prediction from a
+def test_linear_prediction_1d():
+    """Test method for computing linear prediction from a 
     filter to a one-dimensional stimulus.
     """
     filt = np.random.randn(100,)
@@ -21,9 +22,8 @@ def test_linear_prediction_one_dim():
     sl = slicestim(stim, filt.shape[0])
     assert np.allclose(filt.reshape(1, -1).dot(sl), pred)
 
-
-def test_linear_prediction_multi_dim():
-    """Test method for computing linear prediction from a
+def test_linear_prediction_nd():
+    """Test method for computing linear prediction from a 
     filter to a multi-dimensional stimulus.
     """
     for ndim in range(2, 4):
@@ -46,19 +46,34 @@ def test_linear_prediction_raises():
         flt.linear_prediction(np.random.randn(10,), np.random.randn(10,2))
         flt.linear_prediction(np.random.randn(10, 2), np.random.randn(10, 3))
 
-
-def test_revco():
-    """Test computation of a linear filter by reverse correlation"""
-    # Create fake filter
+def test_revco_1d():
+    """Test computation of a 1D linear filter by reverse correlation"""
+    # Create fake filter, 100 time points
     filter_length = 100
-    x = np.linspace(0, 2 * np.pi, filter_length)
-    true = np.exp(-1. * x) * np.sin(x)
-    true /= np.linalg.norm(true)
+    true = utils.create_temporal_filter(filter_length)
 
     # Compute linear response
     stim_length = 10000
     stimulus = np.random.randn(stim_length,)
-    response = np.convolve(stimulus, true, mode='full')[-stimulus.size:]
+    response = flt.linear_prediction(true, stimulus)
+
+    # Reverse correlation
+    filt = flt.revco(response, stimulus, filter_length, norm=True)
+    tol = 0.1
+    assert np.allclose(true, filt, atol=tol)
+
+
+def test_revco_nd():
+    """Test computation of 3D linear filter by reverse correlation"""
+    # Create fake filter
+    filter_length = 100
+    nx, ny = 10, 10
+    true = utils.create_spatiotemporal_filter(nx, ny, filter_length)
+
+    # Compute linear response
+    stim_length = 10000
+    stimulus = np.random.randn(stim_length, nx, ny)
+    response = flt.linear_prediction(true, stimulus)
 
     # Reverse correlation
     filt = flt.revco(response, stimulus, filter_length, norm=True)
