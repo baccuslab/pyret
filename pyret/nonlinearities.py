@@ -6,20 +6,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
-from functools import wraps
 from itertools import zip_longest
 from sklearn.base import BaseEstimator, RegressorMixin
-
-try:
-    import GPy
-except ImportError:     # pragma: no cover
-    print("You must install GPy (pip install GPy) to fit the GP regression nonlinearity.")
+from sklearn.exceptions import NotFittedError
+from sklearn.gaussian_process import GaussianProcessRegressor
 
 __all__ = ['Sigmoid', 'Binterp', 'GaussianProcess']
 
 
-class Nonlinearity(BaseEstimator, RegressorMixin):
-    def plot(self, span=(-5, 5), n=100, **kwargs):
+class NonlinearityMixin:
+    def plot(self, span=(-5, 5), n=100, **kwargs):  # pragma: no cover
         """Creates a 1D plot of the nonlinearity
 
         Parameters
@@ -42,68 +38,8 @@ class Nonlinearity(BaseEstimator, RegressorMixin):
         x = np.linspace(span[0], span[1], n)
         return plt.plot(x, self.predict(x), **kwargs)
 
-    def fit(self, x, y):
-        """Fits the parameters of the nonlinearity
 
-        Parameters
-        ----------
-        x : array_like
-            input to the nonlinearity
-
-        y : array_like
-            output of the nonlinearity (must have the same shape as x)
-        """
-        raise NotImplementedError
-
-    def predict(self, x):
-        """Computes the value of the function at the given input
-
-        Parameters
-        ----------
-        x : array_like
-            The input to the nonlinearity
-
-        Returns
-        y : array_like
-            The output of the nonlinearity
-        """
-        raise NotImplementedError
-
-    @wraps(predict)
-    def __call__(self, x):
-        return self.predict(x)
-
-
-class GaussianProcess(Nonlinearity):
-    def __init__(self, variance=1., length_scale=None):
-        """A nonlinearity fit using Gaussian Process (GP) regression.
-
-        Parameters
-        ----------
-        variance (optional): float
-        length_scale (optional): float
-        """
-
-        # Defines the kernel to use
-        self.kernel = GPy.kern.RBF(input_dim=1, variance=variance, lengthscale=length_scale)
-
-    def fit(self, x, y):
-        """Fits the GP regression model."""
-        self.model = GPy.models.GPRegression(x[:, np.newaxis], y[:, np.newaxis], self.kernel)
-        self.model.optimize()
-        return self
-
-    def predict(self, x):
-        """Gets the mean prediction at the given values."""
-        return self.predict_full(x)[0]
-
-    def predict_full(self, x):
-        """Predicts the mean and variance at the given values."""
-        mean, stdev = self.model.predict(x[:, np.newaxis])
-        return np.squeeze(mean), np.squeeze(stdev)
-
-
-class Sigmoid(Nonlinearity):
+class Sigmoid(BaseEstimator, RegressorMixin, NonlinearityMixin):
     def __init__(self, baseline=0., peak=1., slope=1., threshold=0.):
         """A sigmoidal nonlinearity
 
@@ -142,11 +78,11 @@ class Sigmoid(Nonlinearity):
     def predict(self, x):
         try:
             return self._sigmoid(x, *self.params)
-        except NameError:
-            raise RuntimeError('No estimated parameters, call fit() first')
+        except AttributeError:
+            raise NotFittedError('No estimated parameters, call fit() first')
 
 
-class Binterp(Nonlinearity):
+class Binterp(BaseEstimator, RegressorMixin, NonlinearityMixin):
     def __init__(self, nbins, method='linear', fill_value='extrapolate'):
         """Interpolated nonlinearity by sorting and binning the data
 
@@ -178,8 +114,6 @@ class Binterp(Nonlinearity):
         """Collect data into fixed-length chunks or blocks"""
         # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
         args = [iter(iterable)] * n
-
-        # TODO: make this more performant
         return np.array(list(zip_longest(*args, fillvalue=fillvalue)))
 
     def fit(self, x, y):
@@ -192,9 +126,27 @@ class Binterp(Nonlinearity):
         self.values = np.nanmean(y_grouped, axis=1)
 
         # set the predict function using scipy.interpolate.interp1d
-        self.predict = interp1d(self.bins, self.values, kind=self.method, fill_value=self.fill_value)
+        self.predict = interp1d(self.bins, self.values, kind=self.method,
+                                fill_value=self.fill_value)
         return self
 
     def predict(self, x):
         """Placeholder, this method gets overwritten when fit() is called"""
-        raise RuntimeError('No estimated parameters, call fit() first')
+        raise NotFittedError('No estimated parameters, call fit() first')
+
+
+class GaussianProcess(GaussianProcessRegressor, NonlinearityMixin):
+    def __init__(self, *args, **kwargs):
+        self._fitted = False
+        super().__init__(*args, **kwargs)
+
+    def fit(self, x, y):
+        super().fit(x.reshape(-1, 1), y)
+        self._fitted = True
+        return self
+
+    def predict(self, x, **kwargs):
+        if self._fitted:
+            return super().predict(x.reshape(-1, 1), **kwargs)
+        else:
+            raise NotFittedError('No estimated parameters, call fit() first')

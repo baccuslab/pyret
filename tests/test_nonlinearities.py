@@ -5,20 +5,34 @@ Test code for pyret's nonlinearities module.
 import numpy as np
 import pytest
 import pyret.nonlinearities as nln
+import sklearn
 
 
 nonlinearities = [
-    (nln.Sigmoid, (), 1234, 0.1),
-    (nln.Binterp, (50,), 1234, 0.1),
-    (nln.GaussianProcess, (), 1234, 0.1),
-    (nln.Sigmoid, (), 5678, 0.5),
-    (nln.Binterp, (25,), 5678, 0.5),
-    (nln.GaussianProcess, (), 5678, 0.5),
+    (nln.Sigmoid, (), 1234, 0.1, 0.99),
+    (nln.Binterp, (50,), 1234, 0.1, 0.99),
+    (nln.GaussianProcess, (), 1234, 0.1, 0.99),
+    (nln.Sigmoid, (), 5678, 0.5, 0.99),
+    (nln.Binterp, (25,), 5678, 0.5, 0.99),
+    (nln.GaussianProcess, (), 5678, 0.5, 0.97),
 ]
 
 
-@pytest.mark.parametrize("nln_cls,args,seed,noise_stdev", nonlinearities)
-def test_fitting(nln_cls, args, seed, noise_stdev):
+@pytest.mark.parametrize("nln_cls", [nln.Sigmoid, nln.Binterp, nln.GaussianProcess])
+def test_inheritance(nln_cls):
+    assert issubclass(nln_cls, sklearn.base.BaseEstimator)
+    assert issubclass(nln_cls, sklearn.base.RegressorMixin)
+    assert issubclass(nln_cls, nln.NonlinearityMixin)
+
+
+@pytest.mark.parametrize("nln_cls,args,seed,noise_stdev,thresh", nonlinearities)
+def test_exception(nln_cls, args, seed, noise_stdev, thresh):
+    with pytest.raises(sklearn.exceptions.NotFittedError):
+        nln_cls(*args).predict(np.random.randn(100,))
+
+
+@pytest.mark.parametrize("nln_cls,args,seed,noise_stdev,thresh", nonlinearities)
+def test_fitting(nln_cls, args, seed, noise_stdev, thresh):
     """Test the fit method of each nonlinearity"""
     np.random.seed(seed)
 
@@ -34,8 +48,7 @@ def test_fitting(nln_cls, args, seed, noise_stdev):
     y_obs = y + np.random.randn(n,) * noise_stdev
 
     # fit nonlinearity to the observed (noisy) data
-    y_hat = nln_cls(*args).fit(x, y_obs).predict(x)
+    model = nln_cls(*args).fit(x, y_obs)
 
-    # compute relative error
-    rel_error = np.linalg.norm(y - y_hat) / np.linalg.norm(y)
-    assert rel_error < (0.5 * noise_stdev)
+    # compute coefficient of determination (r2)
+    assert model.score(x, y) >= thresh
