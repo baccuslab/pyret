@@ -24,6 +24,9 @@ def test_resampling_1d():
     assert np.all(stim == stim_us[::resample_factor]), 'Upsampling failed'
     assert np.all(stim == stim_ds), 'Downsampling failed'
 
+    _, time_us = stimulustools.upsample_stim(stim, resample_factor)
+    assert time_us is None
+
 def test_resampling_2d():
     """Test up- and down-sampling a 2D stimulus."""
     np.random.seed(0)
@@ -39,6 +42,15 @@ def test_resampling_2d():
 
     assert np.all(stim == stim_us[::resample_factor, ...]), 'Upsampling failed'
     assert np.all(stim == stim_ds), 'Downsampling failed'
+
+def test_slicestim_raises():
+    """Verify slicestim() raises correct exceptions"""
+    with pytest.raises(ValueError):
+        stimulustools.slicestim(np.zeros(10,), 0)
+    with pytest.raises(ValueError):
+        stimulustools.slicestim(np.zeros(10,), 11)
+    with pytest.raises(ValueError):
+        stimulustools.slicestim(np.zeros(10,), 1.5)
 
 def test_slicestim_1d():
     """Test slicing a 1D stimulus into overlapping segments."""
@@ -70,3 +82,17 @@ def test_cov():
     np.random.seed(0)
     stim = np.random.randn(10, 2)
     assert np.allclose(np.cov(stim.T), stimulustools.cov(stim, 1))
+
+def test_rolling_window_warns():
+    """Verify calling rolling_window results in Deprecation warning, but still returns
+    the correct value.
+    """
+    with pytest.warns(DeprecationWarning):
+        np.random.seed(0)
+        stim_size = 1000
+        stim = np.random.randn(stim_size,)
+        history = 10
+        sliced_stim = stimulustools.rolling_window(stim, history)
+
+        for i in range(stim_size - history):
+            assert np.all(sliced_stim[i] == stim[i:i + history]), 'slicing failed'
