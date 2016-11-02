@@ -5,53 +5,15 @@ Includes an object class, SpikingEvent, that is useful for detecting and
 analyzing firing events within a spike raster. Also provides functions for
 binning spike times into a histogram (`binspikes`) and a function
 for smoothing a histogram into a firing rate (`estfr`)
-
 """
-
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-__all__ = ['binspikes', 'estfr', 'detectevents', 'peakdet',
-           'split_trials', 'SpikingEvent']
+__all__ = ['binspikes', 'estfr', 'detectevents', 'peakdet', 'SpikingEvent']
 
 
-def split_trials(spikes, trial_length=None, fig=None):
-    """
-    Plot a raster of spike times from an array of spike times
-
-    Notes
-    -----
-    The `triallength` keyword specifies the length of time for each trial, and the
-    `spikes` array is split up into segments of that length. These groups are then
-    plotted on top of one another, as individual trials.
-
-    Parameters
-    ----------
-    spikes : array_like
-        An array of spike times
-
-    triallength : float
-        The length of each trial to stack, in seconds.
-
-    Returns
-    -------
-    spiketimes : array_like
-        An array of spike times relative to the start of each trial.
-
-    trials : array_like
-        An array of labels corresponding to the trial associated with each
-        spike in the spiketimes array.
-
-    """
-
-    # Compute a trial index for each spike
-    trials = map(lambda s: np.floor(s, trial_length) + 1, spikes)
-
-    return np.mod(spikes, trial_length), np.array(list(trials))
-
-
-def binspikes(spk, tmax=None, binsize=0.01, time=None, num_trials=1):
+def binspikes(spk, time):
     """
     Bin spike times at the given resolution. The function has two forms.
 
@@ -60,63 +22,29 @@ def binspikes(spk, tmax=None, binsize=0.01, time=None, num_trials=1):
     spk : array_like
         Array of spike times
 
-    tmax : float, optional
-        Final stop time. Only takes spikes that occur before this time.
-        If None (default), this is set to the final spike time
-
-    binsize : float, optional
-        Size of bins in seconds (Default: 0.01 seconds)
-
-    time : array_like, optional
-        If None (default), the `tmax` and `binsize` parameters are used to
-        generate the time array. Otherwise, the given array is used as the time
-        bins for the spike histogram.
-
-    num_trials : float, optional
-        How many trials went into this binning. The output counts are
-        normalized such that they represent # of spikes / trial (Default: 1)
+    time : array_like
+        The left edges of the time bins.
 
     Returns
-    ------
+    -------
     bspk : array_like
         Binned spike times
-
-    tax : array_like
-        The time points corresponding to the bin centers (same size as `bspk`)
-
     """
-
-    # if time is not specified, create a time vector
-    if time is None:
-
-        # If a max time is not specified, set it to the time of the last spike
-        if not tmax:
-            tmax = np.ceil(spk.max())
-
-        # create the time vector
-        time = np.arange(0, tmax + binsize, binsize)
-
-    # bin spike times
-    bspk = np.histogram(spk, bins=time)[0].astype(float)
-
-    # center the time bins
-    tax = time[:-1] + 0.5 * np.mean(np.diff(time))
-
-    # returned binned spikes and cenetered time axis
-    return bspk / num_trials, tax
+    bin_edges = np.append(time, 2 * time[-1] - time[-2])
+    return np.histogram(spk, bins=bin_edges)[0].astype(float)
 
 
-def estfr(tax, bspk, sigma=0.01):
+def estfr(bspk, time, sigma=0.01):
     """
     Estimate the instantaneous firing rates from binned spike counts.
 
     Parameters
     ----------
-    tax : array_like
-        Array of time points corresponding to bins (as from binspikes)
+    time : array_like
+        Array of time points corresponding to bins
 
     bspk : array_like
-        Array of binned spike counts (as from binspikes)
+        Array of binned spike counts (e.g. from binspikes)
 
     sigma : float, optional
         The width of the Gaussian filter, in seconds (Default: 0.01 seconds)
@@ -125,11 +53,9 @@ def estfr(tax, bspk, sigma=0.01):
     -------
     rates : array_like
         Array of estimated instantaneous firing rate
-
     """
-
-    # estimate binned spikes time step
-    dt = float(np.mean(np.diff(tax)))
+    # estimate the time resolution
+    dt = float(np.mean(np.diff(time)))
 
     # Construct Gaussian filter, make sure it is normalized
     tau = np.arange(-5 * sigma, 5 * sigma, dt)
@@ -138,32 +64,30 @@ def estfr(tax, bspk, sigma=0.01):
     size = np.round(filt.size / 2)
 
     # Filter  binned spike times
-    return np.convolve(filt, bspk, mode='full')[size:size + tax.size] / dt
+    return np.convolve(filt, bspk, mode='full')[size:size + time.size] / dt
 
 
 class SpikingEvent(object):
-    """
-    The spiking event class bundles together functions that are used to analyze
-    individual firing events, consisting of spiking activity recorded across
-    trials / cells / conditions.
-
-    Attributes
-    ----------
-    start : float
-        the start time of the firing event
-
-    stop : float
-        the stop time of the firing event
-
-    spikes : array_like
-        the spikes associated with this firing event. This data is stored as an
-        (n by 2) numpy array, where the first column is the set of spike times
-        in the event and the second column is a list of corresponding
-        trial/cell/condition indices for each spike
-
-    """
-
     def __init__(self, start_time, stop_time, spikes):
+        """
+        The spiking event class bundles together functions that are used to analyze
+        individual firing events, consisting of spiking activity recorded across
+        trials / cells / conditions.
+
+        Parameters
+        ----------
+        start : float
+            the start time of the firing event
+
+        stop : float
+            the stop time of the firing event
+
+        spikes : array_like
+            the spikes associated with this firing event. This data is stored as an
+            (n by 2) numpy array, where the first column is the set of spike times
+            in the event and the second column is a list of corresponding
+            trial/cell/condition indices for each spike
+        """
         self.start = start_time
         self.stop = stop_time
         self.spikes = spikes
@@ -302,9 +226,7 @@ def detectevents(spk, threshold=(0.3, 0.05)):
     events : list
         A list of 'spikingevent' objects, one for each firing event detected.
         See the `spikingevent` class for more info.
-
     """
-
     # find peaks in the PSTH
     bspk, tax = binspikes(spk[:, 0], binsize=0.01,
                           num_trials=np.max(spk[:, 1]))
@@ -319,9 +241,9 @@ def detectevents(spk, threshold=(0.3, 0.05)):
 
         # get putative start and stop indices of each spiking event
         start_indices = np.where((psth <= threshold[1]) &
-                                  (tax < maxtab[eventidx, 0]))[0]
+                                 (tax < maxtab[eventidx, 0]))[0]
         stop_indices = np.where((psth <= threshold[1]) &
-                                 (tax > maxtab[eventidx, 0]))[0]
+                                (tax > maxtab[eventidx, 0]))[0]
 
         # find the start time, defined as the right most peak index
         if start_indices.size == 0:
@@ -380,7 +302,6 @@ def peakdet(v, delta, x=None):
         An (M x 2) array containing the indices or locations (left column)
         of the local minima in `v` along with the corresponding minimum
         values (right column).
-
     """
     maxtab = []
     mintab = []

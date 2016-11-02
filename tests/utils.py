@@ -74,5 +74,3 @@ def create_spatiotemporal_filter(nx, ny, nt, norm=True):
 
     return (temporal_filter, gaussian,
             filt / np.linalg.norm(filt) if norm else filt)
-
-
