@@ -134,6 +134,27 @@ def test_cutout_raises():
     with pytest.raises(ValueError):
         flt.cutout(np.zeros((10, 10, 10)), (1,))
 
+def test_resample():
+    """Test resampling a 1 or 2D array."""
+    size = 100
+    arr = np.random.randn(size)
+    scale = 10
+    up = flt.resample(arr, scale)
+    assert np.allclose(up[::scale], arr)
+
+    orig_power = np.absolute(np.fft.fft(arr))
+    up_power = np.absolute(np.fft.fft(arr))
+    assert np.allclose(orig_power[: int(size / 2)], up_power[: int(size / 2)])
+
+    arr = np.random.randn(size, size)
+    up = flt.resample(arr, scale)
+    assert np.allclose(up[::scale, ::scale], arr)
+
+    orig_power = np.absolute(np.fft.fft2(arr)) * scale**2
+    up_power = np.absolute(np.fft.fft2(up))
+    assert np.allclose(orig_power[:int(size / 2), :int(size / 2)],
+            up_power[:int(size / 2), :int(size / 2)])
+
 def test_normalize_spatial():
     """Test normalizing a noisy filter."""
     np.random.seed(0)

@@ -371,12 +371,33 @@ def cutout(arr, idx=None, width=5):
     return arr[:, rmesh, cmesh]
 
 
-def resample(arr, scale_factor): # pragma: no cover
-    """
-    Resamples a 1-D or 2-D array
+def resample(arr, scale_factor):
+    """Resamples a 1-D or 2-D array by the given scale.
+
+    Parameters
+    ----------
+
+    arr : array_like
+        The original array to be resampled.
+
+    scale_factor: int_like
+        The factor by which `arr` will be resampled. For example, a 
+        factor of 2 results in an of twice the size in each dimension,
+        with points interpolated between existing points.
+
+    Returns
+    -------
+
+    res : array_like
+        The resampled array. If ``arr`` has shape (M,N), ``res`` has
+        shape ``(scale_factor*M, scale_factor*N)``.
+
+    Raises
+    ------
+    An AssertionError is raised if the scale factor is <= 0.
+    A ValueError is raised if the input array is not 1- or 2-dimensional.
     """
 
-    assert type(arr) is np.ndarray, "Input array must be a numpy array"
     assert scale_factor > 0, "Scale factor must be non-negative"
 
     if arr.ndim == 1:
