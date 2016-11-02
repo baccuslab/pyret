@@ -1,6 +1,13 @@
+import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-from pyret.utils import plotwrapper
+from pyret.utils import plotwrapper, flat2d
+
+
+def test_flat2d():
+    x = np.random.randn(10, 2, 3, 4)
+    x_ = x.reshape(x.shape[0], -1).copy()
+    assert np.allclose(x_, flat2d(x))
 
 
 def test_plotwrapper():

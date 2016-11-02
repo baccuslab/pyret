@@ -267,7 +267,8 @@ def spatial(spatial_filter, maxval=None, **kwargs):
     ax : matplotlib Axes object
         Axes into which the frame is plotted
     """
-    _, ax = kwargs.pop('fig'), kwargs.pop('ax')
+    kwargs.pop('fig')
+    ax = kwargs.pop('ax')
 
     # adjust color limits if necessary
     if not maxval:

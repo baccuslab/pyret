@@ -7,14 +7,14 @@ spatiotemporal filters, and basic filter signal processing.
 
 import numpy as np
 import scipy
-from scipy.signal import fftconvolve
 from skimage.measure import label, regionprops, find_contours
 from functools import reduce
 
 from pyret.stimulustools import slicestim
+from pyret.utils import flat2d
 
 __all__ = ['ste', 'sta', 'stc', 'lowranksta', 'decompose',
-           'filterpeak', 'smooth', 'cutout', 'resample',
+           'filterpeak', 'smooth', 'cutout', 'resample', 'flat2d',
            'get_ellipse', 'get_contours', 'get_regionprops',
            'normalize_spatial', 'linear_prediction', 'revcorr']
 
@@ -295,7 +295,7 @@ def filterpeak(sta):
     return linear_index, sidx, tidx
 
 
-def smooth(f, spacesig=0.5, timesig=1): # pragma: no cover
+def smooth(f, spacesig=0.5, timesig=1):  # pragma: no cover
     """
 
     Smooths a 3D spatiotemporal linear filter using a multi-dimensional
@@ -381,7 +381,7 @@ def resample(arr, scale_factor):
         The original array to be resampled.
 
     scale_factor: int_like
-        The factor by which `arr` will be resampled. For example, a 
+        The factor by which `arr` will be resampled. For example, a
         factor of 2 results in an of twice the size in each dimension,
         with points interpolated between existing points.
 
@@ -461,7 +461,7 @@ def normalize_spatial(spatial_filter, scale_factor=1.0, clip_negative=False):
     return rf_resampled
 
 
-def get_contours(spatial_filter, threshold=10.0): # pragma: no cover
+def get_contours(spatial_filter, threshold=10.0):  # pragma: no cover
     """
     Gets iso-value contours of a 2D spatial filter.
 
@@ -492,7 +492,7 @@ def get_contours(spatial_filter, threshold=10.0): # pragma: no cover
     return find_contours(normalize_spatial(spatial_filter), threshold)
 
 
-def get_regionprops(spatial_filter, threshold=10.0): # pragma: no cover
+def get_regionprops(spatial_filter, threshold=10.0):  # pragma: no cover
     """
     Gets region properties of a 2D spatial filter.
 
@@ -643,8 +643,7 @@ def linear_prediction(filt, stim):
                          "number of dimensions and match in size along spatial dimensions")
 
     slices = slicestim(stim, filt.shape[0])
-    T = slices.shape[0]
-    return np.einsum('tx,x->t', slices.reshape(T, -1), filt.ravel())
+    return np.einsum('tx,x->t', flat2d(slices), filt.ravel())
 
 
 def revcorr(response, stimulus, filter_length):
@@ -695,8 +694,7 @@ def revcorr(response, stimulus, filter_length):
         raise ValueError(msg.format(response.size + filter_length + 1))
 
     slices = slicestim(stimulus, filter_length)
-    T = slices.shape[0]
-    recovered = np.einsum('tx,t->x', slices.reshape(T, -1), response)
+    recovered = np.einsum('tx,t->x', flat2d(slices), response)
     return recovered.reshape(slices.shape[1:])
 
 

@@ -2,14 +2,12 @@
 Tools for dealing with spatiotemporal stimuli
 
 """
-
 import warnings
-
 import numpy as np
-from scipy.linalg.blas import get_blas_funcs
+from pyret.utils import flat2d
 
-__all__ = ['upsample_stim', 'downsample_stim', 'slicestim', 
-            'cov', 'rolling_window']
+__all__ = ['upsample_stim', 'downsample_stim', 'slicestim',
+           'cov', 'rolling_window', 'flat2d']
 
 
 def upsample_stim(stim, upsample_factor, time=None):
@@ -104,7 +102,7 @@ def slicestim(stimulus, history):
     ----------
     stimulus : array_like
         The spatiotemporal or temporal stimulus to slices. Should have shape
-        (t, ...), so that the time axis is first. The ellipses indicate the 
+        (t, ...), so that the time axis is first. The ellipses indicate the
         spatial dimensions of the stimulus, if any.
 
     history : int
@@ -167,7 +165,7 @@ def cov(stimulus, history, nsamples=None, verbose=False):
         Covariance matrix
     """
     stim = slicestim(stimulus, history)
-    return np.cov(stim.reshape(stim.shape[0], -1).T)
+    return np.cov(flat2d(stim).T)
 
 
 def rolling_window(array, window, time_axis=0):
