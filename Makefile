@@ -9,6 +9,9 @@ develop:
 test:
 	py.test -v --cov=pyret --cov-report=html tests
 
+lint:
+	flake8 pyret/*.py
+
 clean:
 	rm -rf htmlcov/
 	rm -rf pyret.egg-info
