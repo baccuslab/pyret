@@ -21,6 +21,6 @@ install:
   - travis_retry python setup.py install
   - cp tests/matplotlibrc .
 script:
-  - coverage run --source descent -m py.test
+  - coverage run --source pyret -m py.test
 after_success:
   - bash <(curl -s https://codecov.io/bash)
