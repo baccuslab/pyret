@@ -60,7 +60,7 @@ def test_slicestim_1d():
     history = 10
     sliced_stim = stimulustools.slicestim(stim, history)
 
-    for i in range(stim_size - history):
+    for i in range(stim_size - history + 1):
         assert np.all(sliced_stim[i] == stim[i:i + history]), 'slicing failed'
 
 def test_slicestim_3d():
@@ -74,7 +74,7 @@ def test_slicestim_3d():
     assert sliced_stim.ndim == stim.ndim + 1
     assert sliced_stim.shape[0] == stim.shape[0] - history + 1
 
-    for i in range(stim_size[0] - history):
+    for i in range(stim_size[0] - history + 1):
         assert np.all(sliced_stim[i] == stim[i:i + history, ...]), 'slicing failed'
 
 def test_cov():

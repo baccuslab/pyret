@@ -19,7 +19,6 @@ install:
   - source activate test-environment
   - travis_retry pip install -r requirements-dev.txt
   - travis_retry python setup.py install
-  - cp tests/matplotlibrc .
 script:
   - coverage run --source pyret -m py.test
 after_success:
