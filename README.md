@@ -1,5 +1,6 @@
 # pyret
 
+[![Build Status](https://travis-ci.org/baccuslab/pyret.svg?branch=master)](https://travis-ci.org/baccuslab/pyret.svg?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/pyret/badge/?version=master)](http://pyret.readthedocs.org/en/master/?badge=master)
 [![PyPi version](https://img.shields.io/pypi/v/pyret.svg)](https://pypi.python.org/pypi/pyret)
 
