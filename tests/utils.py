@@ -5,7 +5,7 @@ Some general utilities used in various testing routines.
 
 import numpy as np
 
-from pyret.filtertools import _gaussian_function as gaussian_function
+from pyret.filtertools import _gaussian_function
 
 def create_temporal_filter(n, norm=True):
     """Returns a fake temporal linear filter that superficially resembles
@@ -17,7 +17,7 @@ def create_temporal_filter(n, norm=True):
     n : int
         Number of time points in the filter.
 
-    norm : bool [optional]
+    norm : bool, optional
         If True, normalize the filter to have unit 2-norm. Defaults to True.
 
     Returns
@@ -46,26 +46,33 @@ def create_spatiotemporal_filter(nx, ny, nt, norm=True):
     nt : int
         Number of time points in the stimulus.
 
-    norm : bool [optional]
+    norm : bool, optional
         If True, normalize the filter to have unit 2-norm. Defaults to True.
 
     Returns
     -------
 
+    t : ndarray
+        The temporal filter used.
+
+    s : ndarray
+        The spatial filter used.
+
     f : ndarray
-        The linear filter, shaped (nt, nx, ny)
+        The full spatiotemporal linear filter, shaped (nt, nx, ny).
     """
     temporal_filter = create_temporal_filter(nt, norm)
 
     grid = np.meshgrid(np.arange(nx), np.arange(ny), indexing='ij')
     points = np.array([each.flatten() for each in grid])
-    gaussian = gaussian_function(points, int(ny / 2), int(nx / 2), 1, 0, 1).reshape(nx, ny)
+    gaussian = _gaussian_function(points, int(ny / 2), int(nx / 2), 1, 0, 1).reshape(nx, ny)
     if norm:
         gaussian /= np.linalg.norm(gaussian)
 
     # Outer product
     filt = np.rollaxis(np.einsum('i,jk->jki', temporal_filter, gaussian), -1, 0)
 
-    return filt / np.linalg.norm(filt) if norm else filt
+    return (temporal_filter, gaussian,
+            filt / np.linalg.norm(filt) if norm else filt)
 
 

@@ -8,8 +8,8 @@ import warnings
 import numpy as np
 from scipy.linalg.blas import get_blas_funcs
 
-__all__ = ['upsample_stim', 'downsample_stim', 'slicestim', 'getcov',
-           'rolling_window']
+__all__ = ['upsample_stim', 'downsample_stim', 'slicestim', 
+            'cov', 'rolling_window']
 
 
 def upsample_stim(stim, upsample_factor, time=None):
@@ -145,7 +145,7 @@ def slicestim(stimulus, history):
             shape=shape, strides=strides)
 
 
-def getcov(stimulus, history, tproj=None, verbose=False):
+def cov(stimulus, history, nsamples=None, verbose=False):
     """
     Computes a stimulus covariance matrix
 
@@ -160,11 +160,7 @@ def getcov(stimulus, history, tproj=None, verbose=False):
     history : int
         Integer number of time points to keep in each slice.
 
-    tproj : array_like, optional
-        Temporal basis set to use. Size of the second dimension must be equal
-        to `history`. Each extracted stimulus slice is projected onto this 
-        basis set, which reduces the size of the corresponding covariance 
-        matrix to store.
+    nsamples : int_like, optional
 
     verbose : boolean, optional
         If True, print out progress of the computation. (defaults to False)
@@ -188,13 +184,15 @@ def getcov(stimulus, history, tproj=None, verbose=False):
 
     # Update covariance matrix from random points in the stimulus
     indices = np.arange(history, cstim.shape[0])
-    numpts = np.min((cstim.shape[1] * 10, indices.size))
     np.random.shuffle(indices)
 
     # BLAS rank-1 covariance update function
     blas_ger_fnc = get_blas_funcs(('ger',), (stim_cov,))[0]
 
-    for j in range(numpts):
+    if nsamples is None:
+        nsamples = indices.size
+
+    for j in range(nsamples):
         idx = indices[j]
         if verbose and np.mod(j, 100) == 0:
             print('[%i of %i]' % (j, numpts))
@@ -209,11 +207,11 @@ def getcov(stimulus, history, tproj=None, verbose=False):
                 a=stim_cov.T, overwrite_a=True)
 
     # Normalize and compute the mean outer product
-    mean /= numpts
+    mean /= nsamples
     mean_op = mean.reshape(-1, 1).dot(mean.reshape(1, -1))
 
     # Return normalized covariance matrix
-    stim_cov = (stim_cov / (numpts - 1)) - mean_op
+    stim_cov = (stim_cov / (nsamples - 1)) - mean_op
 
     return stim_cov
 

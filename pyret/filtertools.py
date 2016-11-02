@@ -1,5 +1,5 @@
 """
-Tools ansd utilities for computing spike-triggered averages (filters),
+Tools and utilities for computing spike-triggered averages (filters),
 finding spatial and temporal components of
 spatiotemporal filters, and basic filter signal processing.
 
@@ -8,19 +8,18 @@ spatiotemporal filters, and basic filter signal processing.
 import numpy as np
 import scipy
 from scipy.signal import fftconvolve
-from numpy.linalg import LinAlgError
 from skimage.measure import label, regionprops, find_contours
 from functools import reduce
 
 from pyret.stimulustools import slicestim
 
-__all__ = ['getste', 'getsta', 'getstc', 'lowranksta', 'decompose',
-           'filterpeak', 'smooth', 'cutout', 'rolling_window', 'resample',
+__all__ = ['ste', 'sta', 'stc', 'lowranksta', 'decompose',
+           'filterpeak', 'smooth', 'cutout', 'resample',
            'get_ellipse', 'get_contours', 'get_regionprops',
-           'normalize_spatial', 'linear_prediction', 'revco']
+           'normalize_spatial', 'linear_prediction', 'revcorr']
 
 
-def getste(time, stimulus, spikes, filter_length):
+def ste(time, stimulus, spikes, filter_length):
     """
     Constructs an iterator over spike-triggered stimuli
 
@@ -58,11 +57,11 @@ def getste(time, stimulus, spikes, filter_length):
     return slices
 
 
-def getsta(time, stimulus, spikes, filter_length):
+def sta(time, stimulus, spikes, filter_length):
     """
     Compute a spike-triggered average
 
-    sta, tax = getsta(time, stimulus, spikes, filter_length)
+    sta, tax = sta(time, stimulus, spikes, filter_length)
 
     Parameters
     ----------
@@ -90,27 +89,27 @@ def getsta(time, stimulus, spikes, filter_length):
     """
 
     # get the iterator
-    ste = getste(time, stimulus, spikes, filter_length)
+    ste_it = ste(time, stimulus, spikes, filter_length)
 
     # time axis
     tax = time[:filter_length] - time[0]
 
     # reduce
     try:
-        first = next(ste)  # check for empty generators
+        first = next(ste_it)  # check for empty generators
         sta = reduce(lambda sta, x: np.add(sta, x),
-                     ste, first) / float(len(spikes))
+                     ste_it, first) / float(len(spikes))
     except StopIteration:
         return (np.nan * np.ones((filter_length,) + stimulus.shape[1:]), tax)
 
     return sta, tax
 
 
-def getstc(time, stimulus, spikes, filter_length):
+def stc(time, stimulus, spikes, filter_length):
     """
     Compute the spike-triggered covariance
 
-    stc = getstc(time, stimulus, spikes, filter_length)
+    stc = stc(time, stimulus, spikes, filter_length)
 
     Parameters
     ----------
@@ -138,10 +137,10 @@ def getstc(time, stimulus, spikes, filter_length):
     outer = scipy.linalg.blas.get_blas_funcs('syr', dtype='d')
 
     # get the iterator
-    ste = getste(time, stimulus, spikes, filter_length)
+    ste_it = ste(time, stimulus, spikes, filter_length)
 
     # check if empty
-    first = next(ste, None)
+    first = next(ste_it, None)
 
     # if the spike-triggered ensemble is empty, return an array of NaN's
     if first is None:
@@ -153,17 +152,17 @@ def getstc(time, stimulus, spikes, filter_length):
 
     # reduce the stc using the BLAS outer product function
     # (note: this only fills in the upper triangular part of the matrix)
-    stc_ut = reduce(lambda C, x: outer(1, x.ravel(), a=C), ste, stc_init)
+    stc_ut = reduce(lambda C, x: outer(1, x.ravel(), a=C), ste_it, stc_init)
 
     # normalize by the number of spikes
     stc_ut /= float(len(spikes))
 
     # compute the STA (to remove it)
-    sta = getsta(time, stimulus, spikes, filter_length)[0].ravel()
+    s = sta(time, stimulus, spikes, filter_length)[0].ravel()
 
     # fill in the lower triangular portion (by adding the transpose)
     # and subtract off the STA to compute the full STC matrix
-    stc = np.triu(stc_ut, 1).T + stc_ut - np.outer(sta, sta)
+    stc = np.triu(stc_ut, 1).T + stc_ut - np.outer(s, s)
 
     return stc
 
@@ -196,21 +195,22 @@ def lowranksta(f_orig, k=10):
     u : array_like
         the top k temporal components (each column is a component)
 
+    Notes
+    -----
+
+    This method requires that the linear filter be 3D. To decompose a 
+    linear filter into a temporal and 1-dimensional spatial filter, simply
+    promote the filter to 3D before calling this method.
+
     """
 
     # work with a copy of the filter (prevents corrupting the input)
     f = f_orig.copy()
 
     # Compute the SVD of the full filter
-    try:
-        assert f.ndim >= 2, "Filter must be at least 2-D"
-        u, s, v = np.linalg.svd(f.reshape(f.shape[0], -1) - np.mean(f),
-                                full_matrices=False)
-    except LinAlgError:
-        err = '''The SVD did not converge for the given spatiotemporal filter
-              The data is likely too noisy to compute a rank-{0} approximation,
-              try reducing the requested rank.'''.format(k)
-        raise LinAlgError(err)
+    assert f.ndim >= 2, "Filter must be at least 2-D"
+    u, s, v = np.linalg.svd(f.reshape(f.shape[0], -1) - np.mean(f),
+            full_matrices=False)
 
     # Keep the top k components
     k = np.min([k, s.size])
@@ -222,7 +222,7 @@ def lowranksta(f_orig, k=10):
 
     # get out the temporal filter at the RF center
     peakidx = filterpeak(f)[1]
-    tsta = f[:, peakidx[-1::]].reshape(-1, 1)
+    tsta = f[:, peakidx[0], peakidx[1]].reshape(-1, 1)
     tsta -= np.mean(tsta)
 
     # project onto the temporal filters and keep the sign
@@ -260,38 +260,42 @@ def decompose(sta):
 
 def filterpeak(sta):
     """
-    Find the peak (single point in space/time) of a smoothed filter
+    Find the peak (single point in space/time) of a smoothed filter.
 
     Parameters
     ----------
     sta : array_like
-        Filter of which to find the peak (time, space, space)
+        Filter of which to find the peak (time, ...), where ellipses
+        indicate any spatial dimensions to the stimulus.
 
     Returns
     -------
-    idx : int
-        Linear index of the maximal point
+    linear_index : int
+        Linear index of the maximal point, i.e., treating the array as
+        flattened.
 
     sidx : 1- or 2-element tuple
-        Spatial index of the maximal point. For a 1D spatiotemporal
+        Spatial index of the maximal point. This returns a tuple with the
+        same number of elements as the filter has spatial dimensions.
 
     tidx : int
-        Temporal index of the maximal point
+        Temporal index of the maximal point.
 
     """
 
     # Find the index of the maximal point
-    idx = np.unravel_index(np.abs(sta).argmax(), sta.shape)
+    linear_index = np.abs(sta).argmax()
+    idx = np.unravel_index(linear_index, sta.shape)
 
     # Split into spatial/temporal indices
     sidx = np.roll(idx[1:], 1)
     tidx = idx[0]
 
     # Return the indices
-    return idx, sidx, tidx
+    return linear_index, sidx, tidx
 
 
-def smooth(f, spacesig=0.5, timesig=1):
+def smooth(f, spacesig=0.5, timesig=1): # pragma: no cover
     """
 
     Smooths a 3D spatiotemporal linear filter using a multi-dimensional
@@ -353,21 +357,21 @@ def cutout(arr, idx=None, width=5):
         raise ValueError('idx must be a 2-element array')
 
     # Find the indices
-    row = np.arange(idx[0] - width, idx[0] + width + 1)
-    col = np.arange(idx[1] - width, idx[1] + width + 1)
+    row = np.arange(idx[0] - width, idx[0] + width)
+    col = np.arange(idx[1] - width, idx[1] + width)
 
     # Make sure the indices are within the bounds of the given array
     row = row[(row >= 0) & (row < arr.shape[1])]
     col = col[(col >= 0) & (col < arr.shape[2])]
 
     # Mesh the indices
-    rmesh, cmesh = np.meshgrid(row, col)
+    rmesh, cmesh = np.meshgrid(row, col, indexing='ij')
 
     # Extract and return the reduced array
     return arr[:, rmesh, cmesh]
 
 
-def resample(arr, scale_factor):
+def resample(arr, scale_factor): # pragma: no cover
     """
     Resamples a 1-D or 2-D array
     """
@@ -387,11 +391,6 @@ def resample(arr, scale_factor):
         raise ValueError('Input array must be either 1-D or 2-D')
 
 
-def rolling_window(*args, **kwargs):
-    """Raise DeprecationWarning until next pyret release (0.4.1)"""
-    raise DeprecationWarning('The filtertools.rolling_window function has been moved.\nPlease use stimulustools.rolling_window instead!')
-
-
 def normalize_spatial(spatial_filter, scale_factor=1.0, clip_negative=False):
     """
     Normalizes a spatial frame by doing the following:
@@ -408,8 +407,12 @@ def normalize_spatial(spatial_filter, scale_factor=1.0, clip_negative=False):
         the original sampling rate (Default: 1.0)
 
     clip_negative : boolean, optional
-        Whether or not to clip negative values to 0. (Default: True)
+        Whether or not to clip negative values to 0. (Default: False)
 
+    Returns
+    -------
+    rf_resampled : array_like
+        The normalized (and potentially resampled) filter frame.
     """
 
     # work with a copy of the given filter
@@ -437,9 +440,14 @@ def normalize_spatial(spatial_filter, scale_factor=1.0, clip_negative=False):
     return rf_resampled
 
 
-def get_contours(spatial_filter, threshold=10.0):
+def get_contours(spatial_filter, threshold=10.0): # pragma: no cover
     """
-    Gets contours of a 2D spatial filter
+    Gets iso-value contours of a 2D spatial filter.
+
+    This returns a list of arrays of shape (n, 2). Each array in the list
+    gives the indices into the spatial filter of one contour, and each 
+    column of the contour gives the indices along the two dimesions of 
+    the filter.
 
     Usage
     -----
@@ -463,9 +471,12 @@ def get_contours(spatial_filter, threshold=10.0):
     return find_contours(normalize_spatial(spatial_filter), threshold)
 
 
-def get_regionprops(spatial_filter, threshold=10.0):
+def get_regionprops(spatial_filter, threshold=10.0): # pragma: no cover
     """
-    Gets region properties of a 2D spatial filter
+    Gets region properties of a 2D spatial filter. 
+    
+    This returns various attributes of the non-zero area of the given 
+    spatial filter, such as its area, centroid, eccentricity, etc.
 
     Usage
     -----
@@ -490,7 +501,7 @@ def get_regionprops(spatial_filter, threshold=10.0):
     return regionprops(label(normalize_spatial(spatial_filter) >= threshold))
 
 
-def get_ellipse(spatial_filter, pvalue=0.6827):
+def get_ellipse(spatial_filter, sigma=2.):
     """
     Get the parameters of an ellipse fit to a spatial receptive field
 
@@ -499,9 +510,9 @@ def get_ellipse(spatial_filter, pvalue=0.6827):
     spatial_filter : array_like
         The spatial receptive field to which the ellipse should be fit
 
-    pvalue : float, optional
-        Determines the threshold of the ellipse contours. For example, a pvalue
-        of 0.95 corresponds to a 95% confidence ellipse. (Default: 0.6827)
+    sigma : float, optional
+        Determines the size of the ellipse contour, in units of standard
+        deviations. (Default: 2)
 
     Returns
     -------
@@ -532,13 +543,13 @@ def get_ellipse(spatial_filter, pvalue=0.6827):
                                           p0=pinit)
 
     # return ellipse parameters, scaled by the appropriate scale factor
-    scale = 2 * np.sqrt(scipy.stats.chi2.ppf(pvalue, df=2))
-    return _popt_to_ellipse(*popt, scale=scale)
+    
+    return _popt_to_ellipse(*popt, sigma)
 
 
-def rfsize(spatial_filter, dx, dy=None, pvalue=0.6827):
+def rfsize(spatial_filter, dx, dy=None, sigma=2.):
     """
-    Computes the lenghts of an ellipse fit to the receptive field
+    Computes the lengths of an ellipse fit to the receptive field
 
     Parameters
     ----------
@@ -553,21 +564,23 @@ def rfsize(spatial_filter, dx, dy=None, pvalue=0.6827):
         The spatial sampling along the y-dimension. If None, uses the same
         value as dx. (Default: None)
 
-    pvalue : float, optional
-        Determines the threshold of the ellipse contours. For example, a pvalue
-        of 0.95 corresponds to a 95% confidence ellipse. (Default: 0.6827)
+    sigma : float, optional
+        Determines the size of the ellipse contour, in units of standard deviation
+        of the fitted gaussian. E.g., 2.0 means a 2 SD ellipse.
+
+    Returns
+    -------
+    xsize, ysize : float
+        The x- and y-sizes of the ellipse fitted to the receptive field, at
+        the given sigma.
 
     """
 
     if dy is None:
         dy = dx
 
-    # x- and y- sampling locations
-    tx = np.arange(spatial_filter.shape[0])
-    ty = np.arange(spatial_filter.shape[1])
-
     # get ellipse parameters
-    widths = get_ellipse(tx, ty, spatial_filter, pvalue=pvalue)[1]
+    widths = get_ellipse(spatial_filter, sigma=sigma)[1]
 
     # return the scaled widths
     return widths[0] * dx, widths[1] * dy
@@ -621,7 +634,7 @@ def linear_prediction(filt, stim):
     return np.einsum(subscripts, slices, filt)
 
 
-def revco(response, stimulus, filter_length):
+def revcorr(response, stimulus, filter_length):
     """
     Compute the reverse-correlation between a stimulus and a response.
 
@@ -721,7 +734,7 @@ def _gaussian_function(data, x0, y0, a, b, c):
     return np.exp(-0.5 * (a * xc**2 + 2 * b * xc * yc + c * yc**2))
 
 
-def _popt_to_ellipse(y0, x0, a, b, c, scale=3.0):
+def _popt_to_ellipse(y0, x0, a, b, c, sigma):
     """
     Converts the parameters (center and terms in the precision matrix) for a 2D
     gaussian function into ellipse parameters (center, widths, and rotation)
@@ -743,6 +756,10 @@ def _popt_to_ellipse(y0, x0, a, b, c, scale=3.0):
     c : float
         The lower right number in the precision matrix
 
+    sigma : float
+        The standard deviation of the ellipse (controls the overall ellipse scale)
+        (e.g. for sigma=2, the ellipse is a 2 standard deviation ellipse)
+
     Returns
     -------
     (x0, y0) : tuple
@@ -760,26 +777,42 @@ def _popt_to_ellipse(y0, x0, a, b, c, scale=3.0):
     u, v = np.linalg.eigh(np.array([[a, b], [b, c]]))
 
     # convert precision standard deviations
-    sigmas = scale * np.sqrt(1 / u)
+    scale = sigma * np.sqrt(scipy.stats.chi2.ppf(0.6827, df=2))
+    scaled_sigmas = scale * np.sqrt(1 / u)
 
     # rotation angle
     theta = np.rad2deg(np.arccos(v[1, 1]))
 
-    return (x0, y0), sigmas, theta
+    return (x0, y0), scaled_sigmas, theta
 
 
 def _initial_gaussian_params(xm, ym, z, width=5):
     """
-    Guesses the initial 2D Gaussian parameters given a spatial filter
+    Guesses the initial 2D Gaussian parameters given a spatial filter.
 
     Parameters
     ----------
     xm : array_like
+        The x-points for the filter.
+        
     ym : array_like
+        The y-points for the filter.
+
     z : array_like
+        The actual data the parameters of which are guessed.
 
     width : float, optional
-        The expected 1 s.d. width of the RF in checkers. (Default: 5)
+        The expected 1 s.d. width of the RF, in samples. (Default: 5)
+
+    Returns
+    -------
+
+    xc, yc : float
+        Estimated center points for the data.
+
+    a, b, c : float
+        Upper-left, lower-right, and off-diagonal terms for the estimated
+        precision matrix.
     """
 
     # estimate means
