@@ -1,4 +1,4 @@
 -r requirements.txt
 pytest
-coveralls
-twine
+coverage
+flake8
