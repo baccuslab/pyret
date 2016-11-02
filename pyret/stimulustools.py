@@ -120,8 +120,8 @@ def slicestim(stimulus, history):
 
     Examples
     --------
-    >>> x=np.arange(10).reshape((2,5))
-    >>> rolling_window(x, 3)
+    >>> x=np.arange(10).reshape((5, 2))
+    >>> slicestim(x, 3)
     array([[[0, 1, 2], [1, 2, 3], [2, 3, 4]],
            [[5, 6, 7], [6, 7, 8], [7, 8, 9]]])
 
@@ -131,18 +131,19 @@ def slicestim(stimulus, history):
     array([[ 1.,  2.,  3.],
            [ 6.,  7.,  8.]])
     """
-
     if not (1 <= history <= stimulus.shape[0]):
-        raise ValueError(
-                '`history` must be between 1 and {0:#d}'.format(
-                stimulus.shape[0]))
-    history = int(history)
+        msg = '`history` must be between 1 and {0:#d}'.format(stimulus.shape[0])
+        raise ValueError(msg)
+    elif not isinstance(history, int):
+        raise ValueError("`history` must be an integer")
 
     # Use strides to create view onto array
-    shape = (history, stimulus.shape[0] - history) + stimulus.shape[1:]
-    strides = (stimulus.strides[0],) + stimulus.strides
-    return np.lib.stride_tricks.as_strided(stimulus, 
-            shape=shape, strides=strides)
+    shape = (history, stimulus.shape[0] - history + 1) + stimulus.shape[1:]
+    stride = (stimulus.strides[0],) + stimulus.strides
+
+    # return the newly strided array
+    arr = np.lib.stride_tricks.as_strided(stimulus, shape=shape, strides=stride)
+    return np.rollaxis(arr, 1)
 
 
 def cov(stimulus, history, nsamples=None, verbose=False):
@@ -160,60 +161,13 @@ def cov(stimulus, history, nsamples=None, verbose=False):
     history : int
         Integer number of time points to keep in each slice.
 
-    nsamples : int_like, optional
-
-    verbose : boolean, optional
-        If True, print out progress of the computation. (defaults to False)
-
     Returns
     ------
     stim_cov : array_like
-        (n*n*t by n*n*t) Covariance matrix
-
+        Covariance matrix
     """
-    if not (1 <= history < stimulus.shape[0]):
-        raise ValueError('`history` must be in [1, {0:#d})'.format(
-                stimulus.shape[0]))
-
-    # Collapse spatial dimensions
-    cstim = stimulus.reshape(stimulus.shape[0], -1)
-
-    # store mean + covariance matrix
-    mean = np.zeros(cstim.shape[-1] * history)
-    stim_cov = np.zeros((cstim.shape[-1] * history,) * 2)
-
-    # Update covariance matrix from random points in the stimulus
-    indices = np.arange(history, cstim.shape[0])
-    np.random.shuffle(indices)
-
-    # BLAS rank-1 covariance update function
-    blas_ger_fnc = get_blas_funcs(('ger',), (stim_cov,))[0]
-
-    if nsamples is None:
-        nsamples = indices.size
-
-    for j in range(nsamples):
-        idx = indices[j]
-        if verbose and np.mod(j, 100) == 0:
-            print('[%i of %i]' % (j, numpts))
-
-        stimslice = np.reshape(cstim[idx - history : idx, :], 
-                (-1, 1), order='F')
-
-        mean += np.squeeze(stimslice)
-
-        # Update covariance matrix
-        blas_ger_fnc(1, stimslice, stimslice, 
-                a=stim_cov.T, overwrite_a=True)
-
-    # Normalize and compute the mean outer product
-    mean /= nsamples
-    mean_op = mean.reshape(-1, 1).dot(mean.reshape(1, -1))
-
-    # Return normalized covariance matrix
-    stim_cov = (stim_cov / (nsamples - 1)) - mean_op
-
-    return stim_cov
+    stim = slicestim(stimulus, history)
+    return np.cov(stim.reshape(stim.shape[0], -1).T)
 
 
 def rolling_window(array, window, time_axis=0):

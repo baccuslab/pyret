@@ -49,7 +49,7 @@ def test_slicestim_1d():
     sliced_stim = stimulustools.slicestim(stim, history)
 
     for i in range(stim_size - history):
-        assert np.all(sliced_stim[:, i] == stim[i : i + history]), 'slicing failed'
+        assert np.all(sliced_stim[i] == stim[i:i + history]), 'slicing failed'
 
 def test_slicestim_3d():
     """Test slicing a 3D stimulus into overlapping segments."""
@@ -60,19 +60,13 @@ def test_slicestim_3d():
     
     sliced_stim = stimulustools.slicestim(stim, history)
     assert sliced_stim.ndim == stim.ndim + 1
-    assert sliced_stim.shape[1] == stim.shape[0] - history
+    assert sliced_stim.shape[0] == stim.shape[0] - history + 1
 
     for i in range(stim_size[0] - history):
-        assert np.all(sliced_stim[:, i, ...] == stim[i : i + history, ...]), 'slicing failed'
+        assert np.all(sliced_stim[i] == stim[i:i + history, ...]), 'slicing failed'
 
-def test_getcov():
+def test_cov():
     """Test recovering a stimulus covariance matrix."""
     np.random.seed(0)
     stim = np.random.randn(10, 2)
     assert np.allclose(np.cov(stim.T), stimulustools.cov(stim, 1))
-
-def test_rolling_window_warning():
-    """Verify that calling rolling_window() raises a DeprecationWarning"""
-    with pytest.warns(DeprecationWarning):
-        stimulustools.rolling_window(np.random.randn(20, 3, 3), 5)
-

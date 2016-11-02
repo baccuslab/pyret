@@ -198,7 +198,7 @@ def lowranksta(f_orig, k=10):
     Notes
     -----
 
-    This method requires that the linear filter be 3D. To decompose a 
+    This method requires that the linear filter be 3D. To decompose a
     linear filter into a temporal and 1-dimensional spatial filter, simply
     promote the filter to 3D before calling this method.
 
@@ -445,8 +445,8 @@ def get_contours(spatial_filter, threshold=10.0): # pragma: no cover
     Gets iso-value contours of a 2D spatial filter.
 
     This returns a list of arrays of shape (n, 2). Each array in the list
-    gives the indices into the spatial filter of one contour, and each 
-    column of the contour gives the indices along the two dimesions of 
+    gives the indices into the spatial filter of one contour, and each
+    column of the contour gives the indices along the two dimesions of
     the filter.
 
     Usage
@@ -473,9 +473,9 @@ def get_contours(spatial_filter, threshold=10.0): # pragma: no cover
 
 def get_regionprops(spatial_filter, threshold=10.0): # pragma: no cover
     """
-    Gets region properties of a 2D spatial filter. 
-    
-    This returns various attributes of the non-zero area of the given 
+    Gets region properties of a 2D spatial filter.
+
+    This returns various attributes of the non-zero area of the given
     spatial filter, such as its area, centroid, eccentricity, etc.
 
     Usage
@@ -543,7 +543,7 @@ def get_ellipse(spatial_filter, sigma=2.):
                                           p0=pinit)
 
     # return ellipse parameters, scaled by the appropriate scale factor
-    
+
     return _popt_to_ellipse(*popt, sigma)
 
 
@@ -592,46 +592,38 @@ def linear_prediction(filt, stim):
 
     Parameters
     ----------
-
     filt : array_like
         The linear filter whose response is to be computed. The array should
-        have shape ``(t, ...)``, where ``t`` is the number of time points in the 
+        have shape ``(t, ...)``, where ``t`` is the number of time points in the
         filter and the ellipsis indicates any remaining spatial dimenions.
         The number of dimensions and the sizes of the spatial dimensions
         must match that of ``stim``.
 
     stim : array_like
         The stimulus to which the predicted response is computed. The array
-        should have shape (T,...), where ``T`` is the number of time points 
+        should have shape (T,...), where ``T`` is the number of time points
         in the stimulus and the ellipsis indicates any remaining spatial
         dimensions. The number of dimensions and the sizes of the spatial
         dimenions must match that of ``filt``.
 
     Returns
     -------
-
     pred : array_like
-        The predicted linear response. The shape is (T,) where T is the 
+        The predicted linear response. The shape is (T,) where T is the
         number of time points in the input stimulus array.
 
     Raises
     ------
-
     ValueError : If the number of dimensions of ``stim`` and ``filt`` do not
         match, or if the spatial dimensions differ.
-
     """
-    
     if (filt.ndim != stim.ndim) or (filt.shape[1:] != stim.shape[1:]):
         raise ValueError("The filter and stimulus must have the same " +
-                "number of dimensions and match in size along spatial dimensions")
+                         "number of dimensions and match in size along spatial dimensions")
 
     slices = slicestim(stim, filt.shape[0])
-    dim_start = ord('i')
-    indices = ''.join(map(chr, range(dim_start, dim_start + slices.ndim)))
-    subscripts = '{0},{1}{2}->{3}'.format(indices, indices[0], 
-            indices[2:], indices[1])
-    return np.einsum(subscripts, slices, filt)
+    T = slices.shape[0]
+    return np.einsum('tx,x->t', slices.reshape(T, -1), filt.ravel())
 
 
 def revcorr(response, stimulus, filter_length):
@@ -645,12 +637,11 @@ def revcorr(response, stimulus, filter_length):
 
     Parameters
     ----------
-
     response : array_like
         A continuous output response correlated with the stimulus. Must
         be one-dimensional.
 
-    stimulus : array_like 
+    stimulus : array_like
         A input stimulus correlated with the ``response``. Must be of shape
         (t, ...), where t is the time and ... indicates any spatial dimensions.
 
@@ -660,7 +651,6 @@ def revcorr(response, stimulus, filter_length):
 
     Returns
     -------
-
     filt : array_like
         An array of shape ``(filter_length, ...)`` containing the best-fitting
         linear filter which predicts the response from the stimulus. The ellipses
@@ -668,31 +658,26 @@ def revcorr(response, stimulus, filter_length):
 
     Raises
     ------
-
     ValueError : If the ``stimulus`` and ``response`` arrays are of different
     shapes.
 
     Notes
     -----
-
     The ``response`` and ``stimulus`` arrays must share the same sampling
     rate. As the stimulus often has a lower sampling rate, one can use
     ``stimulustools.upsamplestim`` to upsample it.
-
     """
-
     if response.ndim > 1:
         raise ValueError("The `response` must be 1-dimensional")
-    if response.size != (stimulus.shape[0] - filter_length):
-        raise ValueError(("`stimulus` must have {:#d} time points " + 
-                "(`response.size` + `filter_length`").format(response.size + filter_length))
-    
+    if response.size != (stimulus.shape[0] - filter_length + 1):
+        msg = "`stimulus` must have {:#d} time points (`response.size` + `filter_length`)"
+        raise ValueError(msg.format(response.size + filter_length + 1))
+
     slices = slicestim(stimulus, filter_length)
-    dim_start = ord('i')
-    indices = ''.join(map(chr, range(dim_start, dim_start + slices.ndim)))
-    subscripts = '{0},{1}->{2}{3}'.format(indices, indices[1], indices[0], indices[2:])
-    recovered = np.einsum(subscripts, slices, response)
-    return recovered
+    T = slices.shape[0]
+    recovered = np.einsum('tx,t->x', slices.reshape(T, -1), response)
+    return recovered.reshape(slices.shape[1:])
+
 
 def _gaussian_function(data, x0, y0, a, b, c):
     """
@@ -794,7 +779,7 @@ def _initial_gaussian_params(xm, ym, z, width=5):
     ----------
     xm : array_like
         The x-points for the filter.
-        
+
     ym : array_like
         The y-points for the filter.
 

@@ -47,7 +47,7 @@ def test_empty_sta():
     spikes = np.array(())
     stimulus = np.random.randn(100,)
     filter_length = 5
-    
+
     sta, _ = flt.sta(time, stimulus, spikes, filter_length)
     assert np.all(np.isnan(sta))
 
@@ -154,13 +154,13 @@ def test_rfsize():
     filter_length = 100
     nx, ny = 10, 10
     true_filter = utils.create_spatiotemporal_filter(nx, ny, filter_length)[1]
-    
+
     xsize, ysize = flt.rfsize(true_filter, 1., 1.)
     assert np.allclose(xsize, 3., 0.1) # 1 SD is about 3 units
     assert np.allclose(ysize, 3., 0.1)
 
 def test_linear_prediction_1d():
-    """Test method for computing linear prediction from a 
+    """Test method for computing linear prediction from a
     filter to a one-dimensional stimulus.
     """
     np.random.seed(0)
@@ -169,10 +169,11 @@ def test_linear_prediction_1d():
     pred = flt.linear_prediction(filt, stim)
 
     sl = slicestim(stim, filt.shape[0])
-    assert np.allclose(filt.reshape(1, -1).dot(sl), pred)
+    assert np.allclose(sl.dot(filt), pred)
+
 
 def test_linear_prediction_nd():
-    """Test method for computing linear prediction from a 
+    """Test method for computing linear prediction from a
     filter to a multi-dimensional stimulus.
     """
     np.random.seed(0)
@@ -182,10 +183,9 @@ def test_linear_prediction_nd():
         pred = flt.linear_prediction(filt, stim)
 
         sl = slicestim(stim, filt.shape[0])
-        tmp = np.zeros(sl.shape[1])
-        filt_reshape = filt.reshape(1, -1)
+        tmp = np.zeros(sl.shape[0])
         for i in range(tmp.size):
-            tmp[i] = filt_reshape.dot(sl[:, i, :].reshape(-1, 1))
+            tmp[i] = np.inner(filt.ravel(), sl[i].ravel())
 
         assert np.allclose(tmp, pred)
 
