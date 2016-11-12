@@ -6,11 +6,11 @@ import warnings
 import numpy as np
 from pyret.utils import flat2d
 
-__all__ = ['upsample_stim', 'downsample_stim', 'slicestim',
+__all__ = ['upsample', 'downsample', 'slicestim',
            'cov', 'rolling_window', 'flat2d']
 
 
-def upsample_stim(stim, upsample_factor, time=None):
+def upsample(stim, upsample_factor, time=None):
     """
     Upsample the given stimulus by the given factor.
 
@@ -60,7 +60,7 @@ def upsample_stim(stim, upsample_factor, time=None):
     return stim_us, time_us
 
 
-def downsample_stim(stim, downsample_factor, time=None):
+def downsample(stim, downsample_factor, time=None):
     """
     Downsample the given stimulus by the given factor.
 
