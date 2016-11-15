@@ -16,15 +16,15 @@ def test_resampling_1d():
     dt = 0.1
     stim = np.random.randn(stim_size,)
     time = np.arange(stim_size) * dt
-    stim_us, time_us = stimulustools.upsample_stim(
+    stim_us, time_us = stimulustools.upsample(
             stim, resample_factor, time=time)
-    stim_ds, time_ds = stimulustools.downsample_stim(
+    stim_ds, time_ds = stimulustools.downsample(
             stim_us, resample_factor, time=time_us)
 
     assert np.all(stim == stim_us[::resample_factor]), 'Upsampling failed'
     assert np.all(stim == stim_ds), 'Downsampling failed'
 
-    _, time_us = stimulustools.upsample_stim(stim, resample_factor)
+    _, time_us = stimulustools.upsample(stim, resample_factor)
     assert time_us is None
 
 def test_resampling_2d():
@@ -35,9 +35,9 @@ def test_resampling_2d():
     dt = 0.1
     stim = np.random.randn(*stim_size)
     time = np.arange(stim_size[0]) * dt
-    stim_us, time_us = stimulustools.upsample_stim(
+    stim_us, time_us = stimulustools.upsample(
             stim, resample_factor, time=time)
-    stim_ds, time_ds = stimulustools.downsample_stim(
+    stim_ds, time_ds = stimulustools.downsample(
             stim_us, resample_factor, time=time_us)
 
     assert np.all(stim == stim_us[::resample_factor, ...]), 'Upsampling failed'
