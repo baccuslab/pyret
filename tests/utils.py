@@ -70,7 +70,7 @@ def create_spatiotemporal_filter(nx, ny, nt, norm=True):
         gaussian /= np.linalg.norm(gaussian)
 
     # Outer product
-    filt = np.rollaxis(np.einsum('i,jk->jki', temporal_filter, gaussian), -1, 0)
+    filt = np.einsum('i,jk->ijk', temporal_filter, gaussian)
 
     return (temporal_filter, gaussian,
             filt / np.linalg.norm(filt) if norm else filt)

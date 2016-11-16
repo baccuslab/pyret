@@ -9,23 +9,24 @@ from .utils import plotwrapper
 from matplotlib import gridspec, animation, cm
 from matplotlib.patches import Ellipse
 
-__all__ = ['raster', 'psth', 'rasterandpsth', 'spatial', 'temporal',
+__all__ = ['raster', 'psth', 'raster_and_psth', 'spatial', 'temporal',
            'plotsta', 'playsta', 'ellipse', 'plotcells', 'playrates']
 
 
 @plotwrapper
 def raster(spikes, labels, title='Spike raster', marker_string='ko', **kwargs):
     """
-    Plot a raster of spike times
+    Plot a raster of spike times.
 
     Parameters
     ----------
     spikes : array_like
-        An array of spike times
+        An array of spike times.
 
     labels : array_like
         An array of labels corresponding to each spike in spikes. For example,
-        this can indicate which cell or trial each spike came from
+        this can indicate which cell or trial each spike came from. Spike times
+        are plotted on the x-axis, and labels on the y-axis.
 
     title : string, optional
         An optional title for the plot (Default: 'Spike raster').
@@ -33,33 +34,34 @@ def raster(spikes, labels, title='Spike raster', marker_string='ko', **kwargs):
     marker_string : string, optional
         The marker string passed to matplotlib's plot function (Default: 'ko').
 
+    ax : matplotlib.axes.Axes instance, optional
+        An optional axes onto which the data is plotted.
+
+    fig : matplotlib.figure.Figure instance, optional
+        An optional figure onto which the data is plotted.
+
     kwargs : dict
         Optional keyword arguments are passed to matplotlib's plot function
 
     Returns
     -------
-    fig : matplotlib Figure object
-        Matplotlib handle of the figure
+    fig : matplotlib.figure.Figure
+        Matplotlib Figure object into which raster is plotted.
 
-    ax : matplotlib Axes handle
+    ax : matplotlib.axes.Axes
+        Matplotlib Axes object into which raster is plotted.
     """
-    fig, ax = kwargs['fig'], kwargs['ax']
-
-    # data checking
     assert len(spikes) == len(labels), "Spikes and labels must have the same length"
 
-    # Make a new figure
-    if not fig or type(fig) is not plt.Figure:
-        fig = plt.figure()
+    kwargs.pop('fig')
+    ax = kwargs.pop('ax')
 
     # Plot the spikes
-    if not ax:
-        ax = fig.add_subplot(111)
     ax.plot(spikes, labels, marker_string, **kwargs)
 
     # Labels, etc.
-    plt.title(title, fontdict={'fontsize': 24})
-    plt.xlabel('Time (s)', fontdict={'fontsize': 20})
+    ax.set_title(title, fontdict={'fontsize': 24})
+    ax.set_xlabel('Time (s)', fontdict={'fontsize': 20})
 
 
 @plotwrapper
@@ -70,24 +72,36 @@ def psth(spikes, trial_length=None, binsize=0.01, **kwargs):
     Parameters
     ----------
     spikes : array_like
-        An array of spike times
+        An array of spike times.
 
-    triallength : float
-        The length of each trial to stack, in seconds
+    trial_length : float
+        The length of each trial to stack, in seconds. If None (the
+        default), a single PSTH is plotted. If a float is passed, PSTHs
+        from each trial of the given length are averaged together before
+        plotting.
 
     binsize : float
-        The size of bins used in computing the PSTH
+        The size of bins used in computing the PSTH.
 
-    fig : matplotlib Figure object
-        Figure into which the psth should be plotted
+    ax : matplotlib.axes.Axes instance, optional
+        An optional axes onto which the data is plotted.
+
+    fig : matplotlib.figure.Figure instance, optional
+        An optional figure onto which the data is plotted.
+
+    kwargs : dict
+        Keyword arguments passed to matplotlib's ``plot`` function.
 
     Returns
     -------
-    fig : matplotlib Figure object
-        Matplotlib figure handle
+    fig : matplotlib.figure.Figure
+        Matplotlib Figure object into which PSTH is plotted.
 
+    ax : matplotlib.axes.Axes
+        Matplotlib Axes object into which PSTH is plotted.
     """
-    fig, ax = kwargs['fig'], kwargs['ax']
+    fig = kwargs.pop('fig')
+    ax = kwargs.pop('ax')
 
     # Input-checking
     if not trial_length:
@@ -96,7 +110,8 @@ def psth(spikes, trial_length=None, binsize=0.01, **kwargs):
     # Compute the histogram bins to use
     ntrials = int(np.ceil(spikes.max() / trial_length))
     basebins = np.arange(0, trial_length + binsize, binsize)
-    tbins = np.tile(basebins, (ntrials, 1)) + (np.tile(np.arange(0, ntrials), (basebins.size, 1)).T * trial_length)
+    tbins = np.tile(basebins, (ntrials, 1)) + (np.tile(np.arange(0, ntrials), 
+            (basebins.size, 1)).T * trial_length)
 
     # Bin the spikes in each time bin
     bspk = np.empty((tbins.shape[0], tbins.shape[1] - 1))
@@ -106,45 +121,51 @@ def psth(spikes, trial_length=None, binsize=0.01, **kwargs):
     # Compute the mean over each trial, and multiply by the binsize
     fr = np.mean(bspk, axis=0) / binsize
 
-    # Make a figure
-    if not fig or type(fig) is not plt.Figure:
-        fig = plt.figure()
-
     # Plot the PSTH
-    ax = fig.add_subplot(111)
     ax.plot(tbins[0, :-1], fr, color='k', marker=None, linestyle='-', linewidth=2)
 
     # Labels etc
-    plt.title('psth', fontsize=24)
-    plt.xlabel('time (s)', fontsize=20)
-    plt.ylabel('firing rate (Hz)', fontsize=20)
+    ax.set_title('PSTH', fontsize=24)
+    ax.set_xlabel('Time (s)', fontsize=20)
+    ax.set_ylabel('Firing rate (Hz)', fontsize=20)
 
 
 @plotwrapper
-def rasterandpsth(spikes, trial_length=None, binsize=0.01, **kwargs):
+def raster_and_psth(spikes, trial_length=None, binsize=0.01, **kwargs):
     """
     Plot a spike raster and a PSTH on the same set of axes.
 
     Parameters
     ----------
     spikes : array_like
-        An array of spike times
+        An array of spike times.
 
-    triallength : float
-        The length of each trial to stack, in seconds
+    trial_length : float
+        The length of each trial to stack, in seconds. If None (the default),
+        all spikes are plotted as part of the same trial.
 
     binsize : float
-        The size of bins used in computing the PSTH
+        The size of bins used in computing the PSTH.
 
-    fig : matplotlib Figure handle
-        Figure into which the psth should be plotted
+    ax : matplotlib.axes.Axes instance, optional
+        An optional axes onto which the data is plotted.
+
+    fig : matplotlib.figure.Figure instance, optional
+        An optional figure onto which the data is plotted.
+
+    kwargs : dict
+        Keyword arguments to matplotlib's ``plot`` function.
 
     Returns
     -------
-    fig : matplotlib Figure handle
-        Matplotlib figure handle
+    fig : matplotlib.figure.Figure
+        Matplotlib Figure instance onto which the data is plotted.
+
+    ax : matplotlib.axes.Axes
+        Matplotlib Axes instance onto which the data is plotted.
     """
-    ax = kwargs['ax']
+    fig = kwargs.pop('fig')
+    ax = kwargs.pop('ax')
 
     # Input-checking
     if not trial_length:
@@ -153,7 +174,8 @@ def rasterandpsth(spikes, trial_length=None, binsize=0.01, **kwargs):
     # Compute the histogram bins to use
     ntrials = int(np.ceil(spikes.max() / trial_length))
     basebins = np.arange(0, trial_length + binsize, binsize)
-    tbins = np.tile(basebins, (ntrials, 1)) + (np.tile(np.arange(0, ntrials), (basebins.size, 1)).T * trial_length)
+    tbins = np.tile(basebins, (ntrials, 1)) + (np.tile(np.arange(0, ntrials), 
+            (basebins.size, 1)).T * trial_length)
 
     # Bin the spikes in each time bin
     bspk = np.empty((tbins.shape[0], tbins.shape[1] - 1))
@@ -165,9 +187,8 @@ def rasterandpsth(spikes, trial_length=None, binsize=0.01, **kwargs):
 
     # Plot the PSTH
     ax.plot(tbins[0, :-1], fr, color='r', marker=None, linestyle='-', linewidth=2)
-    ax.set_title('psth and raster', fontdict={'fontsize': 24})
-    ax.set_xlabel('time (s)', fontdict={'fontsize': 20})
-    ax.set_ylabel('firing rate (Hz)', color='r', fontdict={'fontsize': 20})
+    ax.set_xlabel('Time (s)', fontdict={'fontsize': 20})
+    ax.set_ylabel('Firing rate (Hz)', color='r', fontdict={'fontsize': 20})
     for tick in ax.get_yticklabels():
         tick.set_color('r')
 
@@ -178,31 +199,31 @@ def rasterandpsth(spikes, trial_length=None, binsize=0.01, **kwargs):
         idx = np.bitwise_and(spikes > tbins[trial, 0], spikes <= tbins[trial, -1])
         rastax.plot(spikes[idx] - tbins[trial, 0], trial * np.ones(spikes[idx].shape),
                     color='k', marker='.', linestyle='none')
-    rastax.set_ylabel('trial #', color='k', fontdict={'fontsize': 20})
+    rastax.set_ylabel('Trial #', color='k', fontdict={'fontsize': 20})
     for tick in ax.get_yticklabels():
         tick.set_color('k')
 
 
 def playsta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None):
     """
-    Plays a spatiotemporal spike-triggered average as a movie
+    Plays a spatiotemporal spike-triggered average as a movie.
 
     Parameters
     ----------
     sta : array_like
-        Spike-triggered average array, shaped as (nframes, npix, npix)
+        Spike-triggered average array, shaped as ``(nt, nx, ny)``.
 
     repeat : boolean, optional
-        Whether or not to repeat the animation (default is True)
+        Whether or not to repeat the animation (default is True).
 
     frametime : float, optional
-        Length of time each frame is displayed for in milliseconds (default is 100)
+        Length of time each frame is displayed for in milliseconds (default is 100).
 
     cmap : string, optional
-        Name of the colormap to use (Default: gray)
+        Name of the colormap to use (Default: ``'seismic_r'``).
 
     clim : array_like, optional
-        2 Dimensional color limit for animation; e.g. [0, 255]
+        2-element color limit for animation; e.g. [0, 255].
 
     Returns
     -------
@@ -271,10 +292,13 @@ def spatial(filt, maxval=None, **kwargs):
 
     Returns
     -------
+    fig : matplotlib.figure.Figure
+        The figure onto which the spatial STA is plotted.
+
     ax : matplotlib Axes object
-        Axes into which the frame is plotted.
+        Axes into which the spatial STA is plotted.
     """
-    kwargs.pop('fig')
+    fig = kwargs.pop('fig')
     ax = kwargs.pop('ax')
 
     if filt.ndim > 2:
@@ -320,8 +344,11 @@ def temporal(time, filt, **kwargs):
 
     Returns
     -------
+    fig : matplotlib.figure.Figure
+        The figure onto which the temoral STA is plotted.
+
     ax : matplotlib Axes object
-        Axes into which the frame is plotted
+        Axes into which the temporal STA is plotted
     """
     if filt.ndim > 1:
         _, temporal_filter = ft.decompose(filt)
@@ -349,6 +376,9 @@ def plotsta(time, sta):
 
     Returns
     -------
+    fig : matplotlib.figure.Figure
+        The figure onto which the STA is plotted.
+
     ax : matplotlib Axes object
         Axes into which the STA is plotted
     """
@@ -403,22 +433,25 @@ def plotsta(time, sta):
 
 
 @plotwrapper
-def ellipse(spatial_filter, pvalue=0.6827, alpha=0.8, fc='none', ec='black', lw=3, **kwargs):
+def ellipse(filt, sigma=2.0, alpha=0.8, fc='none', ec='black', lw=3, **kwargs):
     """
-    Plot a given ellipse
+    Plot an ellipse fitted to the given receptive field.
 
     Parameters
     ----------
-    spatial_filter : array_like
-        A spatial filter (2D image) corresponding to the spatial profile of the
-        receptive field
+    filt : array_like
+        A linear filter whose spatial extent is to be plotted. If this is 2D, it
+        is assumed to be the spatial component of the receptive field. If it is
+        3D, it is assumed to be a full spatiotemporal receptive field; the spatial
+        component is extracted and plotted.
 
-    pvalue : float, optional
-        Determines the threshold of the ellipse contours. For example, a pvalue
-        of 0.95 corresponds to a 95% confidence ellipse. (Default: 0.6827)
+    sigma : float, optional
+        Determines the threshold of the ellipse contours. This is the standard
+        deviation of a Gaussian fitted to the filter at which the contours are plotted.
+        Default is 2.0.
 
     alpha : float, optional
-        The alpha blending value, between 0 (transparent) and 1 (opaque) (Default: 0.8)
+        The alpha blending value, between 0 (transparent) and 1 (opaque) (Default: 0.8).
 
     fc : string, optional
         Ellipse face color. (Default: none)
@@ -434,16 +467,24 @@ def ellipse(spatial_filter, pvalue=0.6827, alpha=0.8, fc='none', ec='black', lw=
 
     Returns
     -------
-    ax : matplotlib Axes object
-        The axes onto which the ellipse is plotted
+    fig : matplotlib.figure.Figure
+        The figure onto which the ellipse is plotted.
+        
+    ax : matplotlib.axes.Axes
+        The axes onto which the ellipse is plotted.
     """
-    ax = kwargs['ax']
+    fig = kwargs.pop('fig')
+    ax = kwargs.pop('ax')
+
+    if filt.ndim == 2:
+        spatial_filter = filt.copy()
+    elif filt.ndim == 3:
+        spatial_filter = ft.decompose(filt)[0]
+    else:
+        raise ValueError('Linear filter must be 2- or 3-D')
 
     # get the ellipse parameters
-    center, widths, theta = ft.get_ellipse(np.arange(spatial_filter.shape[0]),
-                                           np.arange(spatial_filter.shape[1]),
-                                           spatial_filter,
-                                           pvalue=pvalue)
+    center, widths, theta = ft.get_ellipse(spatial_filter, sigma=sigma)
 
     # create the ellipse
     ell = Ellipse(xy=center, width=widths[0], height=widths[1], angle=theta,
@@ -457,22 +498,26 @@ def ellipse(spatial_filter, pvalue=0.6827, alpha=0.8, fc='none', ec='black', lw=
 @plotwrapper
 def plotcells(cells, **kwargs):
     """
-    Plot the spatial receptive fields for multiple cells
+    Plot the spatial receptive fields for multiple cells.
 
     Parameters
     ----------
     cells : list of array_like
-        A list of spatiotemporal receptive fields, each of which is a spatiotemporal array
+        A list of spatiotemporal receptive fields, each of which is a spatiotemporal array.
 
     ax : matplotlib Axes object, optional
         The axes onto which the ellipse should be plotted. Defaults to a new figure
 
     Returns
     ------
-    ax : matplotlib Axes object
-        The axes onto which the ellipse is plotted
+    fig : matplotlib.figure.Figure
+        The figure onto which the ellipses are plotted.
+
+    ax : matplotlib.axes.Axes
+        The axes onto which the ellipses are plotted.
     """
-    ax = kwargs['ax']
+    fig = kwargs.pop('fig')
+    ax = kwargs.pop('ax')
 
     # for each cell
     for idx, sta in enumerate(cells):
@@ -482,43 +527,57 @@ def plotcells(cells, **kwargs):
 
         # plot ellipse
         color = cm.Set1(np.random.randint(100))
-        ax = ellipse(sp, fc=color, ec=color, lw=2, alpha=0.3, ax=ax)
+        fig, ax = ellipse(sp, fc=color, ec=color, lw=2, alpha=0.3, ax=ax)
 
 
 def playrates(rates, patches, num_levels=255, time=None, repeat=True, frametime=100):
     """
-    Plays a movie of the firing rate for N cells by updating the given patches (matplotlib handles)
-    (useful in conjunction with the output of plotcells)
+    Plays a movie representation of the firing rate of a list of cells, by
+    coloring a list of patches with a color proportional to the firing rate. This
+    is useful, for example, in conjunction with ``plotcells``, to color the 
+    ellipses fitted to a set of receptive fields proportional to the firing rate.
 
     Parameters
     ----------
     rates : array_like
-        an (N, T) matrix of firing rates
+        An ``(N, T)`` matrix of firing rates. ``N`` is the number of cells, and
+        ``T`` gives the firing rate at a each time point.
 
     patches : list
-        A list of N matplotlib patch elements. The facecolor of these patches is altered according to the rates values.
+        A list of ``N`` matplotlib patch elements. The facecolor of these patches is 
+        altered according to the rates values.
 
     Returns
     -------
-    anim : matplotlib Animation object
+    anim : matplotlib.animation.Animation
+        The object representing the full animation.
     """
-    # approximate necessary colormap
+    # Validate input
+    if rates.ndim == 1:
+        rates = rates.reshape(1, -1)
+    if isinstance(patches, Ellipse):
+        patches = [patches]
+    N, T = rates.shape
+
+    # Approximate necessary colormap
     colors = cm.gray(np.arange(num_levels))
     rscale = np.round((num_levels - 1) * (rates - rates.min()) /
-                      (rates.max() - rates.min())).astype('int')
+                      (rates.max() - rates.min())).astype('int').reshape(N, T)
 
     # set up
     fig = plt.gcf()
     ax = plt.gca()
     if time is None:
-        time = np.arange(rscale.shape[1])
+        time = np.arange(T)
 
     # Animation function (called sequentially)
     def animate(t):
-        for i in range(rscale.shape[0]):
+        for i in range(N):
             patches[i].set_facecolor(colors[rscale[i, t]])
         ax.set_title('Time: %0.2f seconds' % (time[t]), fontsize=20)
 
     # Call the animator
-    anim = animation.FuncAnimation(fig, animate, np.arange(rscale.shape[1]), interval=frametime, repeat=repeat)
+    anim = animation.FuncAnimation(fig, animate, 
+            np.arange(T), interval=frametime, repeat=repeat)
     return anim
+

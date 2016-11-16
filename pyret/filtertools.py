@@ -187,13 +187,14 @@ def lowranksta(f_orig, k=10):
         the rank-k filter
 
     u : array_like
-        the top k spatial components  (each row is a component)
+        the top ``k`` temporal components  (each column is a component).
 
     s : array_like
-        the top k singular values
+        the top ``k`` singular values.
 
-    u : array_like
-        the top k temporal components (each column is a component)
+    v : array_like
+        the top ``k`` spatial components (each row is a component). These
+        components have all spatial dimensions collapsed to one.
 
     Notes
     -----
@@ -205,23 +206,25 @@ def lowranksta(f_orig, k=10):
     """
 
     # work with a copy of the filter (prevents corrupting the input)
-    f = f_orig.copy()
+    f = f_orig.copy() - f_orig.mean()
 
     # Compute the SVD of the full filter
     assert f.ndim >= 2, "Filter must be at least 2-D"
-    u, s, v = np.linalg.svd(f.reshape(f.shape[0], -1) - np.mean(f),
-            full_matrices=False)
+    u, s, v = np.linalg.svd(f.reshape(f.shape[0], -1), full_matrices=False)
 
     # Keep the top k components
     k = np.min([k, s.size])
+    u = u[:, :k]
+    s = s[:k]
+    v = v[:k, :]
 
     # Compute the rank-k filter
-    fk = (u[:, :k].dot(np.diag(s[:k]).dot(v[:k, :]))).reshape(f.shape)
+    fk = (u.dot(np.diag(s).dot(v))).reshape(f.shape)
 
     # Ensure that the computed filter components have the correct sign.
-    # The mean-subtracted filter should have positive projection onto
-    # the low-rank filter.
-    sign = np.sign(fk.ravel().dot((f - np.mean(f)).ravel()))
+    # The full STA should have positive projection onto first temporal
+    # component of the low-rank STA.
+    sign = np.sign(np.einsum('i,ijk->jk', u[:, 0], f).sum())
     u *= sign
     v *= sign
 
