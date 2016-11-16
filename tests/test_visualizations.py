@@ -6,7 +6,6 @@ Testing code for pyret.visualizations module.
 import os
 
 from matplotlib.testing.compare import compare_images
-from matplotlib.animation import writers
 from matplotlib.patches import Ellipse
 import matplotlib.pyplot as plt
 import numpy as np
@@ -120,19 +119,24 @@ def test_raster_and_psth():
     plt.close('all')
 
 
-@pytest.mark.skipif(not writers.is_available('ffmpeg'),
-        reason='Requires ffmpeg to test animations')
 def test_playsta():
-    """Test playing an STA as a movie."""
+    """Test playing an STA as a movie.
+    
+    Matplotlib doesn't yet have a way to compare movies, and the formats
+    and precise bytes written by different encoding libraries are too variable
+    to test reliably. Instead, we write a specific frame of the animation
+    to disk as an image, and compare it with a baseline.
+    """
     nx, ny, nt = 10, 10, 50
     sta = utils.create_spatiotemporal_filter(nx, ny, nt)[-1]
     anim = viz.playsta(sta)
-    filename = os.path.join(IMG_DIR, 'test-sta-movie.mp4')
-    anim.save(filename)
-
-    with open(os.path.join(IMG_DIR, 'baseline-sta-movie.mp4'), 'rb') as base:
-        with open(filename, 'rb') as test:
-            assert base.read() == test.read()
+    filename = os.path.join(IMG_DIR, 'test-sta-movie.png')
+    frame = 10
+    anim._func(frame)
+    plt.savefig(filename)
+    assert not compare_images(
+            os.path.join(IMG_DIR, 'baseline-sta-movie-frame.png'),
+            filename, 1)
     os.remove(filename)
     plt.close('all')
 
@@ -167,8 +171,6 @@ def test_plotcells():
     plt.close('all')
 
 
-@pytest.mark.skipif(not writers.is_available('ffmpeg'),
-        reason='Requires ffmpeg to test animations')
 def test_playrates():
     """Test playing firing rates for cells as a movie."""
     nx, ny, nt = 10, 10, 50
@@ -182,11 +184,13 @@ def test_playrates():
     fig, axes = viz.ellipse(sta)
     patch = plt.findobj(axes, Ellipse)[0]
     anim = viz.playrates(rate, patch)
-    filename = os.path.join(IMG_DIR, 'test-rates-movie.mp4')
-    anim.save(filename)
-    with open(os.path.join(IMG_DIR, 'baseline-rates-movie.mp4'), 'rb') as base:
-        with open(filename, 'rb') as test:
-            assert base.read() == test.read()
+    filename = os.path.join(IMG_DIR, 'test-rates-movie.png')
+    frame = 10
+    anim._func(frame)
+    plt.savefig(filename)
+    assert not compare_images(
+            os.path.join(IMG_DIR, 'baseline-rates-movie-frame.png'),
+            filename, 1)
     os.remove(filename)
     plt.close('all')
 
