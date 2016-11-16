@@ -247,39 +247,47 @@ def playsta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None):
 
 
 @plotwrapper
-def spatial(spatial_filter, maxval=None, **kwargs):
+def spatial(filt, maxval=None, **kwargs):
     """
-    Plot a spatial filter on a given axes
+    Plot the spatial component of a full linear filter.
+
+    If the given filter is 2D, it is assumed to be a 1D spatial filter,
+    and is plotted directly. If the filter is 3D, it is decomposed into
+    its spatial and temporal components, and the spatial component is plotted.
 
     Parameters
     ----------
-    spatialFrame : array_like
-        The frame to plot, as an (n x n) matrix.
+    filt : array_like
+        The filter whose spatial component is to be plotted. It may have
+        temporal components.
+
+    maxval : float, optional
+        The value to use as minimal and maximal values when normalizing the
+        colormap for this plot. See ``plt.imshow()`` documentation for more
+        details.
 
     ax : matplotlib Axes object, optional
-        the axes on which to plot the data; defaults to creating a new figure
-
-    clim : tuple, optional
-        the color range with which to scale the image. Defaults to [-maxval, maxval] where maxval is the max abs. value
+        The axes on which to plot the data; defaults to creating a new figure.
 
     Returns
     -------
     ax : matplotlib Axes object
-        Axes into which the frame is plotted
+        Axes into which the frame is plotted.
     """
     kwargs.pop('fig')
     ax = kwargs.pop('ax')
 
+    if filt.ndim > 2:
+        spatial_filter, _ = ft.decompose(filt)
+    else:
+        spatial_filter = filt.copy()
+
     # adjust color limits if necessary
     if not maxval:
-
-        # normalize
         spatial_filter -= np.mean(spatial_filter)
-
-        # find max abs value
         maxval = np.max(np.abs(spatial_filter))
 
-    # plot the spatial frame
+    # plot the spatial component
     ax.imshow(spatial_filter,
               cmap='seismic_r',
               interpolation='nearest',
@@ -290,17 +298,22 @@ def spatial(spatial_filter, maxval=None, **kwargs):
 
 
 @plotwrapper
-def temporal(time, temporal_filter, **kwargs):
+def temporal(time, filt, **kwargs):
     """
-    Plot a temporal filter on a given axes
+    Plot the temporal component of a full linear filter.
+
+    If the given linear filter is 1D, it is assumed to be a temporal filter,
+    and is plotted directly. If the filter is 2 or 3D, it is decomposed into
+    its spatial and temporal components, and the temporal component is plotted.
 
     Parameters
     ----------
     time : array_like
-        a time vector to plot against
+        A time vector to plot against.
 
-    temporal_filter : ndarray
-        the temporal filter to plot, has the same dimensions as time
+    filt : array_like
+        The full filter to plot. May be than 1D, but must match in size along
+        the first dimension with the ``time`` input.
 
     ax : matplotlib Axes object, optional
         the axes on which to plot the data; defaults to creating a new figure
@@ -310,23 +323,29 @@ def temporal(time, temporal_filter, **kwargs):
     ax : matplotlib Axes object
         Axes into which the frame is plotted
     """
+    if filt.ndim > 1:
+        _, temporal_filter = ft.decompose(filt)
+    else:
+        temporal_filter = filt.copy()
     kwargs['ax'].plot(time, temporal_filter, linestyle='-', linewidth=2, color='LightCoral')
 
 
 def plotsta(time, sta):
     """
-    Plot a spatial and temporal filter
+    Plot a linear filter.
+
+    If the given filter is 1D, it is direclty plotted. If it is 2D, it is
+    shown as an image, with space and time as its axes. If the filter is 3D,
+    it is decomposed into its spatial and temporal components, each of which 
+    is plotted on its own axis.
 
     Parameters
     ----------
     time : array_like
-        a time vector to plot against
+        A time vector to plot against.
 
     sta : array_like
-        the filter to plot
-
-    timeslice : int, optional
-        the index of the spatial slice to plot
+        The filter to plot.
 
     Returns
     -------
