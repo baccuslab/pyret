@@ -218,19 +218,12 @@ def lowranksta(f_orig, k=10):
     # Compute the rank-k filter
     fk = (u[:, :k].dot(np.diag(s[:k]).dot(v[:k, :]))).reshape(f.shape)
 
-    # make sure the temporal kernels have the correct sign
-
-    # get out the temporal filter at the RF center
-    peakidx = filterpeak(f)[1]
-    tsta = f[:, peakidx[0], peakidx[1]].reshape(-1, 1)
-    tsta -= np.mean(tsta)
-
-    # project onto the temporal filters and keep the sign
-    signs = np.sign((u - np.mean(u, axis=0)).T.dot(tsta))
-
-    # flip signs according to this projection
-    v *= signs
-    u *= signs.T
+    # Ensure that the computed filter components have the correct sign.
+    # The mean-subtracted filter should have positive projection onto
+    # the low-rank filter.
+    sign = np.sign(fk.ravel().dot((f - np.mean(f)).ravel()))
+    u *= sign
+    v *= sign
 
     # Return the rank-k approximate filter, and the SVD components
     return fk, u, s, v
@@ -630,8 +623,10 @@ def linear_prediction(filt, stim):
     Returns
     -------
     pred : array_like
-        The predicted linear response. The shape is (T,) where T is the
-        number of time points in the input stimulus array.
+        The predicted linear response. The shape is ``(T - t + 1,)`` where
+        ``T`` is the number of time points in the stimulus, and ``t`` is 
+        the number of time points in the filter. This is the valid portion
+        of the convolution between the stimulus and filter
 
     Raises
     ------

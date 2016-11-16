@@ -24,6 +24,8 @@ Pyret requires the following dependencies:
 
 - ``scikit-image``
 
+- ``scikit-learn``
+
 - ``matplotlib``
 
 Development

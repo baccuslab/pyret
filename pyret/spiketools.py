@@ -40,11 +40,11 @@ def estfr(bspk, time, sigma=0.01):
 
     Parameters
     ----------
-    time : array_like
-        Array of time points corresponding to bins
-
     bspk : array_like
         Array of binned spike counts (e.g. from binspikes)
+
+    time : array_like
+        Array of time points corresponding to bins
 
     sigma : float, optional
         The width of the Gaussian filter, in seconds (Default: 0.01 seconds)
@@ -61,7 +61,7 @@ def estfr(bspk, time, sigma=0.01):
     tau = np.arange(-5 * sigma, 5 * sigma, dt)
     filt = np.exp(-0.5 * (tau / sigma) ** 2)
     filt = filt / np.sum(filt)
-    size = np.round(filt.size / 2)
+    size = int(np.round(filt.size / 2))
 
     # Filter  binned spike times
     return np.convolve(filt, bspk, mode='full')[size:size + time.size] / dt
