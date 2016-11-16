@@ -69,6 +69,7 @@ class Sigmoid(BaseEstimator, RegressorMixin, NonlinearityMixin):
 
     def fit(self, x, y, **kwargs):
         self.params, self.pcov = curve_fit(self._sigmoid, x, y, self.init_params, **kwargs)
+        self.set_params(**dict(zip(self.get_params().keys(), self.params)))
         return self
 
     @staticmethod
@@ -136,9 +137,9 @@ class Binterp(BaseEstimator, RegressorMixin, NonlinearityMixin):
 
 
 class GaussianProcess(GaussianProcessRegressor, NonlinearityMixin):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self._fitted = False
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
     def fit(self, x, y):
         super().fit(x.reshape(-1, 1), y)
