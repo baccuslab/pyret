@@ -657,7 +657,7 @@ def revcorr(response, stimulus, filter_length):
 
     stimulus : array_like
         A input stimulus correlated with the ``response``. Must be of shape
-        (t, ...), where t is the time and ... indicates any spatial dimensions.
+        ``(t, ...)``, where ``t`` is the time and ``...`` indicates any spatial dimensions.
 
     filter_length : int
         The length of the returned filter, in samples of the ``stimulus`` and
@@ -672,8 +672,7 @@ def revcorr(response, stimulus, filter_length):
 
     Raises
     ------
-    ValueError : If the ``stimulus`` and ``response`` arrays are of different
-    shapes.
+    ValueError : If the ``stimulus`` and ``response`` arrays are of different shapes.
 
     Notes
     -----

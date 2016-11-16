@@ -59,7 +59,7 @@ firing rate of the RGC over time.
     :width: 500px
     :alt: Estimated RGC firing rate over time
 
-One widely-used and informative description of the cell is it's receptive field. This
+One widely-used and informative description of the cell is its receptive field. This
 is a linear approximation to the function of the cell, and captures the average visual
 feature to which it responds. Because our data consists of spike times, we'll compute
 the *spike-triggered average* (STA) for the cell. 
@@ -81,7 +81,7 @@ the *spike-triggered average* (STA) for the cell.
 While the STA gives a lot of information, it is not the whole story. Real RGCs are definitely
 *not* linear. One common way to correct for this fact is to fit a single, time-invariant
 (static), point-wise nonlinearity to the data. This is a mapping between the linear response
-to the real spiking data; in otherwords, it captures the difference between how the cell
+to the real spiking data; in other words, it captures the difference between how the cell
 *would response if it were linear* and how the cell actually responds.
 
 The first step in computing a nonlinearity is to compute how the recovered linear
@@ -122,7 +122,7 @@ bins, so that each bin has roughly the same number of data points.
     >>> binterp = pyret.nonlinearities.Binterp(nbins)
     >>> binterp.fit(pred, rate[filter_length - 1 :])
     >>> nonlin_range = (pred.min(), pred.max())
-    >>> binterp.plot(nonlin_range, linewdith=5, label='Binterp')  # Plot nonlinearity over the given range
+    >>> binterp.plot(nonlin_range, linewidth=5, label='Binterp')  # Plot nonlinearity over the given range
 
 .. image:: /pyret-tutorial-figures/pred-vs-true-with-binterp.png
     :height: 500px
@@ -130,7 +130,8 @@ bins, so that each bin has roughly the same number of data points.
     :alt: Predicted vs true firing rates for one RGC
 
 One can also fit sigmoidal nonlinearities, or a nonlinearity using a Gaussian process
-(which has some nice advantages, and returns errorbars automatically). These are shown below.
+(which has some nice advantages, and returns errorbars automatically). More information 
+about these can be found in the full documentation.
 
 We can now compare how well the full LN model captures the cell's response characteristics.
 
