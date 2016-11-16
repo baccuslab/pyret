@@ -6,7 +6,7 @@
 [![PyPi version](https://img.shields.io/pypi/v/pyret.svg)](https://pypi.python.org/pypi/pyret)
 
 ### A Python package for analyzing retinal data
-Benjamin Naecker, Niru Maheswaranthan, Pablo Jadzinsky
+Benjamin Naecker, Niru Maheswaranthan
 
 <img src="https://cloud.githubusercontent.com/assets/904854/11761236/e77e2bd2-a06e-11e5-8b54-0c70f40089ab.gif" height="256">
 
@@ -20,10 +20,6 @@ analyses, and visualization tools.
 Documentation
 -------------
 For more info and documentation, see the [pyret documentation](http://pyret.readthedocs.org/en/master/).
-
-Demo
-----
-(coming soon) For a demo of how to do analysis using `pyret`, check out the html file and corresponding ipython notebook in the `demo/` folder.
 
 Contributing
 ------------
