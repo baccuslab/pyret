@@ -557,8 +557,7 @@ def get_ellipse(spatial_filter, sigma=2.):
                                           p0=pinit)
 
     # return ellipse parameters, scaled by the appropriate scale factor
-
-    return _popt_to_ellipse(*popt, sigma)
+    return _popt_to_ellipse(*popt, sigma=sigma)
 
 
 def rfsize(spatial_filter, dx, dy=None, sigma=2.):
@@ -733,7 +732,7 @@ def _gaussian_function(data, x0, y0, a, b, c):
     return np.exp(-0.5 * (a * xc**2 + 2 * b * xc * yc + c * yc**2))
 
 
-def _popt_to_ellipse(y0, x0, a, b, c, sigma):
+def _popt_to_ellipse(y0, x0, a, b, c, sigma=2.):
     """
     Converts the parameters (center and terms in the precision matrix) for a 2D
     gaussian function into ellipse parameters (center, widths, and rotation)
