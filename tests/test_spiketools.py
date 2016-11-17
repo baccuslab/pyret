@@ -23,7 +23,20 @@ def test_binspikes():
 
 
 def test_estfr():
-    pass
+
+    T = 100
+    dt = 1e-2
+
+    # test an empty array
+    bspk = np.zeros(T,)
+    time = np.arange(0, 1, dt)
+    fr = spk.estfr(bspk, time, sigma=0.01)
+    assert np.allclose(fr, bspk)
+
+    # test a single spike
+    bspk[T // 2] = 1.
+    fr = spk.estfr(bspk, time, sigma=0.01)
+    assert (fr.sum() * dt) == bspk.sum()
 
 
 def test_detectevents():
