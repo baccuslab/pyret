@@ -9,6 +9,7 @@ for smoothing a histogram into a firing rate (`estfr`)
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+from collections import Counter
 
 __all__ = ['binspikes', 'estfr', 'detectevents', 'peakdet', 'SpikingEvent']
 
@@ -105,17 +106,10 @@ class SpikingEvent(object):
         return (self.start == other.start) & (self.stop == other.stop)
 
     def trial_counts(self):
-        """
-        Count the number of spikes per trial
+        """Count the number of spikes per trial"""
+        return Counter(self.spikes[:, 1])
 
-        >> counts = spkevent.trial_counts()
-
-        """
-        counts, _ = np.histogram(self.spikes[:, 1], bins=np.arange(
-            np.min(self.spikes[:, 1]), np.max(self.spikes[:, 1])))
-        return counts
-
-    def event_stats(self):
+    def stats(self):
         """
         Compute statistics (mean and standard deviation) across spike counts
 
@@ -124,7 +118,7 @@ class SpikingEvent(object):
         """
 
         # count number of spikes per trial
-        counts = self.trial_counts()
+        counts = list(self.trial_counts().values())
 
         return np.mean(counts), np.std(counts)
 
@@ -219,7 +213,7 @@ def detectevents(spk, threshold=(0.3, 0.05)):
 
     threshold : (float, float), optional
         A tuple of two floats that are used as thresholds for detecting firing
-        events. Default: (0.1, 0.005) see `peakdetect.py` for more info
+        events. Default: (0.1, 0.005) see `peakdet` for more info
 
     Returns
     -------
@@ -228,10 +222,10 @@ def detectevents(spk, threshold=(0.3, 0.05)):
         See the `spikingevent` class for more info.
     """
     # find peaks in the PSTH
-    bspk, tax = binspikes(spk[:, 0], binsize=0.01,
-                          num_trials=np.max(spk[:, 1]))
-    psth = estfr(tax, bspk, sigma=0.02)
-    maxtab, _ = peakdet(psth, threshold[0], tax)
+    time = np.arange(0, np.ceil(spk[:, 0].max()), 0.01)
+    bspk = binspikes(spk[:, 0], time)
+    psth = estfr(bspk, time, sigma=0.01)
+    maxtab, _ = peakdet(psth, threshold[0], time)
 
     # store spiking events in a list
     events = list()
@@ -241,21 +235,21 @@ def detectevents(spk, threshold=(0.3, 0.05)):
 
         # get putative start and stop indices of each spiking event
         start_indices = np.where((psth <= threshold[1]) &
-                                 (tax < maxtab[eventidx, 0]))[0]
+                                 (time < maxtab[eventidx, 0]))[0]
         stop_indices = np.where((psth <= threshold[1]) &
-                                (tax > maxtab[eventidx, 0]))[0]
+                                (time > maxtab[eventidx, 0]))[0]
 
         # find the start time, defined as the right most peak index
         if start_indices.size == 0:
-            starttime = tax[0]
+            starttime = time[0]
         else:
-            starttime = tax[np.max(start_indices)]
+            starttime = time[np.max(start_indices)]
 
         # find the stop time, defined as the lest most peak index
         if stop_indices.size == 0:
-            stoptime = tax[-1]
+            stoptime = time[-1]
         else:
-            stoptime = tax[np.min(stop_indices)]
+            stoptime = time[np.min(stop_indices)]
 
         # find spikes within this time interval
         event_spikes = spk[(spk[:, 0] >= starttime) &
@@ -268,7 +262,7 @@ def detectevents(spk, threshold=(0.3, 0.05)):
         if not events or not (events[-1] == event):
             events.append(event)
 
-    return tax, psth, bspk, events
+    return time, psth, bspk, events
 
 
 def peakdet(v, delta, x=None):

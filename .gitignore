@@ -9,3 +9,4 @@ dist/
 htmlcov/
 .cache/
 .DS_Store
+tests/test-images/
