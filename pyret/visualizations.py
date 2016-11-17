@@ -10,7 +10,7 @@ from matplotlib import gridspec, animation, cm
 from matplotlib.patches import Ellipse
 
 __all__ = ['raster', 'psth', 'raster_and_psth', 'spatial', 'temporal',
-           'plotsta', 'playsta', 'ellipse', 'plotcells', 'playrates']
+           'plot_sta', 'play_sta', 'ellipse', 'plot_cells', 'play_rates']
 
 
 @plotwrapper
