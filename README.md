@@ -12,10 +12,7 @@ Benjamin Naecker, Niru Maheswaranthan
 
 Brief description
 -----------------
-
-The pyret package provides a set of tools useful in the analysis of retina experiments
-in the Baccus lab. It contains routines for manipulating spike trains, performing basic spike-triggered
-analyses, and visualization tools.
+The pyret package provides a set of tools for analyzing electrophysiology data, especially data recorded from sensory systems driven by an external stimulus. It was originally written and is mainly used for the analysis of multi-electrode array (MEA) recordings from the retina in the Baccus lab at Stanford University. It contains routines for manipulating spike trains, performing basic spike-triggered analyses, and visualization tools.
 
 Documentation
 -------------
