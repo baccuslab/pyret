@@ -195,7 +195,7 @@ def test_play_rates():
     plt.close('all')
 
 
-def test_to_html():
+def test_anim_to_html():
     """Test converting an animation to HTML."""
     try:
         from IPython.display import HTML
@@ -205,6 +205,6 @@ def test_to_html():
     nx, ny, nt = 10, 10, 50
     sta = utils.create_spatiotemporal_filter(nx, ny, nt)[-1]
     anim = viz.play_sta(sta)
-    html = viz.to_html(anim)
+    html = viz.anim_to_html(viz.play_sta(sta))
     assert isinstance(html, HTML)
 

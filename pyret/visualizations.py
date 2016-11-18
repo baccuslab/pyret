@@ -534,7 +534,7 @@ def play_rates(rates, patches, num_levels=255, time=None, repeat=True, frametime
     """
     Plays a movie representation of the firing rate of a list of cells, by
     coloring a list of patches with a color proportional to the firing rate. This
-    is useful, for example, in conjunction with ``plotcells``, to color the 
+    is useful, for example, in conjunction with ``plot_cells``, to color the 
     ellipses fitted to a set of receptive fields proportional to the firing rate.
 
     Parameters
@@ -581,12 +581,12 @@ def play_rates(rates, patches, num_levels=255, time=None, repeat=True, frametime
             np.arange(T), interval=frametime, repeat=repeat)
     return anim
 
-def to_html(anim):
+def anim_to_html(anim):
     """
     Convert an animation into an embedable HTML element.
     
-    This converts the animation objects returned by ``playsta()`` and
-    ``playrates()`` into an HTML tag that can be embedded, for example
+    This converts the animation objects returned by ``play_sta()`` and
+    ``play_rates()`` into an HTML tag that can be embedded, for example
     in a Jupyter notebook.
 
     Paramters
@@ -607,4 +607,3 @@ def to_html(anim):
     """
     from IPython.display import HTML
     return HTML(anim.to_html5_video())
-
