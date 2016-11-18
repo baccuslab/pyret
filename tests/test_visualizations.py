@@ -193,4 +193,3 @@ def test_playrates():
             filename, 1)
     os.remove(filename)
     plt.close('all')
-
