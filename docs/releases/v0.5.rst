@@ -1,0 +1,31 @@
+==================
+v0.5 (17 Nov 2016)
+==================
+
+New features
+------------
+- Better handling of low-rank STA component signs in ``filtertools.lowranksta``.
+- Functionality for embedding STA animations into HTML, via ``visualizations.anim_to_html()``.
+- New classes for estimating nonlinearities: ``Binterp``, ``Sigmoid`` and 
+  ``GaussianProcess``. These follow the ``scikit-learn`` interface, meaning
+  they have ``fit()`` and ``predict()`` methods, which return ``self``.
+
+API changes
+-----------
+- Renamed ``filtertools.getsta`` -> ``filtertools.sta``
+- Renamed ``filtertools.getste`` -> ``filtertools.ste``
+- Renamed ``filtertools.getstc`` -> ``filtertools.stc``
+- Renamed ``visualizations.rasterandpsth`` -> ``visualizations.raster_and_psth``
+- Renamed ``visualizations.plotcells`` -> ``visualizations.plot_cells``
+- Renamed ``visualizations.plotsta`` -> ``visualizations.plot_sta``
+- Renamed ``visualizations.playrates`` -> ``visualizations.play_rates``
+- Renamed ``visualizations.playsta`` -> ``visualizations.play_sta``
+- ``spiketools.binspikes`` and ``spiketools.estfr`` no longer return the time axis. Only the
+  binned spikes and firing rate are returned, respectively.
+- Removed ``containers`` module.
+- ``filtertools.rolling_window`` has been moved to the ``stimulustools`` module,
+  and is renamed ``slicestim``. ``rolling_window`` is an alias for ``slicestim``,
+  for the time being, which raises a warning about future deprecation.
+- Renamed ``stimulustools.stimcov`` -> ``stimulustools.cov``.
+- Renamed ``stimulustools.upsample_stim`` -> ``stimulustools.upsample``.
+- Renamed ``stimulustools.downsample_stim`` -> ``stimulustools.downsample``.

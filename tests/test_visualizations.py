@@ -54,7 +54,7 @@ def test_spatiotemporal_filter():
 
     # Test plotting temporal component
     filename = os.path.join(IMG_DIR, 'test-temporal-filter.png')
-    viz.plotsta(time, t)
+    viz.plot_sta(time, t)
     plt.savefig(filename)
     assert not compare_images(
             os.path.join(IMG_DIR, 'baseline-temporal-from-spatiotemporal-filter.png'), 
@@ -64,7 +64,7 @@ def test_spatiotemporal_filter():
 
     # Test plotting spatial component
     filename = os.path.join(IMG_DIR, 'test-temporal-filter.png')
-    viz.plotsta(time, s)
+    viz.plot_sta(time, s)
     plt.savefig(filename)
     assert not compare_images(
             os.path.join(IMG_DIR, 'baseline-spatial-from-spatiotemporal-filter.png'), 
@@ -74,7 +74,7 @@ def test_spatiotemporal_filter():
 
     # Test plotting both spatial/temporal components
     filename = os.path.join(IMG_DIR, 'test-full-spatiotemporal-filter.png')
-    viz.plotsta(time, sta)
+    viz.plot_sta(time, sta)
     plt.savefig(filename)
     assert not compare_images(
             os.path.join(IMG_DIR, 'baseline-full-spatiotemporal-filter.png'), filename, 1)
@@ -119,7 +119,7 @@ def test_raster_and_psth():
     plt.close('all')
 
 
-def test_playsta():
+def test_play_sta():
     """Test playing an STA as a movie.
     
     Matplotlib doesn't yet have a way to compare movies, and the formats
@@ -129,7 +129,7 @@ def test_playsta():
     """
     nx, ny, nt = 10, 10, 50
     sta = utils.create_spatiotemporal_filter(nx, ny, nt)[-1]
-    anim = viz.playsta(sta)
+    anim = viz.play_sta(sta)
     filename = os.path.join(IMG_DIR, 'test-sta-movie.png')
     frame = 10
     anim._func(frame)
@@ -153,7 +153,7 @@ def test_ellipse():
     plt.close('all')
 
 
-def test_plotcells():
+def test_plot_cells():
     """Test plotting ellipses for multiple cells on the same axes."""
     nx, ny, nt = 10, 10, 50
     stas = []
@@ -162,8 +162,8 @@ def test_plotcells():
         stas.append(utils.create_spatiotemporal_filter(nx, ny, nt)[-1])
 
     filename = os.path.join(IMG_DIR, 'test-plotcells.png')
-    np.random.seed(0) # plotcells() uses random colors for each cell
-    viz.plotcells(stas)
+    np.random.seed(0) # plot_cells() uses random colors for each cell
+    viz.plot_cells(stas)
     plt.savefig(filename)
     assert not compare_images(
             os.path.join(IMG_DIR, 'baseline-plotcells.png'), filename, 1)
@@ -171,7 +171,7 @@ def test_plotcells():
     plt.close('all')
 
 
-def test_playrates():
+def test_play_rates():
     """Test playing firing rates for cells as a movie."""
     nx, ny, nt = 10, 10, 50
     sta = utils.create_spatiotemporal_filter(nx, ny, nt)[-1]
@@ -183,7 +183,7 @@ def test_playrates():
     # Plot cell
     fig, axes = viz.ellipse(sta)
     patch = plt.findobj(axes, Ellipse)[0]
-    anim = viz.playrates(rate, patch)
+    anim = viz.play_rates(rate, patch)
     filename = os.path.join(IMG_DIR, 'test-rates-movie.png')
     frame = 10
     anim._func(frame)
@@ -193,3 +193,18 @@ def test_playrates():
             filename, 1)
     os.remove(filename)
     plt.close('all')
+
+
+def test_anim_to_html():
+    """Test converting an animation to HTML."""
+    try:
+        from IPython.display import HTML
+    except ImportError:
+        pytest.skip('Cannot convert movie to HTML without IPython.')
+
+    nx, ny, nt = 10, 10, 50
+    sta = utils.create_spatiotemporal_filter(nx, ny, nt)[-1]
+    anim = viz.play_sta(sta)
+    html = viz.anim_to_html(viz.play_sta(sta))
+    assert isinstance(html, HTML)
+

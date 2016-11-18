@@ -10,7 +10,7 @@ from matplotlib import gridspec, animation, cm
 from matplotlib.patches import Ellipse
 
 __all__ = ['raster', 'psth', 'raster_and_psth', 'spatial', 'temporal',
-           'plotsta', 'playsta', 'ellipse', 'plotcells', 'playrates']
+           'plot_sta', 'play_sta', 'ellipse', 'plot_cells', 'play_rates']
 
 
 @plotwrapper
@@ -204,7 +204,7 @@ def raster_and_psth(spikes, trial_length=None, binsize=0.01, **kwargs):
         tick.set_color('k')
 
 
-def playsta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None):
+def play_sta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None):
     """
     Plays a spatiotemporal spike-triggered average as a movie.
 
@@ -357,7 +357,7 @@ def temporal(time, filt, **kwargs):
     kwargs['ax'].plot(time, temporal_filter, linestyle='-', linewidth=2, color='LightCoral')
 
 
-def plotsta(time, sta):
+def plot_sta(time, sta):
     """
     Plot a linear filter.
 
@@ -496,7 +496,7 @@ def ellipse(filt, sigma=2.0, alpha=0.8, fc='none', ec='black', lw=3, **kwargs):
 
 
 @plotwrapper
-def plotcells(cells, **kwargs):
+def plot_cells(cells, **kwargs):
     """
     Plot the spatial receptive fields for multiple cells.
 
@@ -530,11 +530,11 @@ def plotcells(cells, **kwargs):
         fig, ax = ellipse(sp, fc=color, ec=color, lw=2, alpha=0.3, ax=ax)
 
 
-def playrates(rates, patches, num_levels=255, time=None, repeat=True, frametime=100):
+def play_rates(rates, patches, num_levels=255, time=None, repeat=True, frametime=100):
     """
     Plays a movie representation of the firing rate of a list of cells, by
     coloring a list of patches with a color proportional to the firing rate. This
-    is useful, for example, in conjunction with ``plotcells``, to color the 
+    is useful, for example, in conjunction with ``plot_cells``, to color the 
     ellipses fitted to a set of receptive fields proportional to the firing rate.
 
     Parameters
@@ -581,3 +581,29 @@ def playrates(rates, patches, num_levels=255, time=None, repeat=True, frametime=
             np.arange(T), interval=frametime, repeat=repeat)
     return anim
 
+def anim_to_html(anim):
+    """
+    Convert an animation into an embedable HTML element.
+    
+    This converts the animation objects returned by ``play_sta()`` and
+    ``play_rates()`` into an HTML tag that can be embedded, for example
+    in a Jupyter notebook.
+
+    Paramters
+    ---------
+    anim : matplotlib.animation.Animation
+        The animation object to embed.
+
+    Returns
+    -------
+    html : IPython.display.HTML
+        An HTML object with the encoded video. This can be directly embedded
+        into an IPython notebook.
+
+    Raises
+    ------
+    An ImportError is raised if the IPython modules required to convert the
+    animation are not installed.
+    """
+    from IPython.display import HTML
+    return HTML(anim.to_html5_video())

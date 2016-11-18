@@ -67,7 +67,7 @@ the *spike-triggered average* (STA) for the cell.
     >>> filter_length_seconds = 0.5  # 500 ms filter
     >>> filter_length = int(filter_length_second / data_file['stimulus'].attrs.get('frame-rate'))
     >>> sta, tax = pyret.filtertools.sta(time, stimulus, spikes, filter_length)
-    >>> fig, axes = pyret.visualizations.plotsta(tax[::-1], sta)
+    >>> fig, axes = pyret.visualizations.plot_sta(tax[::-1], sta)
     >>> axes[0].set_title('Recovered spatial filter (STA)')
     >>> axes[1].set_title('Recovered temporal filter (STA)')
     >>> axes[1].set_xlabel('Time before spike (s)')
