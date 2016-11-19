@@ -11,8 +11,6 @@ pyret: retinal data analysis in python
 It was written because we think sharing code and data withing the scientific community is easiest when there are open
 standards to adhere to.
 
-.. note:: Pyret is under active development. Please refer to these pages or the Github repository for the latest info.
-
 .. _pyret: https://github.com/baccuslab/pyret/
 
 .. toctree::
@@ -24,10 +22,15 @@ standards to adhere to.
     api
     changelog
 
-An example receptive field visualized using pyret:
+An example retinal ganglion cell `receptive field`_ visualized using pyret:
+
+.. _receptive field: https://en.wikipedia.org/wiki/Receptive_field
 
 .. image:: https://cloud.githubusercontent.com/assets/904854/11761236/e77e2bd2-a06e-11e5-8b54-0c70f40089ab.gif
     :height: 256 px
     :width: 256 px
+
+Please report any bugs you encounter through the GitHub `issue tracker
+<https://github.com/baccuslab/pyret/issues/new>`_.
 
 :ref:`genindex` of all functions.

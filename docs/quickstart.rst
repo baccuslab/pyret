@@ -145,15 +145,7 @@ We can now compare how well the full LN model captures the cell's response chara
     >>> np.corrcoef(rate[filter_length - 1 :], predicted_rate)[0, 1]
     0.70315310866999448
 
-
 .. image:: /pyret-tutorial-figures/pred-vs-true-rates.png
     :height: 500px
     :width: 500px
     :alt: True firing rate with LN model prediction for one RGC
-
-
-Bugs
-----
-
-Please report any bugs you encounter through the GitHub `issue tracker
-<https://github.com/baccuslab/pyret/issues/new>`_.
