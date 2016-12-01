@@ -1,0 +1,17 @@
+{
+  "@context": "https://raw.githubusercontent.com/mbjones/codemeta/master/codemeta.jsonld",
+  "@type": "Code",
+  "author": [
+
+  ],
+  "identifier": "",
+  "codeRepository": "https://github.com/baccuslab/pyret",
+  "datePublished": "2016-12-01",
+  "dateModified": "2016-12-01",
+  "dateCreated": "2016-12-01",
+  "description": "A Python package for analyzing sensory electrophysiology",
+  "keywords": "sensory, neuroscience, retina",
+  "license": "MIT",
+  "title": "pyret",
+  "version": "v0.5.0"
+}

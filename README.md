@@ -5,7 +5,7 @@
 [![Documentation Status](https://readthedocs.org/projects/pyret/badge/?version=latest)](http://pyret.readthedocs.org/en/master/?badge=master)
 [![PyPi version](https://img.shields.io/pypi/v/pyret.svg)](https://pypi.python.org/pypi/pyret)
 
-### A Python package for analyzing retinal data
+### A Python package for analyzing sensory electrophysiology data
 Benjamin Naecker, Niru Maheswaranthan
 
 <img src="https://cloud.githubusercontent.com/assets/904854/11761236/e77e2bd2-a06e-11e5-8b54-0c70f40089ab.gif" height="256">
