@@ -94,7 +94,7 @@ def downsample(stim, downsample_factor, time=None):
     return stim_ds, time_ds
 
 
-def slicestim(stimulus, history):
+def slicestim(stimulus, nsamples_before, nsamples_after=0):
     """
     Slices a spatiotemporal stimulus array (over time) into overlapping frames.
 
@@ -102,11 +102,13 @@ def slicestim(stimulus, history):
     ----------
     stimulus : array_like
         The spatiotemporal or temporal stimulus to slices. Should have shape
-        (t, ...), so that the time axis is first. The ellipses indicate the
+        ``(t, ...)``, so that the time axis is first. The ellipses indicate the
         spatial dimensions of the stimulus, if any.
 
-    history : int
-        Integer number of time points to keep in each slice.
+    nsamples_before : int
+        Integer number of time points
+
+    nsamples_after : int, optional
 
     Returns
     ------
@@ -129,14 +131,15 @@ def slicestim(stimulus, history):
     array([[ 1.,  2.,  3.],
            [ 6.,  7.,  8.]])
     """
-    if not (1 <= history <= stimulus.shape[0]):
+    if not (1 <= nsamples_before <= stimulus.shape[0]):
         msg = '`history` must be between 1 and {0:#d}'.format(stimulus.shape[0])
         raise ValueError(msg)
-    elif not isinstance(history, int):
-        raise ValueError("`history` must be an integer")
+    elif not isinstance(nsamples_before, int) or not isinstance(nsamples_after, int):
+        raise ValueError("`nsamples_before` and `nsamples_after` must be integers")
 
     # Use strides to create view onto array
-    shape = (history, stimulus.shape[0] - history + 1) + stimulus.shape[1:]
+    npoints = nsamples_before + nsamples_after
+    shape = (nsamples_before, stimulus.shape[0] - npoints + 1) + stimulus.shape[1:]
     stride = (stimulus.strides[0],) + stimulus.strides
 
     # return the newly strided array

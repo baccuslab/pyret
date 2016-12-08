@@ -162,7 +162,7 @@ def test_normalize_spatial():
     nx, ny = 10, 10
     true_filter = utils.create_spatiotemporal_filter(nx, ny, filter_length)[1]
     noise_std = 0.01
-    noisy_filter = -(true_filter + 1.0 + np.random.randn(*true_filter.shape) * 0.01)
+    noisy_filter = true_filter + 1.0 + np.random.randn(*true_filter.shape) * 0.01
 
     normalized = flt.normalize_spatial(noisy_filter)
     normalized /= np.linalg.norm(normalized)
@@ -180,28 +180,28 @@ def test_rfsize():
     assert np.allclose(xsize, 3., 0.1) # 1 SD is about 3 units
     assert np.allclose(ysize, 3., 0.1)
 
-def test_linear_prediction_1d():
-    """Test method for computing linear prediction from a
+def test_linear_response_1d():
+    """Test method for computing linear response from a
     filter to a one-dimensional stimulus.
     """
     np.random.seed(0)
     filt = np.random.randn(100,)
     stim = np.random.randn(1000,)
-    pred = flt.linear_prediction(filt, stim)
+    pred = flt.linear_response(filt, stim)
 
     sl = slicestim(stim, filt.shape[0])
     assert np.allclose(sl.dot(filt), pred)
 
 
-def test_linear_prediction_nd():
-    """Test method for computing linear prediction from a
+def test_linear_response_nd():
+    """Test method for computing linear response from a
     filter to a multi-dimensional stimulus.
     """
     np.random.seed(0)
     for ndim in range(2, 4):
         filt = np.random.randn(100, *((10,) * ndim))
         stim = np.random.randn(1000, *((10,) * ndim))
-        pred = flt.linear_prediction(filt, stim)
+        pred = flt.linear_response(filt, stim)
 
         sl = slicestim(stim, filt.shape[0])
         tmp = np.zeros(sl.shape[0])
@@ -210,21 +210,21 @@ def test_linear_prediction_nd():
 
         assert np.allclose(tmp, pred)
 
-def test_linear_prediction_raises():
+def test_linear_response_raises():
     """Test raising ValueErrors with incorrect inputs"""
     np.random.seed(0)
     with pytest.raises(ValueError):
-        flt.linear_prediction(np.random.randn(10,), np.random.randn(10,2))
+        flt.linear_response(np.random.randn(10,), np.random.randn(10,2))
     with pytest.raises(ValueError):
-        flt.linear_prediction(np.random.randn(10, 2), np.random.randn(10, 3))
+        flt.linear_response(np.random.randn(10, 2), np.random.randn(10, 3))
 
 def test_revcorr_raises():
     """Test raising ValueErrors with incorrect inputs"""
     np.random.seed(0)
     with pytest.raises(ValueError):
-        flt.revcorr(np.random.randn(10,), np.random.randn(10,2), 2)
+        flt.revcorr(np.random.randn(10, 1), np.random.randn(10,), 2)[0]
     with pytest.raises(ValueError):
-        flt.revcorr(np.random.randn(10, 2), np.random.randn(10, 3), 2)
+        flt.revcorr(np.random.randn(10, 3), np.random.randn(10, 2), 2)[0]
 
 def test_revcorr_1d():
     """Test computation of a 1D linear filter by reverse correlation"""
@@ -237,10 +237,10 @@ def test_revcorr_1d():
     # Compute linear response
     stim_length = 10000
     stimulus = np.random.randn(stim_length,)
-    response = flt.linear_prediction(true_filter, stimulus)
+    response = flt.linear_response(true_filter, stimulus)
 
     # Reverse correlation
-    filt = flt.revcorr(response, stimulus, filter_length)
+    filt = flt.revcorr(stimulus, response, filter_length)[0]
     filt /= np.linalg.norm(filt)
     tol = 0.1
     assert np.allclose(true_filter, filt, atol=tol)
@@ -258,10 +258,10 @@ def test_revcorr_nd():
     # Compute linear response
     stim_length = 10000
     stimulus = np.random.randn(stim_length, nx, ny)
-    response = flt.linear_prediction(true_filter, stimulus)
+    response = flt.linear_response(true_filter, stimulus)
 
     # Reverse correlation
-    filt = flt.revcorr(response, stimulus, filter_length)
+    filt = flt.revcorr(stimulus, response, filter_length)[0]
     filt /= np.linalg.norm(filt)
     tol = 0.1
     assert np.allclose(true_filter, filt, atol=tol)
