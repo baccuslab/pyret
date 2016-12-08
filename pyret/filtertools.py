@@ -19,7 +19,7 @@ __all__ = ['ste', 'sta', 'stc', 'lowranksta', 'decompose',
            'normalize_spatial', 'linear_prediction', 'revcorr']
 
 
-def ste(time, stimulus, spikes, filter_length):
+def ste(time, stimulus, spikes, nsamples_before, nsamples_after=0):
     """
     Constructs an iterator over spike-triggered stimuli
 
@@ -35,8 +35,11 @@ def ste(time, stimulus, spikes, filter_length):
     spikes : iterable
         A list or ndarray of spike times
 
-    filter_length : int
-        The desired temporal history / length of the STA
+    nsamples_before : int
+        Number of samples to include in the STE before the spike
+
+    nsamples_after : int
+        Number of samples to include in the STE after the spike (default: 0)
 
     Returns
     -------
@@ -44,20 +47,22 @@ def ste(time, stimulus, spikes, filter_length):
         A generator that yields samples from the spike-triggered ensemble
 
     """
+    nb, na = nsamples_before, nsamples_after
 
     # Bin spikes
     (hist, bins) = np.histogram(spikes, time)
 
     # Get indices of non-zero firing, truncating spikes earlier
     # than `filterlength` frames
-    slices = (stimulus[(idx - filter_length):idx, ...].astype('float64')
-              for idx in np.where(hist > 0)[0] if idx > filter_length)
+    slices = (stimulus[(idx - nb):(idx + na), ...].astype('float64')
+              for idx in np.where(hist > 0)[0]
+              if (idx > nsamples_before and (idx + nsamples_after) < len(stimulus)))
 
     # return the iterator
     return slices
 
 
-def sta(time, stimulus, spikes, filter_length):
+def sta(time, stimulus, spikes, nsamples_before, nsamples_after=0):
     """
     Compute a spike-triggered average
 
@@ -75,8 +80,11 @@ def sta(time, stimulus, spikes, filter_length):
     spikes : iterable
         A list or ndarray of spike times
 
-    filter_length : int
-        The desired temporal history / length of the STA
+    nsamples_before : int
+        Number of samples to include in the STA before the spike
+
+    nsamples_after : int
+        Number of samples to include in the STA after the spike (default: 0)
 
     Returns
     -------
@@ -89,10 +97,12 @@ def sta(time, stimulus, spikes, filter_length):
     """
 
     # get the iterator
-    ste_it = ste(time, stimulus, spikes, filter_length)
+    ste_it = ste(time, stimulus, spikes, nsamples_before, nsamples_after=nsamples_after)
 
     # time axis
-    tax = time[:filter_length] - time[0]
+    filter_length = nsamples_before + nsamples_after
+    dt = np.mean(np.diff(time))
+    tax = dt * np.arange(-nsamples_before, nsamples_after) + dt
 
     # reduce
     try:
@@ -105,7 +115,7 @@ def sta(time, stimulus, spikes, filter_length):
     return sta, tax
 
 
-def stc(time, stimulus, spikes, filter_length):
+def stc(time, stimulus, spikes, nsamples_before, nsamples_after=0):
     """
     Compute the spike-triggered covariance
 
@@ -123,21 +133,24 @@ def stc(time, stimulus, spikes, filter_length):
     spikes : iterable
         A list or ndarray of spike times
 
-    filter_length : int
-        The desired temporal history / length of the STA
+    nsamples_before : int
+        Number of samples to include in the STC before the spike
+
+    nsamples_after : int
+        Number of samples to include in the STC after the spike (default: 0)
 
     Returns
     -------
     stc : ndarray
         The spike-triggered covariance (STC) matrix
-
     """
-
     # get the blas function for computing the outer product
     outer = scipy.linalg.blas.get_blas_funcs('syr', dtype='d')
 
     # get the iterator
-    ste_it = ste(time, stimulus, spikes, filter_length)
+    ste_it = ste(time, stimulus, spikes, nsamples_before, nsamples_after=nsamples_after)
+
+    filter_length = nsamples_before + nsamples_after
 
     # check if empty
     first = next(ste_it, None)
