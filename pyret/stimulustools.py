@@ -101,21 +101,25 @@ def slicestim(stimulus, nsamples_before, nsamples_after=0):
     Parameters
     ----------
     stimulus : array_like
-        The spatiotemporal or temporal stimulus to slices. Should have shape
+        The spatiotemporal or temporal stimulus to slice. Should have shape
         ``(t, ...)``, so that the time axis is first. The ellipses indicate the
         spatial dimensions of the stimulus, if any.
 
     nsamples_before : int
-        Integer number of time points
+        Integer number of time points before a hypothetical center.
+        See Notes section for more details.
 
     nsamples_after : int, optional
+        Integer number of time points before a hypothetical center.
+        See Notes section for more details.
 
     Returns
     ------
     slices : array_like
         A view onto the original stimulus array, giving the overlapping slices
         of the stimulus. The full shape of the returned array is:
-        (history, stimulus.shape[0] - history, ...). As above, the ellipses
+        ``(history, stimulus.shape[0] - history, ...)``, where
+        ``history == nsamples_before + nafter``. As above, the ellipses
         indicate any spatial dimensions to the stimulus.
 
     Examples
@@ -127,19 +131,37 @@ def slicestim(stimulus, nsamples_before, nsamples_after=0):
 
     Calculate rolling mean of last dimension:
 
-    >>> np.mean(rolling_window(x, 3), -1)
+    >>> np.mean(slicestim(x, 3), -1)
     array([[ 1.,  2.,  3.],
            [ 6.,  7.,  8.]])
+
+    Notes
+    -----
+    ``stimulustools.slicestim`` is used to create a Toeplitz matrix from a
+    multi-dimensional stimulus. This simplifies performing certain operations
+    such as filtering, as it allows us to express the operation as a matrix
+    product rather than via convolution.
+
+    However, this product only works when the sliced stimulus and filter are
+    temporally aligned. Because ``filtertools.sta`` and ``filtertools.revcorr``
+    allow computing acausal components of an STA (points *after* a spike occurs),
+    this method must also allow that in order to keep the temporal alignment.
+
+    Practically this means that one must always pass the same value to
+    ``stimulustools.slicestim`` as is passed to ``filtertools.sta`` or
+    ``filtertools.revcorr``.
+
     """
-    if not (1 <= nsamples_before <= stimulus.shape[0]):
-        msg = '`history` must be between 1 and {0:#d}'.format(stimulus.shape[0])
+    history = nsamples_before + nsamples_after
+    if not (1 <= history <= stimulus.shape[0]):
+        msg = ('`nsamples_before` + `nsamples_after` must be between ' +
+                '1 and {0:#d}').format(stimulus.shape[0])
         raise ValueError(msg)
     elif not isinstance(nsamples_before, int) or not isinstance(nsamples_after, int):
         raise ValueError("`nsamples_before` and `nsamples_after` must be integers")
 
     # Use strides to create view onto array
-    npoints = nsamples_before + nsamples_after
-    shape = (nsamples_before, stimulus.shape[0] - npoints + 1) + stimulus.shape[1:]
+    shape = (history, stimulus.shape[0] - history + 1) + stimulus.shape[1:]
     stride = (stimulus.strides[0],) + stimulus.strides
 
     # return the newly strided array

@@ -38,7 +38,26 @@ def test_sta():
     tmp /= len(spikes)
 
     assert np.allclose(tmp, sta)
-    assert np.allclose(tax, np.arange(filter_length))
+    assert np.allclose(tax, np.arange(-filter_length + 1, 1))
+
+def test_sta_acausal():
+    """Test computing a spike-triggered average with points before and
+    after the time of the spike.
+    """
+    np.random.seed(0)
+    time = np.arange(100)
+    spikes = np.array((0, 30, 70))
+    stimulus = np.random.randn(100,)
+    nbefore, nafter = 5, 2
+
+    sta, tax = flt.sta(time, stimulus, spikes, nbefore, nafter)
+    tmp = np.zeros(sta.shape)
+    for ix in spikes[1:]: # Should ignore first spike, comes before filter_length frames
+        tmp += stimulus[ix - nbefore : ix + nafter]
+    tmp /= len(spikes)
+
+    assert np.allclose(tmp, sta)
+    assert np.allclose(tax, np.arange(-nbefore + 1, nafter + 1))
 
 def test_empty_sta():
     """Test that an empty with no spikes returns an array of nans"""
@@ -180,6 +199,7 @@ def test_rfsize():
     assert np.allclose(xsize, 3., 0.1) # 1 SD is about 3 units
     assert np.allclose(ysize, 3., 0.1)
 
+
 def test_linear_response_1d():
     """Test method for computing linear response from a
     filter to a one-dimensional stimulus.
@@ -190,6 +210,19 @@ def test_linear_response_1d():
     pred = flt.linear_response(filt, stim)
 
     sl = slicestim(stim, filt.shape[0])
+    assert np.allclose(sl.dot(filt), pred)
+
+
+def test_linear_response_acausal():
+    """Test computing a linear response from a filter to a 1D stimulus,
+    including acausal portions of the stimulus.
+    """
+    np.random.seed(0)
+    filt = np.random.randn(100,)
+    stim = np.random.randn(1000,)
+    pred = flt.linear_response(filt, stim, 10)
+
+    sl = slicestim(stim, filt.shape[0] - 10, 10)
     assert np.allclose(sl.dot(filt), pred)
 
 
@@ -210,6 +243,7 @@ def test_linear_response_nd():
 
         assert np.allclose(tmp, pred)
 
+
 def test_linear_response_raises():
     """Test raising ValueErrors with incorrect inputs"""
     np.random.seed(0)
@@ -218,6 +252,7 @@ def test_linear_response_raises():
     with pytest.raises(ValueError):
         flt.linear_response(np.random.randn(10, 2), np.random.randn(10, 3))
 
+
 def test_revcorr_raises():
     """Test raising ValueErrors with incorrect inputs"""
     np.random.seed(0)
@@ -225,6 +260,7 @@ def test_revcorr_raises():
         flt.revcorr(np.random.randn(10, 1), np.random.randn(10,), 2)[0]
     with pytest.raises(ValueError):
         flt.revcorr(np.random.randn(10, 3), np.random.randn(10, 2), 2)[0]
+
 
 def test_revcorr_1d():
     """Test computation of a 1D linear filter by reverse correlation"""
@@ -241,6 +277,29 @@ def test_revcorr_1d():
 
     # Reverse correlation
     filt = flt.revcorr(stimulus, response, filter_length)[0]
+    filt /= np.linalg.norm(filt)
+    tol = 0.1
+    assert np.allclose(true_filter, filt, atol=tol)
+
+
+def test_revcorr_acausal():
+    """Test computation of a 1D linear filter by reverse correlation,
+    including acausal lag values.
+    """
+    np.random.seed(0)
+
+    # Create fake filter, 100 time points
+    nbefore, nafter = 90, 10
+    filter_length = nbefore + nafter
+    true_filter = utils.create_temporal_filter(filter_length)
+
+    # Compute linear response
+    stim_length = 10000
+    stimulus = np.random.randn(stim_length,)
+    response = flt.linear_response(true_filter, stimulus)
+
+    # Reverse correlation
+    filt = flt.revcorr(stimulus, response, nbefore, nafter)[0]
     filt /= np.linalg.norm(filt)
     tol = 0.1
     assert np.allclose(true_filter, filt, atol=tol)

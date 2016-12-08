@@ -50,7 +50,7 @@ def ste(time, stimulus, spikes, nsamples_before, nsamples_after=0):
     Notes
     -----
     The spike-triggered ensemble (STE) is the set of all stimuli immediately
-    surrounding a spike. If the full stimulus distribution is p(s), the STE 
+    surrounding a spike. If the full stimulus distribution is p(s), the STE
     is p(s | spike).
 
     """
@@ -143,9 +143,9 @@ def sta(time, stimulus, spikes, nsamples_before, nsamples_after=0):
         sta = reduce(lambda sta, x: np.add(sta, x),
                      ste_it, first) / float(len(spikes))
     except StopIteration:
-        return (np.nan * np.ones((filter_length,) + stimulus.shape[1:]), -tax[::-1])
+        return (np.nan * np.ones((filter_length,) + stimulus.shape[1:]), tax)
 
-    return sta, -tax[::-1]
+    return sta, tax
 
 
 def stc(time, stimulus, spikes, nsamples_before, nsamples_after=0):
@@ -666,8 +666,9 @@ def linear_response(filt, stim, nsamples_after=0):
     Notes
     -----
     Both ``filtertools.sta`` and ``filtertools.revcorr`` can estimate "acausal"
-    components, such as points in the stimulus occuring *after* a spike. This
-    method by default assumes that the given filter contains no such points.
+    components, such as points in the stimulus occuring *after* a spike. The
+    value passed as parameter ``nsamples_after`` must match that value used
+    when calling ``filtertools.sta`` or ``filtertools.revcorr``.
 
     """
     if (filt.ndim != stim.ndim) or (filt.shape[1:] != stim.shape[1:]):
@@ -704,12 +705,12 @@ def revcorr(stimulus, response, nsamples_before, nsamples_after=0):
     Returns
     -------
     rc : array_like
-        An array of shape ``(nsamples_before + nsamples_after + 1, ...)`` 
-        containing the best-fitting linear filter which predicts the response from 
+        An array of shape ``(nsamples_before + nsamples_after, ...)``
+        containing the best-fitting linear filter which predicts the response from
         the stimulus. The ellipses indicates spatial dimensions of the filter.
 
     lags : array_like
-        An array of shape ``(nsamples_before + nsamples_after + 1,)``, which gives
+        An array of shape ``(nsamples_before + nsamples_after,)``, which gives
         the lags, in samples, between ``stimulus`` and ``response`` for the correlation
         returned in ``rc``. This can be converted to an axis of time (like that 
         returned from ``filtertools.sta``) by multiplying by the sampling period.

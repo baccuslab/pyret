@@ -63,6 +63,20 @@ def test_slicestim_1d():
     for i in range(stim_size - history + 1):
         assert np.all(sliced_stim[i] == stim[i:i + history]), 'slicing failed'
 
+def test_slicestim_acausal():
+    """Test slicing a stimulus into overlapping segments with
+    samples before and after a hypothetical center.
+    """
+    np.random.seed(0)
+    stim_size = 1000
+    stim = np.random.randn(stim_size,)
+    nbefore, nafter = 7, 3
+    sliced_stim = stimulustools.slicestim(stim, nbefore, nafter)
+
+    for i in range(stim_size - nbefore - nafter + 1):
+        assert np.all(sliced_stim[i] == stim[i:i + nbefore + nafter]), 'slicing failed'
+
+
 def test_slicestim_3d():
     """Test slicing a 3D stimulus into overlapping segments."""
     np.random.seed(0)
