@@ -59,11 +59,11 @@ def ste(time, stimulus, spikes, nsamples_before, nsamples_after=0):
     # Bin spikes
     (hist, bins) = np.histogram(spikes, time)
 
-    # Get indices of non-zero firing, truncating spikes earlier
-    # than `filterlength` frames
+    # Get indices of non-zero firing, truncating spikes before nsamples_before
+    # or after nsamples_after
     slices = (stimulus[(idx - nb):(idx + na), ...].astype('float64')
               for idx in np.where(hist > 0)[0]
-              if (idx > nsamples_before and (idx + nsamples_after) < len(stimulus)))
+              if (idx > nb and (idx + na) < len(stimulus)))
 
     # return the iterator
     return slices
@@ -94,7 +94,7 @@ def sta(time, stimulus, spikes, nsamples_before, nsamples_after=0):
     Returns
     -------
     sta : ndarray
-        The spatiotemporal spike-triggered average (RF). Note that time
+        The spatiotemporal spike-triggered average. Note that time
         increases with increasing array index, i.e. time of the spike is
         at the index for which ``tax == 0``.
 
@@ -213,48 +213,51 @@ def stc(time, stimulus, spikes, nsamples_before, nsamples_after=0):
     return stc
 
 
-def lowranksta(f_orig, k=10):
+def lowranksta(sta_orig, k=10):
     """
-    Constructs a rank-k approximation to the given spatiotemporal filter.
-    This is useful for computing a spatial and temporal kernel of an STA,
-    or for denoising.
+    Constructs a rank-k approximation to the given spatiotemporal STA.
+    This is useful for estimating a spatial and temporal kernel for an
+    STA or for denoising.
 
     Parameters
     ----------
-    f : array_like
-        3-D filter to be separated, shaped as (time, space, space).
+    sta_orig : array_like
+        3D STA to be separated, shaped as ``(time, space, space)``.
 
     k : int
-        Number of components to keep (rank of the filter).
+        Number of components to keep (rank of the reduced STA).
 
     Returns
     -------
-    fk : array_like
-        The rank-k estimate of the original filter.
+    sk : array_like
+        The rank-k estimate of the original STA.
 
     u : array_like
         The top ``k`` temporal components (each column is a component).
 
     s : array_like
-        the top ``k`` singular values.
+        The top ``k`` singular values.
 
     v : array_like
-        the top ``k`` spatial components (each row is a component). These
+        The top ``k`` spatial components (each row is a component). These
         components have all spatial dimensions collapsed to one.
 
     Notes
     -----
-    This method requires that the linear filter be 3D. To decompose a
-    linear filter into a temporal and 1-dimensional spatial filter, simply
-    promote the filter to 3D before calling this method.
+    This method requires that the STA be 3D. To decompose a STA into a 
+    temporal and 1-dimensional spatial component, simply promote the STA 
+    to 3D before calling this method.
+
+    Despite the name this method accepts both an STA or a linear filter.
+    The components estimated for one will be flipped versions of the other.
 
     """
 
-    # work with a copy of the filter (prevents corrupting the input)
-    f = f_orig.copy() - f_orig.mean()
+    # work with a copy of the STA (prevents corrupting the input)
+    f = sta_orig.copy() - sta_orig.mean()
 
-    # Compute the SVD of the full filter
-    assert f.ndim >= 2, "Filter must be at least 2-D"
+    # Compute the SVD of the full STA
+    assert f.ndim >= 2, "STA must be at least 2-D"
     u, s, v = np.linalg.svd(f.reshape(f.shape[0], -1), full_matrices=False)
 
     # Keep the top k components
@@ -263,18 +266,18 @@ def lowranksta(f_orig, k=10):
     s = s[:k]
     v = v[:k, :]
 
-    # Compute the rank-k filter
-    fk = (u.dot(np.diag(s).dot(v))).reshape(f.shape)
+    # Compute the rank-k STA
+    sk = (u.dot(np.diag(s).dot(v))).reshape(f.shape)
 
-    # Ensure that the computed filter components have the correct sign.
+    # Ensure that the computed STA components have the correct sign.
     # The full STA should have positive projection onto first temporal
     # component of the low-rank STA.
     sign = np.sign(np.einsum('i,ijk->jk', u[:, 0], f).sum())
     u *= sign
     v *= sign
 
-    # Return the rank-k approximate filter, and the SVD components
-    return fk, u, s, v
+    # Return the rank-k approximate STA, and the SVD components
+    return sk, u, s, v
 
 
 def decompose(sta):
@@ -284,15 +287,15 @@ def decompose(sta):
     Parameters
     ----------
     sta : array_like
-        The full 3-dimensional STA to be decomposed.
+        The full 3-dimensional STA to be decomposed, of shape ``(t, nx, ny)``.
 
     Returns
     -------
     s : array_like
-        The spatial kernel.
+        The spatial kernel, with shape ``(nx * ny,)``.
 
     t : array_like
-        The temporal kernel.
+        The temporal kernel, with shape ``(t,)``.
 
     """
     _, u, _, v = lowranksta(sta, k=1)
@@ -340,14 +343,14 @@ def filterpeak(sta):
 
 def smooth(f, spacesig=0.5, timesig=1):  # pragma: no cover
     """
-    Smooths a 3D spatiotemporal linear filter using a multi-dimensional
+    Smooths a 3D spatiotemporal STA or linear filter using a multi-dimensional
     Gaussian filter with the given properties.
 
     Parameters
     ----------
 
     f : array_like
-        3D filter to be smoothed.
+        3D STA or filter to be smoothed.
 
     spacesig : float
         The standard deviation of the spatial Gaussian smoothing kernel.
@@ -374,7 +377,7 @@ def cutout(arr, idx=None, width=5):
     Parameters
     ----------
     arr : array_like
-        Stimulus or filter array from which the chunk is cut out. The array
+        Stimulus, STA, or filter array from which the chunk is cut out. The array
         should be shaped as ``(time, spatial, spatial)``.
 
     idx : array_like, optional
@@ -388,14 +391,14 @@ def cutout(arr, idx=None, width=5):
     Returns
     -------
     cut : array_like
-        The cut out section of the given stimulus or filter.
+        The cut out section of the given stimulus, STA, or filter.
 
     Notes
     -----
     This method can be useful to reduce the space and time costs of computations
-    involving stimuli and/or filters. For example, a neuron's linear filter is
+    involving stimuli and/or filters. For example, a neuron's receptive field is
     often much smaller than the stimulus, but this method can be used to only
-    compare the relevant portions of the stimulus and filter.
+    compare the relevant portions of the stimulus and receptive field.
 
     """
 
@@ -463,19 +466,21 @@ def resample(arr, scale_factor):
         raise ValueError('Input array must be either 1-D or 2-D')
 
 
-def normalize_spatial(spatial_filter, scale_factor=1.0, clip_negative=False):
+def normalize_spatial(frame, scale_factor=1.0, clip_negative=False):
     """
-    Normalizes a spatial frame by doing the following:
+    Normalizes a spatial frame, for example of a stimulus or STA, by 
+    doing the following:
+
     1. mean subtraction using a robust estimate of the mean (ignoring outliers).
     2. scaling such that the std. dev. of the pixel values is 1.0.
 
     Parameters
     ----------
-    spatial_filter : array_like
-        The spatial filter to be normalized.
+    frame : array_like
+        The spatial frame to be normalized.
 
     scale_factor : float, optional
-        The given filter is resampled at a sampling rate of this ratio times
+        The given frame is resampled at a sampling rate of this ratio times
         the original sampling rate (Default: 1.0).
 
     clip_negative : boolean, optional
@@ -483,35 +488,35 @@ def normalize_spatial(spatial_filter, scale_factor=1.0, clip_negative=False):
 
     Returns
     -------
-    rf_resampled : array_like
-        The normalized (and potentially resampled) filter frame.
+    resampled : array_like
+        The normalized (and potentially resampled) frame.
     """
 
-    # work with a copy of the given filter
-    rf = spatial_filter.copy()
-    rf -= rf.mean()
+    # work with a copy of the given frame
+    f = frame.copy()
+    f -= f.mean()
 
     # compute the mean of pixels within +/- 5 std. deviations of the mean
-    outlier_threshold = 5 * np.std(rf.ravel())
-    mu = rf[(rf <= outlier_threshold) & (rf >= -outlier_threshold)].mean()
+    outlier_threshold = 5 * np.std(f.ravel())
+    mu = f[(f <= outlier_threshold) & (f >= -outlier_threshold)].mean()
 
     # normalize by the standard deviation of the pixel values
-    rf_centered = rf - mu
-    rf_centered /= rf_centered.std()
+    f_centered = f - mu
+    f_centered /= f_centered.std()
 
     # resample by the given amount
-    rf_resampled = resample(rf_centered, scale_factor)
+    f_resampled = resample(f_centered, scale_factor)
 
     # clip negative values
     if clip_negative:
-        rf_resampled = np.maximum(rf_resampled, 0)
+        f_resampled = np.maximum(f_resampled, 0)
 
-    return rf_resampled
+    return f_resampled
 
 
 def get_regionprops(spatial_filter, percentile=0.95):  # pragma: no cover
     """
-    Gets region properties of a 2D spatial filter.
+    Gets region properties of a 2D spatial STA or linear filter.
 
     This returns various attributes of the non-zero area of the given
     spatial filter, such as its area, centroid, eccentricity, etc.
@@ -544,7 +549,7 @@ def get_regionprops(spatial_filter, percentile=0.95):  # pragma: no cover
 
 def get_ellipse(spatial_filter, sigma=2.):
     """
-    Get the parameters of an ellipse fit to a spatial receptive field.
+    Get the parameters of an ellipse fit to a spatial STA or linear filter.
 
     Parameters
     ----------
@@ -590,7 +595,7 @@ def get_ellipse(spatial_filter, sigma=2.):
 def rfsize(spatial_filter, dx, dy=None, sigma=2.):
     """
     Computes the lengths of the major and minor axes of an ellipse fit 
-    to a receptive field.
+    to an STA or linear filter.
 
     Parameters
     ----------
@@ -730,23 +735,28 @@ def revcorr(stimulus, response, nsamples_before, nsamples_after=0):
     estimates the stimulus feature that most strongly correlates with the 
     response on average.
 
-    It is the reverse of the standard cross-correlation function, which is defined
+    It is the time-reverse of the standard cross-correlation function, and is defined
     as:
 
     .. math::
-        c[k] = \\sum_{n} s[n] r[n + k]
+        c[-k] = \\sum_{n} s[n] r[n - k]
 
     The parameter ``k`` is the lag between the two signals in samples. The range
     of lags computed in this method are determined by ``nsamples_before`` and 
     ``nsamples_after``.
 
+    Note that, as with ``filtertools.sta``, the values (samples) in the ``lags``
+    array increase with increasing array index. This means that time is moving
+    forward with increasing array index.
+
     """
-    filter_length = nsamples_before + nsamples_after
+    history = nsamples_before + nsamples_after
     if response.ndim > 1:
         raise ValueError("The `response` must be 1-dimensional")
-    if response.size != (stimulus.shape[0] - filter_length + 1):
-        msg = "`stimulus` must have {:#d} time points (`response.size` + `filter_length`)"
-        raise ValueError(msg.format(response.size + filter_length + 1))
+    if response.size != (stimulus.shape[0] - history + 1):
+        msg = ('`stimulus` must have {:#d} time points ' + 
+                '(`response.size` + `nsamples_before` + `nsamples_after`)')
+        raise ValueError(msg.format(response.size + history + 1))
 
     slices = slicestim(stimulus, nsamples_before, nsamples_after)
     recovered = np.einsum('tx,t->x', flat2d(slices), response).reshape(slices.shape[1:])

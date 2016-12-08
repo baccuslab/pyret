@@ -78,6 +78,19 @@ the *spike-triggered average* (STA) for the cell.
     :width: 500px
     :alt: Spatial and temporal RGC filters recovered via STA
 
+.. IMPORTANT::
+    It is common to hear the terms "STA", "linear filter", and "receptive field"
+    used interchangeably. However, this is technically incorrect. The STA is an
+    unbiased estimate of the time-reverse of a best-fitting linear filter (in
+    the least-squares sense), *assuming the stimulus is uncorrelated*. If the
+    stimulus contains correlations, those will appear in the arrays returned by
+    both ``filtertools.sta`` and ``filtertools.revcorr``. As Gaussian white
+    noise, which is uncorrelated, is an exceedingly common stimulus, practioners
+    often loosely refer to the STA as the linear filter, keeping the time-reversing 
+    process implicit. The ``pyret`` methods and docstrings strive for the maximal
+    amount of clarity when refering to these objects, and the documentation should
+    be heeded about whether a filter or STA is expected.
+
 While the STA gives a lot of information, it is not the whole story. Real RGCs are definitely
 *not* linear. One common way to correct for this fact is to fit a single, time-invariant
 (static), point-wise nonlinearity to the data. This is a mapping between the linear response
