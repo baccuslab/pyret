@@ -18,6 +18,8 @@ in response to an input.
 - ``nonlinearities``: Classes for estimating static nonlinearities.
 - ``visualizations``: Functions to visualize responses and fitted filters/nonlinearities.
 
+``Pyret`` will work equally well with Python3+ and Python2.7.
+
 Demo
 ----
 
@@ -29,14 +31,18 @@ import the relevant modules.
     >>> import matplotlib.pyplot as plt
     >>> import h5py
 
+.. note::
+    This demo requires the Python HDF5 bindings from ``h5py``, but note that
+    Pyret itself does not have this requirement. However, Pyret will work just
+    as well with NumPy arrays, builtin iterable types, and ``h5py`` datasets.
+
 For this demo, we'll be using data from a retinal ganglion cell (RGC), whose spike times were
 recorded using a multi-electrode array. (Data courtesy of Lane McIntosh.) We'll load the 
 stimulus used in the experiment, as well as the spike times for the cell.
 
     >>> data_file = h5py.File('tutorial-data.h5', 'r')
     >>> spikes = data_file['spike-times']  # Spike times for one cell
-    >>> stimulus = data_file['stimulus']
-    >>> stimulus -= stimulus.mean()
+    >>> stimulus = data_file['stimulus'] - np.mean(data_file['stimulus'])
     >>> stimulus /= stimulus.std()
     >>> time = np.arange(stimulus.shape[0]) * data_file['stimulus'].attrs.get('frame-rate')
 

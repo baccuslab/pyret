@@ -13,6 +13,9 @@ The fastest way to install is by grabbing the code from Github:
     $ cd pyret
     $ python setup.py install
 
+
+Pyret supports Python2.7+ and Python3.0+.
+
 Dependencies
 ------------
 
