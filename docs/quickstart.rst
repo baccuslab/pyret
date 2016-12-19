@@ -38,7 +38,9 @@ import the relevant modules.
 
 For this demo, we'll be using data from a retinal ganglion cell (RGC), whose spike times were
 recorded using a multi-electrode array. (Data courtesy of Lane McIntosh.) We'll load the 
-stimulus used in the experiment, as well as the spike times for the cell.
+stimulus used in the experiment, as well as the spike times for the cell. (This assumes
+that the current working directory is ``pyret/docs``, which contains the data file 
+used for the tutorial.)
 
     >>> data_file = h5py.File('tutorial-data.h5', 'r')
     >>> spikes = data_file['spike-times']  # Spike times for one cell
