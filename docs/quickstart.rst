@@ -18,7 +18,7 @@ in response to an input.
 - ``nonlinearities``: Classes for estimating static nonlinearities.
 - ``visualizations``: Functions to visualize responses and fitted filters/nonlinearities.
 
-``Pyret`` will work equally well with Python3+ and Python2.7.
+``Pyret`` works on Python3.4+ and Python2.7.
 
 Demo
 ----
