@@ -1,8 +1,7 @@
 from setuptools import setup, find_packages
-import pyret
 
 setup(name='pyret',
-      version=pyret.__version__,
+      version='0.5.3',
       description='Tools for the analysis of neural electrophysiology data',
       author='Benjamin Naecker, Niru Maheshwaranathan',
       author_email='bnaecker@stanford.edu',
