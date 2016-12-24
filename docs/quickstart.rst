@@ -18,6 +18,8 @@ in response to an input.
 - ``nonlinearities``: Classes for estimating static nonlinearities.
 - ``visualizations``: Functions to visualize responses and fitted filters/nonlinearities.
 
+``Pyret`` works on Python3.4+ and Python2.7.
+
 Demo
 ----
 
@@ -29,14 +31,20 @@ import the relevant modules.
     >>> import matplotlib.pyplot as plt
     >>> import h5py
 
+.. note::
+    This demo requires the Python HDF5 bindings from ``h5py``, but note that
+    Pyret itself does not have this requirement. However, Pyret will work just
+    as well with NumPy arrays, builtin iterable types, and ``h5py`` datasets.
+
 For this demo, we'll be using data from a retinal ganglion cell (RGC), whose spike times were
 recorded using a multi-electrode array. (Data courtesy of Lane McIntosh.) We'll load the 
-stimulus used in the experiment, as well as the spike times for the cell.
+stimulus used in the experiment, as well as the spike times for the cell. (This assumes
+that the current working directory is ``pyret/docs``, which contains the data file 
+used for the tutorial.)
 
     >>> data_file = h5py.File('tutorial-data.h5', 'r')
     >>> spikes = data_file['spike-times']  # Spike times for one cell
-    >>> stimulus = data_file['stimulus']
-    >>> stimulus -= stimulus.mean()
+    >>> stimulus = data_file['stimulus'] - np.mean(data_file['stimulus'])
     >>> stimulus /= stimulus.std()
     >>> time = np.arange(stimulus.shape[0]) * data_file['stimulus'].attrs.get('frame-rate')
 
@@ -77,6 +85,19 @@ the *spike-triggered average* (STA) for the cell.
     :height: 500px
     :width: 500px
     :alt: Spatial and temporal RGC filters recovered via STA
+
+.. IMPORTANT::
+    It is common to hear the terms "STA", "linear filter", and "receptive field"
+    used interchangeably. However, this is technically incorrect. The STA is an
+    unbiased estimate of the time-reverse of a best-fitting linear filter (in
+    the least-squares sense), *assuming the stimulus is uncorrelated*. If the
+    stimulus contains correlations, those will appear in the arrays returned by
+    both ``filtertools.sta`` and ``filtertools.revcorr``. As Gaussian white
+    noise, which is uncorrelated, is an exceedingly common stimulus, practioners
+    often loosely refer to the STA as the linear filter, keeping the time-reversing 
+    process implicit. The ``pyret`` methods and docstrings strive for the maximal
+    amount of clarity when refering to these objects, and the documentation should
+    be heeded about whether a filter or STA is expected.
 
 While the STA gives a lot of information, it is not the whole story. Real RGCs are definitely
 *not* linear. One common way to correct for this fact is to fit a single, time-invariant

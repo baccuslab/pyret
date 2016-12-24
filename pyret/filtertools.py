@@ -15,53 +15,63 @@ from pyret.utils import flat2d
 
 __all__ = ['ste', 'sta', 'stc', 'lowranksta', 'decompose',
            'filterpeak', 'smooth', 'cutout', 'resample', 'flat2d',
-           'get_ellipse', 'get_contours', 'get_regionprops',
-           'normalize_spatial', 'linear_prediction', 'revcorr']
+           'get_ellipse', 'get_regionprops', 'normalize_spatial', 
+           'linear_response', 'revcorr']
 
 
-def ste(time, stimulus, spikes, filter_length):
+def ste(time, stimulus, spikes, nsamples_before, nsamples_after=0):
     """
-    Constructs an iterator over spike-triggered stimuli
+    Constructs an iterator over spike-triggered stimuli.
 
     Parameters
     ----------
     time : ndarray
-        The time array corresponding to the stimulus
+        The time array corresponding to the stimulus.
 
     stimulus : ndarray
-        A spatiotemporal or temporal stimulus array
-        (where time is the first dimension)
+        A spatiotemporal or temporal stimulus array, where time is the 
+        first dimension.
 
     spikes : iterable
-        A list or ndarray of spike times
+        A list or ndarray of spike times.
 
-    filter_length : int
-        The desired temporal history / length of the STA
+    nsamples_before : int
+        Number of samples to include in the STE before the spike.
+
+    nsamples_after : int
+        Number of samples to include in the STE after the spike,
+        which defaults to 0.
 
     Returns
     -------
     ste : generator
-        A generator that yields samples from the spike-triggered ensemble
+        A generator that yields samples from the spike-triggered ensemble.
+
+    Notes
+    -----
+    The spike-triggered ensemble (STE) is the set of all stimuli immediately
+    surrounding a spike. If the full stimulus distribution is p(s), the STE
+    is p(s | spike).
 
     """
+    nb, na = nsamples_before, nsamples_after
 
     # Bin spikes
     (hist, bins) = np.histogram(spikes, time)
 
-    # Get indices of non-zero firing, truncating spikes earlier
-    # than `filterlength` frames
-    slices = (stimulus[(idx - filter_length):idx, ...].astype('float64')
-              for idx in np.where(hist > 0)[0] if idx > filter_length)
+    # Get indices of non-zero firing, truncating spikes before nsamples_before
+    # or after nsamples_after
+    slices = (stimulus[(idx - nb):(idx + na), ...].astype('float64')
+              for idx in np.where(hist > 0)[0]
+              if (idx > nb and (idx + na) < len(stimulus)))
 
     # return the iterator
     return slices
 
 
-def sta(time, stimulus, spikes, filter_length):
+def sta(time, stimulus, spikes, nsamples_before, nsamples_after=0):
     """
-    Compute a spike-triggered average
-
-    sta, tax = sta(time, stimulus, spikes, filter_length)
+    Compute a spike-triggered average.
 
     Parameters
     ----------
@@ -75,24 +85,57 @@ def sta(time, stimulus, spikes, filter_length):
     spikes : iterable
         A list or ndarray of spike times
 
-    filter_length : int
-        The desired temporal history / length of the STA
+    nsamples_before : int
+        Number of samples to include in the STA before the spike
+
+    nsamples_after : int
+        Number of samples to include in the STA after the spike (default: 0)
 
     Returns
     -------
     sta : ndarray
-        The spatiotemporal spike-triggered average (RF)
+        The spatiotemporal spike-triggered average. Note that time
+        increases with increasing array index, i.e. time of the spike is
+        at the index for which ``tax == 0``.
 
     tax : ndarray
-        A time axis corresponding to the STA
+        A time axis corresponding to the STA, giving the time relative
+        to the spike.
+
+    Notes
+    -----
+    The spike-triggered average (STA) is the averaged stimulus feature
+    conditioned on the presence of a spike. This is widely-used method
+    for estimating a neuron's receptive field, and captures the average
+    stimulus feature to which the neuron responds.
+
+    Formally, the STA is defined as the function [1]:
+
+    .. math::
+        C(\\tau) = \\frac{1}{N} \\sum_{i=1}^{N} s(t_i - \\tau)
+
+    where :math:`\\tau` is time preceding the spike, and :math:`t_i` is
+    the time of the ith spike.
+
+    The STA is often used to estimate a linear filter which captures
+    a neuron's responses. If the stimulus is uncorrelated (spherical),
+    the STA is unbiased and proportional to the time-reverse of the
+    linear filter.
+
+    References
+    ----------
+    [1] Dayan, P. and L.F. Abbott. Theoretical Neuroscience: Computational
+    and Mathematical Modeling of Neural Systems. 2001.
 
     """
 
     # get the iterator
-    ste_it = ste(time, stimulus, spikes, filter_length)
+    ste_it = ste(time, stimulus, spikes, nsamples_before, nsamples_after=nsamples_after)
 
     # time axis
-    tax = time[:filter_length] - time[0]
+    filter_length = nsamples_before + nsamples_after
+    dt = np.mean(np.diff(time))
+    tax = dt * np.arange(-nsamples_before, nsamples_after) + dt
 
     # reduce
     try:
@@ -105,39 +148,42 @@ def sta(time, stimulus, spikes, filter_length):
     return sta, tax
 
 
-def stc(time, stimulus, spikes, filter_length):
+def stc(time, stimulus, spikes, nsamples_before, nsamples_after=0):
     """
-    Compute the spike-triggered covariance
-
-    stc = stc(time, stimulus, spikes, filter_length)
+    Compute the spike-triggered covariance.
 
     Parameters
     ----------
     time : ndarray
-        The time array corresponding to the stimulus
-        (where time is the first dimension)
+        The time array corresponding to the stimulus, where time is the 
+        first dimension.
 
     stimulus : ndarray
-        A spatiotemporal or temporal stimulus array
+        A spatiotemporal or temporal stimulus array.
 
     spikes : iterable
-        A list or ndarray of spike times
+        A list or ndarray of spike times.
 
-    filter_length : int
-        The desired temporal history / length of the STA
+    nsamples_before : int
+        Number of samples to include in the STC before the spike.
+
+    nsamples_after : int
+        Number of samples to include in the STC after the spike,
+        which defaults to 0.
 
     Returns
     -------
     stc : ndarray
-        The spike-triggered covariance (STC) matrix
+        The spike-triggered covariance (STC) matrix.
 
     """
-
     # get the blas function for computing the outer product
     outer = scipy.linalg.blas.get_blas_funcs('syr', dtype='d')
 
     # get the iterator
-    ste_it = ste(time, stimulus, spikes, filter_length)
+    ste_it = ste(time, stimulus, spikes, nsamples_before, nsamples_after=nsamples_after)
+
+    filter_length = nsamples_before + nsamples_after
 
     # check if empty
     first = next(ste_it, None)
@@ -167,49 +213,51 @@ def stc(time, stimulus, spikes, filter_length):
     return stc
 
 
-def lowranksta(f_orig, k=10):
+def lowranksta(sta_orig, k=10):
     """
-    Constructs a rank-k approximation to the given spatiotemporal filter.
-    This is useful for computing a spatial and temporal kernel of an STA,
-    or for denoising.
+    Constructs a rank-k approximation to the given spatiotemporal STA.
+    This is useful for estimating a spatial and temporal kernel for an
+    STA or for denoising.
 
     Parameters
     ----------
-    f : array_like
-        3-D filter to be separated (time, space, space)
+    sta_orig : array_like
+        3D STA to be separated, shaped as ``(time, space, space)``.
 
     k : int
-        number of components to keep (rank of the filter)
+        Number of components to keep (rank of the reduced STA).
 
     Returns
     -------
-    fk : array_like
-        the rank-k filter
+    sk : array_like
+        The rank-k estimate of the original STA.
 
     u : array_like
-        the top ``k`` temporal components  (each column is a component).
+        The top ``k`` temporal components (each column is a component).
 
     s : array_like
-        the top ``k`` singular values.
+        The top ``k`` singular values.
 
     v : array_like
-        the top ``k`` spatial components (each row is a component). These
+        The top ``k`` spatial components (each row is a component). These
         components have all spatial dimensions collapsed to one.
 
     Notes
     -----
+    This method requires that the STA be 3D. To decompose a STA into a 
+    temporal and 1-dimensional spatial component, simply promote the STA 
+    to 3D before calling this method.
 
-    This method requires that the linear filter be 3D. To decompose a
-    linear filter into a temporal and 1-dimensional spatial filter, simply
-    promote the filter to 3D before calling this method.
+    Despite the name this method accepts both an STA or a linear filter.
+    The components estimated for one will be flipped versions of the other.
 
     """
 
-    # work with a copy of the filter (prevents corrupting the input)
-    f = f_orig.copy() - f_orig.mean()
+    # work with a copy of the STA (prevents corrupting the input)
+    f = sta_orig.copy() - sta_orig.mean()
 
-    # Compute the SVD of the full filter
-    assert f.ndim >= 2, "Filter must be at least 2-D"
+    # Compute the SVD of the full STA
+    assert f.ndim >= 2, "STA must be at least 2-D"
     u, s, v = np.linalg.svd(f.reshape(f.shape[0], -1), full_matrices=False)
 
     # Keep the top k components
@@ -218,36 +266,36 @@ def lowranksta(f_orig, k=10):
     s = s[:k]
     v = v[:k, :]
 
-    # Compute the rank-k filter
-    fk = (u.dot(np.diag(s).dot(v))).reshape(f.shape)
+    # Compute the rank-k STA
+    sk = (u.dot(np.diag(s).dot(v))).reshape(f.shape)
 
-    # Ensure that the computed filter components have the correct sign.
+    # Ensure that the computed STA components have the correct sign.
     # The full STA should have positive projection onto first temporal
     # component of the low-rank STA.
     sign = np.sign(np.einsum('i,ijk->jk', u[:, 0], f).sum())
     u *= sign
     v *= sign
 
-    # Return the rank-k approximate filter, and the SVD components
-    return fk, u, s, v
+    # Return the rank-k approximate STA, and the SVD components
+    return sk, u, s, v
 
 
 def decompose(sta):
     """
-    Decomposes a spatiotemporal STA into a spatial and temporal kernel
+    Decomposes a spatiotemporal STA into a spatial and temporal kernel.
 
     Parameters
     ----------
     sta : array_like
-        The full 3-dimensional STA to be decomposed
+        The full 3-dimensional STA to be decomposed, of shape ``(t, nx, ny)``.
 
     Returns
     -------
     s : array_like
-        The spatial kernel
+        The spatial kernel, with shape ``(nx * ny,)``.
 
     t : array_like
-        The temporal kernel
+        The temporal kernel, with shape ``(t,)``.
 
     """
     _, u, _, v = lowranksta(sta, k=1)
@@ -256,18 +304,20 @@ def decompose(sta):
 
 def filterpeak(sta):
     """
-    Find the peak (single point in space/time) of a smoothed filter.
+    Find the peak (single point in space/time) of a smoothed STA or
+    linear filter.
 
     Parameters
     ----------
     sta : array_like
-        Filter of which to find the peak (time, ...), where ellipses
-        indicate any spatial dimensions to the stimulus.
+        STA or filter for which to find the peak. It should be shaped as
+        ``(time, ...)``, where ellipses indicate any spatial dimensions 
+        to the array.
 
     Returns
     -------
     linear_index : int
-        Linear index of the maximal point, i.e., treating the array as
+        Linear index of the maximal point, i.e. treating the array as
         flattened.
 
     sidx : 1- or 2-element tuple
@@ -293,27 +343,26 @@ def filterpeak(sta):
 
 def smooth(f, spacesig=0.5, timesig=1):  # pragma: no cover
     """
-
-    Smooths a 3D spatiotemporal linear filter using a multi-dimensional
+    Smooths a 3D spatiotemporal STA or linear filter using a multi-dimensional
     Gaussian filter with the given properties.
 
     Parameters
     ----------
 
     f : array_like
-        3D filter to be smoothed
+        3D STA or filter to be smoothed.
 
     spacesig : float
-        The standard deviation of the spatial Gaussian smoothing kernel
+        The standard deviation of the spatial Gaussian smoothing kernel.
 
     timesig : float
-        The standard deviation of the temporal Gaussian smoothing kernel
+        The standard deviation of the temporal Gaussian smoothing kernel.
 
     Returns
     -------
 
     fsmooth : array_like
-        The smoothed filter, with the same shape as the input
+        The smoothed filter, with the same shape as the input.
 
     """
     return scipy.ndimage.filters.gaussian_filter(f,
@@ -323,25 +372,33 @@ def smooth(f, spacesig=0.5, timesig=1):  # pragma: no cover
 
 def cutout(arr, idx=None, width=5):
     """
-    Cut out a chunk of the given stimulus or filter
+    Cut out a chunk of the given stimulus or filter.
 
     Parameters
     ----------
     arr : array_like
-        Stimulus or filter array from which the chunk is cut out. The array
-        should be shaped as (time, spatial, spatial)
+        Stimulus, STA, or filter array from which the chunk is cut out. The array
+        should be shaped as ``(time, spatial, spatial)``.
 
-    idx : array_like
+    idx : array_like, optional
         2D array specifying the row and column indices of the center of the
-        section to be cut out (if None, the indices are taken from filterpeak)
+        section to be cut out (if None, the indices are taken from ``filterpeak``).
 
-    width : int
-        The size of the chunk to cut out from the start indices
+    width : int, optional
+        The size of the chunk to cut out from the start indices. Defaults
+        to 5 samples.
 
     Returns
     -------
     cut : array_like
-        The cut out section of the given stimulus or filter
+        The cut out section of the given stimulus, STA, or filter.
+
+    Notes
+    -----
+    This method can be useful to reduce the space and time costs of computations
+    involving stimuli and/or filters. For example, a neuron's receptive field is
+    often much smaller than the stimulus, but this method can be used to only
+    compare the relevant portions of the stimulus and receptive field.
 
     """
 
@@ -368,7 +425,8 @@ def cutout(arr, idx=None, width=5):
 
 
 def resample(arr, scale_factor):
-    """Resamples a 1-D or 2-D array by the given scale.
+    """
+    Resamples a 1-D or 2-D array by the given scale.
 
     Parameters
     ----------
@@ -377,7 +435,7 @@ def resample(arr, scale_factor):
         The original array to be resampled.
 
     scale_factor: int_like
-        The factor by which `arr` will be resampled. For example, a
+        The factor by which ``arr`` will be resampled. For example, a
         factor of 2 results in an of twice the size in each dimension,
         with points interpolated between existing points.
 
@@ -408,89 +466,57 @@ def resample(arr, scale_factor):
         raise ValueError('Input array must be either 1-D or 2-D')
 
 
-def normalize_spatial(spatial_filter, scale_factor=1.0, clip_negative=False):
+def normalize_spatial(frame, scale_factor=1.0, clip_negative=False):
     """
-    Normalizes a spatial frame by doing the following:
-    1. mean subtraction using a robust estimate of the mean (ignoring outliers)
-    2. sign adjustment so it is always an 'on' feature
-    3. scaling such that the std. dev. of the pixel values is 1.0
+    Normalizes a spatial frame, for example of a stimulus or STA, by 
+    doing the following:
+
+    1. mean subtraction using a robust estimate of the mean (ignoring outliers).
+    2. scaling such that the std. dev. of the pixel values is 1.0.
 
     Parameters
     ----------
-    spatial_filter : array_like
+    frame : array_like
+        The spatial frame to be normalized.
 
     scale_factor : float, optional
-        The given filter is resampled at a sampling rate of this ratio times
-        the original sampling rate (Default: 1.0)
+        The given frame is resampled at a sampling rate of this ratio times
+        the original sampling rate (Default: 1.0).
 
     clip_negative : boolean, optional
-        Whether or not to clip negative values to 0. (Default: False)
+        Whether or not to clip negative values to 0. (Default: False).
 
     Returns
     -------
-    rf_resampled : array_like
-        The normalized (and potentially resampled) filter frame.
+    resampled : array_like
+        The normalized (and potentially resampled) frame.
     """
 
-    # work with a copy of the given filter
-    rf = spatial_filter.copy()
-    rf -= rf.mean()
+    # work with a copy of the given frame
+    f = frame.copy()
+    f -= f.mean()
 
     # compute the mean of pixels within +/- 5 std. deviations of the mean
-    outlier_threshold = 5 * np.std(rf.ravel())
-    mu = rf[(rf <= outlier_threshold) & (rf >= -outlier_threshold)].mean()
-
-    # remove this mean and multiply by the sign of the skew (which forces
-    # the polarity of the filter to be an 'ON' feature)
-    rf_centered = (rf - mu) * np.sign(scipy.stats.skew(rf.ravel()))
+    outlier_threshold = 5 * np.std(f.ravel())
+    mu = f[(f <= outlier_threshold) & (f >= -outlier_threshold)].mean()
 
     # normalize by the standard deviation of the pixel values
-    rf_centered /= rf_centered.std()
+    f_centered = f - mu
+    f_centered /= f_centered.std()
 
     # resample by the given amount
-    rf_resampled = resample(rf_centered, scale_factor)
+    f_resampled = resample(f_centered, scale_factor)
 
     # clip negative values
     if clip_negative:
-        rf_resampled = np.maximum(rf_resampled, 0)
+        f_resampled = np.maximum(f_resampled, 0)
 
-    return rf_resampled
+    return f_resampled
 
 
-def get_contours(spatial_filter, threshold=10.0):  # pragma: no cover
+def get_regionprops(spatial_filter, percentile=0.95):  # pragma: no cover
     """
-    Gets iso-value contours of a 2D spatial filter.
-
-    This returns a list of arrays of shape (n, 2). Each array in the list
-    gives the indices into the spatial filter of one contour, and each
-    column of the contour gives the indices along the two dimesions of
-    the filter.
-
-    Usage
-    -----
-    >>> rr, cc = get_contours(sta_spatial)
-    >>> plt.plot(rr, cc)
-
-    Parameters
-    ----------
-    spatial_filter : array_like
-        The spatial receptive field to which the ellipse should be fit
-
-    threshold : float, optional
-        Threshold value (Default: 10.0)
-
-    Returns
-    -------
-    rr, cc : array_like
-        List of contour indices
-
-    """
-    return find_contours(normalize_spatial(spatial_filter), threshold)
-
-
-def get_regionprops(spatial_filter, threshold=10.0):  # pragma: no cover
-    """
-    Gets region properties of a 2D spatial filter.
+    Gets region properties of a 2D spatial STA or linear filter.
 
     This returns various attributes of the non-zero area of the given
     spatial filter, such as its area, centroid, eccentricity, etc.
@@ -503,29 +529,32 @@ def get_regionprops(spatial_filter, threshold=10.0):  # pragma: no cover
     Parameters
     ----------
     spatial_filter : array_like
-        The spatial receptive field to which the ellipse should be fit
+        The spatial linear filter to which the ellipse should be fit.
 
-    threshold : float, optional
-        Threshold value (Default: 10.0)
+    percentile : float, optional
+        The cutoff percentile at which the contour is taken. Defaults
+        to 0.95.
 
     Returns
     -------
     regions : list
-        List of region properties (see scikit-image regionprops for more
-        information)
+        List of region properties (see ``skimage.measure.regionprops`` 
+        for more information).
 
     """
-    return regionprops(label(normalize_spatial(spatial_filter) >= threshold))
+    normed = normalize_spatial(spatial_filter)
+    threshold = normed.max() * percentile
+    return regionprops(label(normed >= threshold))
 
 
 def get_ellipse(spatial_filter, sigma=2.):
     """
-    Get the parameters of an ellipse fit to a spatial receptive field
+    Get the parameters of an ellipse fit to a spatial STA or linear filter.
 
     Parameters
     ----------
     spatial_filter : array_like
-        The spatial receptive field to which the ellipse should be fit
+        The spatial receptive field to which the ellipse should be fit.
 
     sigma : float, optional
         Determines the size of the ellipse contour, in units of standard
@@ -534,13 +563,13 @@ def get_ellipse(spatial_filter, sigma=2.):
     Returns
     -------
     center : (float,float)
-        The receptive field center (location stored as an (x,y) tuple)
+        The receptive field center (location stored as an (x,y) tuple).
 
     widths : [float,float]
-        Two-element list of the size of each principal axis of the RF ellipse
+        Two-element list of the size of each principal axis of the RF ellipse.
 
     theta : float
-        angle of rotation of the ellipse from the vertical axis, in radians
+        angle of rotation of the ellipse from the vertical axis, in radians.
     """
 
     # preprocess
@@ -565,16 +594,17 @@ def get_ellipse(spatial_filter, sigma=2.):
 
 def rfsize(spatial_filter, dx, dy=None, sigma=2.):
     """
-    Computes the lengths of an ellipse fit to the receptive field
+    Computes the lengths of the major and minor axes of an ellipse fit 
+    to an STA or linear filter.
 
     Parameters
     ----------
 
     spatial_filter : array_like
-        The spatial receptive field to which the ellipse should be fit
+        The spatial receptive field to which the ellipse should be fit.
 
     dx : float
-        The spatial sampling along the x-dimension
+        The spatial sampling along the x-dimension.
 
     dy : float
         The spatial sampling along the y-dimension. If None, uses the same
@@ -602,9 +632,9 @@ def rfsize(spatial_filter, dx, dy=None, sigma=2.):
     return widths[0] * dx, widths[1] * dy
 
 
-def linear_prediction(filt, stim):
+def linear_response(filt, stim, nsamples_after=0):
     """
-    Compute the predicted linear response of a receptive field to a stimulus.
+    Compute the response of a linear filter to a stimulus.
 
     Parameters
     ----------
@@ -622,56 +652,73 @@ def linear_prediction(filt, stim):
         dimensions. The number of dimensions and the sizes of the spatial
         dimenions must match that of ``filt``.
 
+    nsamples_after : int, optional
+        The number of acausal points in the filter. Defaults to 0.
+
     Returns
     -------
     pred : array_like
         The predicted linear response. The shape is ``(T - t + 1,)`` where
         ``T`` is the number of time points in the stimulus, and ``t`` is 
         the number of time points in the filter. This is the valid portion
-        of the convolution between the stimulus and filter
+        of the convolution between the stimulus and filter.
 
     Raises
     ------
     ValueError : If the number of dimensions of ``stim`` and ``filt`` do not
         match, or if the spatial dimensions differ.
+
+    Notes
+    -----
+    Both ``filtertools.sta`` and ``filtertools.revcorr`` can estimate "acausal"
+    components, such as points in the stimulus occuring *after* a spike. The
+    value passed as parameter ``nsamples_after`` must match that value used
+    when calling ``filtertools.sta`` or ``filtertools.revcorr``.
+
     """
     if (filt.ndim != stim.ndim) or (filt.shape[1:] != stim.shape[1:]):
         raise ValueError("The filter and stimulus must have the same " +
                          "number of dimensions and match in size along spatial dimensions")
 
-    slices = slicestim(stim, filt.shape[0])
+    slices = slicestim(stim, filt.shape[0] - nsamples_after, nsamples_after)
     return np.einsum('tx,x->t', flat2d(slices), filt.ravel())
 
 
-def revcorr(response, stimulus, filter_length):
+def revcorr(stimulus, response, nsamples_before, nsamples_after=0):
     """
     Compute the reverse-correlation between a stimulus and a response.
 
-    This returns the best-fitting linear filter which predicts the given
-    response from the stimulus. It is analogous to the spike-triggered
-    average for continuous variables. ``response`` is most often a membrane
-    potential.
-
     Parameters
     ----------
-    response : array_like
-        A continuous output response correlated with the stimulus. Must
-        be one-dimensional.
-
     stimulus : array_like
         A input stimulus correlated with the ``response``. Must be of shape
-        ``(t, ...)``, where ``t`` is the time and ``...`` indicates any spatial dimensions.
+        ``(t, ...)``, where ``t`` is the time and ``...`` indicates any spatial 
+        dimensions.
 
-    filter_length : int
-        The length of the returned filter, in samples of the ``stimulus`` and
-        ``response`` arrays.
+    response : array_like
+        A continuous output response correlated with ``stimulus``. Must
+        be one-dimensional, of size ``t``.
+
+    nsamples_before : int
+        The maximum negative lag for the correlation between stimulus and response,
+        in samples.
+
+    nsamples_after : int, optional
+        The maximum positive lag for the correlation between stimulus and response,
+        in samples. Defaults to 0.
 
     Returns
     -------
-    filt : array_like
-        An array of shape ``(filter_length, ...)`` containing the best-fitting
-        linear filter which predicts the response from the stimulus. The ellipses
-        indicates spatial dimensions of the filter.
+    rc : array_like
+        An array of shape ``(nsamples_before + nsamples_after, ...)``
+        containing the best-fitting linear filter which predicts the response from
+        the stimulus. The ellipses indicates spatial dimensions of the filter.
+
+    lags : array_like
+        An array of shape ``(nsamples_before + nsamples_after,)``, which gives
+        the lags, in samples, between ``stimulus`` and ``response`` for the correlation
+        returned in ``rc``. This can be converted to an axis of time (like that 
+        returned from ``filtertools.sta``) by multiplying by the sampling period.
 
     Raises
     ------
@@ -682,16 +729,39 @@ def revcorr(response, stimulus, filter_length):
     The ``response`` and ``stimulus`` arrays must share the same sampling
     rate. As the stimulus often has a lower sampling rate, one can use
     ``stimulustools.upsamplestim`` to upsample it.
+
+    Reverse correlation is a method analogous to spike-triggered averaging for
+    continuous response variables, such as a membrane voltage recording. It 
+    estimates the stimulus feature that most strongly correlates with the 
+    response on average.
+
+    It is the time-reverse of the standard cross-correlation function, and is defined
+    as:
+
+    .. math::
+        c[-k] = \\sum_{n} s[n] r[n - k]
+
+    The parameter ``k`` is the lag between the two signals in samples. The range
+    of lags computed in this method are determined by ``nsamples_before`` and 
+    ``nsamples_after``.
+
+    Note that, as with ``filtertools.sta``, the values (samples) in the ``lags``
+    array increase with increasing array index. This means that time is moving
+    forward with increasing array index.
+
     """
+    history = nsamples_before + nsamples_after
     if response.ndim > 1:
         raise ValueError("The `response` must be 1-dimensional")
-    if response.size != (stimulus.shape[0] - filter_length + 1):
-        msg = "`stimulus` must have {:#d} time points (`response.size` + `filter_length`)"
-        raise ValueError(msg.format(response.size + filter_length + 1))
+    if response.size != (stimulus.shape[0] - history + 1):
+        msg = ('`stimulus` must have {:#d} time points ' + 
+                '(`response.size` + `nsamples_before` + `nsamples_after`)')
+        raise ValueError(msg.format(response.size + history + 1))
 
-    slices = slicestim(stimulus, filter_length)
-    recovered = np.einsum('tx,t->x', flat2d(slices), response)
-    return recovered.reshape(slices.shape[1:])
+    slices = slicestim(stimulus, nsamples_before, nsamples_after)
+    recovered = np.einsum('tx,t->x', flat2d(slices), response).reshape(slices.shape[1:])
+    lags = np.arange(-nsamples_before, nsamples_after)
+    return recovered, lags
 
 
 def _gaussian_function(data, x0, y0, a, b, c):

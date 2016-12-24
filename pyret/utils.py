@@ -20,7 +20,8 @@ def plotwrapper(func):
     of a function"""
 
     @wraps(func)
-    def wrapper(*args, figsize=None, **kwargs):
+    def wrapper(*args, **kwargs):
+        figsize = kwargs.get('figsize', None)
 
         if 'ax' not in kwargs:
             if 'fig' not in kwargs:

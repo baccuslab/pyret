@@ -6,15 +6,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
-from itertools import zip_longest
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.exceptions import NotFittedError
 from sklearn.gaussian_process import GaussianProcessRegressor
 
+try:
+    from itertools import zip_longest
+except ImportError:
+    from itertools import izip_longest as zip_longest
+
 __all__ = ['Sigmoid', 'Binterp', 'GaussianProcess']
 
 
-class NonlinearityMixin:
+class NonlinearityMixin(object):
     def plot(self, span=(-5, 5), n=100, **kwargs):  # pragma: no cover
         """Creates a 1D plot of the nonlinearity
 
@@ -139,15 +143,15 @@ class Binterp(BaseEstimator, RegressorMixin, NonlinearityMixin):
 class GaussianProcess(GaussianProcessRegressor, NonlinearityMixin):
     def __init__(self, **kwargs):
         self._fitted = False
-        super().__init__(**kwargs)
+        super(self.__class__, self).__init__(**kwargs)
 
     def fit(self, x, y):
-        super().fit(x.reshape(-1, 1), y)
+        super(self.__class__, self).fit(x.reshape(-1, 1), y)
         self._fitted = True
         return self
 
     def predict(self, x, **kwargs):
         if self._fitted:
-            return super().predict(x.reshape(-1, 1), **kwargs)
+            return super(self.__class__, self).predict(x.reshape(-1, 1), **kwargs)
         else:
             raise NotFittedError('No estimated parameters, call fit() first')
