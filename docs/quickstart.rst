@@ -23,34 +23,66 @@ in response to an input.
 Demo
 ----
 
+Importing ``pyret``
+^^^^^^^^^^^^^^^^^^^
+
 Let's explore how ``pyret`` might be used in a very common analysis pipeline. First, we'll
 import the relevant modules.
 
     >>> import pyret
     >>> import numpy as np
     >>> import matplotlib.pyplot as plt
-    >>> import h5py
-
-.. note::
-    This demo requires the Python HDF5 bindings from ``h5py``, but note that
-    Pyret itself does not have this requirement. However, Pyret will work just
-    as well with NumPy arrays, builtin iterable types, and ``h5py`` datasets.
 
 For this demo, we'll be using data from a retinal ganglion cell (RGC), whose spike times were
 recorded using a multi-electrode array. (Data courtesy of Lane McIntosh.) We'll load the 
-stimulus used in the experiment, as well as the spike times for the cell. (This assumes
-that the current working directory is ``pyret/docs``, which contains the data file 
-used for the tutorial.)
+stimulus used in the experiment, as well as the spike times for the cell.
+
+The data is stored in the GitHub repository, in both HDF5 and NumPy's native ``.npz`` formats.
+The following code snippets show how to download and load the data in those formats,
+respectively. Note that using data in the HDF5 format imposes the additional dependency of
+the ``h5py`` package, which is available on PyPI.
+
+Loading data from HDF5
+^^^^^^^^^^^^^^^^^^^^^^
+
+To download the data in HDF5 format, use the shell command:
+
+.. code:: bash
+
+    $ wget https://github.com/baccuslab/pyret/raw/master/docs/tutorial-data.h5
+
+To load the data, back in the Python shell, run:
 
     >>> data_file = h5py.File('tutorial-data.h5', 'r')
     >>> spikes = data_file['spike-times']  # Spike times for one cell
-    >>> stimulus = data_file['stimulus'] - np.mean(data_file['stimulus'])
-    >>> stimulus /= stimulus.std()
-    >>> time = np.arange(stimulus.shape[0]) * data_file['stimulus'].attrs.get('frame-rate')
+    >>> stimulus = data_file['stimulus'].value.astype(np.float64)
+    >>> frame_rate = data_file['stimulus'].attrs.get('frame-rate')
+
+Loading data from ``.npz``
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To download and the data in the ``.npz`` file format, use the following command:
+
+.. code:: bash
+
+    $ wget https://github.com/baccuslab/pyret/raw/master/docs/tutorial-data.npz
+
+Then, in the Python shell, load the data with:
+
+    >>> arrays = np.load('tutorial-data.npz')
+    >>> spikes, stimulus, frame_rate = arrays['spikes], arrays['stimulus'].astype(np.float64), arrays['frame_rate'][0]
+
+Estimating firing rates
+^^^^^^^^^^^^^^^^^^^^^^^
 
 The stimulus is a spatio-temporal gaussian white noise checkboard, with shape ``(time, nx, ny)``.
 Each spatial position is drawn independently from a normal distribution on each
-temporal frame.
+temporal frame. We will z-score the stimulus, and create a time-axis for it, to reference
+the spike times for this cell to the frames of the stimulus.
+
+    >>> stimulus -= stimulus.mean()
+    >>> stimulus /= stimulus.std()
+    >>> time = np.arange(stimulus.shape[0]) * frame_rate
 
 To begin, let's look at the spiking behavior of the RGC. We'll create a peri-stimulus
 time histogram, by binning the spike times and smoothing a bit. This is an estimate of the
@@ -66,6 +98,9 @@ firing rate of the RGC over time.
     :height: 500px
     :width: 500px
     :alt: Estimated RGC firing rate over time
+
+Estimating a receptive field
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 One widely-used and informative description of the cell is its receptive field. This
 is a linear approximation to the function of the cell, and captures the average visual
@@ -98,6 +133,9 @@ the *spike-triggered average* (STA) for the cell.
     process implicit. The ``pyret`` methods and docstrings strive for the maximal
     amount of clarity when refering to these objects, and the documentation should
     be heeded about whether a filter or STA is expected.
+
+Estimating a nonlinearity
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 While the STA gives a lot of information, it is not the whole story. Real RGCs are definitely
 *not* linear. One common way to correct for this fact is to fit a single, time-invariant
@@ -163,7 +201,7 @@ We can now compare how well the full LN model captures the cell's response chara
     >>> plt.legend()
     >>> plt.xlabel('Time (s)')
     >>> plt.ylabel('Firing rate (Hz)')
-    >>> np.corrcoef(rate[filter_length - 1 :], predicted_rate)[0, 1]
+    >>> np.corrcoef(rate[filter_length - 1 :], predicted_rate)[0, 1] # Correlation coefficient on training data
     0.70315310866999448
 
 .. image:: /pyret-tutorial-figures/pred-vs-true-rates.png
