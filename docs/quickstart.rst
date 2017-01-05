@@ -51,6 +51,12 @@ To download the data in HDF5 format, use the shell command:
 
     $ wget https://github.com/baccuslab/pyret/raw/master/docs/tutorial-data.h5
 
+To use ``curl`` instead of ``wget``, run:
+
+.. code:: bash
+
+    $ curl -L -o tutorial-data.h5 https://github.com/baccuslab/pyret/raw/master/docs/tutorial-data.h5
+
 To load the data, back in the Python shell, run:
 
     >>> data_file = h5py.File('tutorial-data.h5', 'r')
@@ -66,6 +72,12 @@ To download and the data in the ``.npz`` file format, use the following command:
 .. code:: bash
 
     $ wget https://github.com/baccuslab/pyret/raw/master/docs/tutorial-data.npz
+
+Or, using ``curl``:
+
+.. code:: bash
+
+    $ curl -L -o tutorial-data.npz https://github.com/baccuslab/pyret/raw/master/docs/tutorial-data.npz
 
 Then, in the Python shell, load the data with:
 
@@ -108,7 +120,7 @@ feature to which it responds. Because our data consists of spike times, we'll co
 the *spike-triggered average* (STA) for the cell. 
     
     >>> filter_length_seconds = 0.5  # 500 ms filter
-    >>> filter_length = int(filter_length_second / data_file['stimulus'].attrs.get('frame-rate'))
+    >>> filter_length = int(filter_length_second / frame_rate)
     >>> sta, tax = pyret.filtertools.sta(time, stimulus, spikes, filter_length)
     >>> fig, axes = pyret.visualizations.plot_sta(tax[::-1], sta)
     >>> axes[0].set_title('Recovered spatial filter (STA)')
