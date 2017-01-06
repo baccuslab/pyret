@@ -4,6 +4,7 @@
 [![Coverage Status](https://codecov.io/gh/baccuslab/pyret/branch/master/graph/badge.svg)](https://codecov.io/gh/baccuslab/pyret)
 [![Documentation Status](https://readthedocs.org/projects/pyret/badge/?version=master)](http://pyret.readthedocs.org/en/master/?badge=master)
 [![PyPi version](https://img.shields.io/pypi/v/pyret.svg)](https://pypi.python.org/pypi/pyret)
+[![status](http://joss.theoj.org/papers/73e486788290a6386e90a21c7e71bbe0/status.svg)](http://joss.theoj.org/papers/73e486788290a6386e90a21c7e71bbe0)
 
 ### A Python package for analyzing sensory electrophysiology data
 Benjamin Naecker, Niru Maheswaranthan
