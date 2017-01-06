@@ -82,7 +82,7 @@ Or, using ``curl``:
 Then, in the Python shell, load the data with:
 
     >>> arrays = np.load('tutorial-data.npz')
-    >>> spikes, stimulus, frame_rate = arrays['spikes], arrays['stimulus'].astype(np.float64), arrays['frame_rate'][0]
+    >>> spikes, stimulus, frame_rate = arrays['spikes'], arrays['stimulus'].astype(np.float64), arrays['frame_rate'][0]
 
 Estimating firing rates
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -120,7 +120,7 @@ feature to which it responds. Because our data consists of spike times, we'll co
 the *spike-triggered average* (STA) for the cell. 
     
     >>> filter_length_seconds = 0.5  # 500 ms filter
-    >>> filter_length = int(filter_length_second / frame_rate)
+    >>> filter_length = int(filter_length_seconds / frame_rate)
     >>> sta, tax = pyret.filtertools.sta(time, stimulus, spikes, filter_length)
     >>> fig, axes = pyret.visualizations.plot_sta(tax[::-1], sta)
     >>> axes[0].set_title('Recovered spatial filter (STA)')
@@ -159,7 +159,7 @@ The first step in computing a nonlinearity is to compute how the recovered linea
 filter responds to the input stimulus. This is done via convolution of the linear filter
 with the stimulus.
 
-    >>> pred = pyret.filtertools.linear_prediction(sta, stimulus)
+    >>> pred = pyret.filtertools.linear_response(sta, stimulus)
     >>> stimulus.shape
     (30011, 20, 20)
     >>> pred.shape
