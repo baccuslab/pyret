@@ -77,7 +77,7 @@ class Sigmoid(BaseEstimator, RegressorMixin, NonlinearityMixin):
         return self
 
     @staticmethod
-    def _sigmoid(x, threshold, slope, peak, baseline):
+    def _sigmoid(x, baseline, peak, slope, threshold):
         return baseline + peak / (1 + np.exp(-slope * (x - threshold)))
 
     def predict(self, x):
