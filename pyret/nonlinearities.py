@@ -73,7 +73,8 @@ class Sigmoid(BaseEstimator, RegressorMixin, NonlinearityMixin):
 
     def fit(self, x, y, **kwargs):
         self.params, self.pcov = curve_fit(self._sigmoid, x, y, self.init_params, **kwargs)
-        self.set_params(**dict(zip(self.get_params().keys(), self.params)))
+        keys = ('baseline', 'peak', 'slope', 'threshold')
+        self.set_params(**dict(zip(keys, self.params)))
         return self
 
     @staticmethod
