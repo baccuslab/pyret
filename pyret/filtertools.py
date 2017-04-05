@@ -7,7 +7,7 @@ spatiotemporal filters, and basic filter signal processing.
 
 import numpy as np
 import scipy
-from skimage.measure import label, regionprops, find_contours
+from skimage.measure import label, regionprops
 from functools import reduce
 
 from pyret.stimulustools import slicestim
@@ -15,7 +15,7 @@ from pyret.utils import flat2d
 
 __all__ = ['ste', 'sta', 'stc', 'lowranksta', 'decompose',
            'filterpeak', 'smooth', 'cutout', 'resample', 'flat2d',
-           'get_ellipse', 'get_regionprops', 'normalize_spatial', 
+           'get_ellipse', 'get_regionprops', 'normalize_spatial',
            'linear_response', 'revcorr']
 
 
@@ -29,7 +29,7 @@ def ste(time, stimulus, spikes, nsamples_before, nsamples_after=0):
         The time array corresponding to the stimulus.
 
     stimulus : ndarray
-        A spatiotemporal or temporal stimulus array, where time is the 
+        A spatiotemporal or temporal stimulus array, where time is the
         first dimension.
 
     spikes : iterable
@@ -155,7 +155,7 @@ def stc(time, stimulus, spikes, nsamples_before, nsamples_after=0):
     Parameters
     ----------
     time : ndarray
-        The time array corresponding to the stimulus, where time is the 
+        The time array corresponding to the stimulus, where time is the
         first dimension.
 
     stimulus : ndarray
@@ -190,7 +190,7 @@ def stc(time, stimulus, spikes, nsamples_before, nsamples_after=0):
 
     # if the spike-triggered ensemble is empty, return an array of NaN's
     if first is None:
-        ndims = np.prod(stimulus.shape[1:]) * filter_length
+        ndims = int(np.prod(stimulus.shape[1:]) * filter_length)
         return np.nan * np.ones((ndims, ndims))
 
     # initialize the STC matrix using the outer product of the first sample
@@ -244,13 +244,12 @@ def lowranksta(sta_orig, k=10):
 
     Notes
     -----
-    This method requires that the STA be 3D. To decompose a STA into a 
-    temporal and 1-dimensional spatial component, simply promote the STA 
+    This method requires that the STA be 3D. To decompose a STA into a
+    temporal and 1-dimensional spatial component, simply promote the STA
     to 3D before calling this method.
 
     Despite the name this method accepts both an STA or a linear filter.
     The components estimated for one will be flipped versions of the other.
-
     """
 
     # work with a copy of the STA (prevents corrupting the input)
@@ -311,7 +310,7 @@ def filterpeak(sta):
     ----------
     sta : array_like
         STA or filter for which to find the peak. It should be shaped as
-        ``(time, ...)``, where ellipses indicate any spatial dimensions 
+        ``(time, ...)``, where ellipses indicate any spatial dimensions
         to the array.
 
     Returns
@@ -468,7 +467,7 @@ def resample(arr, scale_factor):
 
 def normalize_spatial(frame, scale_factor=1.0, clip_negative=False):
     """
-    Normalizes a spatial frame, for example of a stimulus or STA, by 
+    Normalizes a spatial frame, for example of a stimulus or STA, by
     doing the following:
 
     1. mean subtraction using a robust estimate of the mean (ignoring outliers).
@@ -538,7 +537,7 @@ def get_regionprops(spatial_filter, percentile=0.95):  # pragma: no cover
     Returns
     -------
     regions : list
-        List of region properties (see ``skimage.measure.regionprops`` 
+        List of region properties (see ``skimage.measure.regionprops``
         for more information).
 
     """
@@ -594,7 +593,7 @@ def get_ellipse(spatial_filter, sigma=2.):
 
 def rfsize(spatial_filter, dx, dy=None, sigma=2.):
     """
-    Computes the lengths of the major and minor axes of an ellipse fit 
+    Computes the lengths of the major and minor axes of an ellipse fit
     to an STA or linear filter.
 
     Parameters
@@ -659,7 +658,7 @@ def linear_response(filt, stim, nsamples_after=0):
     -------
     pred : array_like
         The predicted linear response. The shape is ``(T - t + 1,)`` where
-        ``T`` is the number of time points in the stimulus, and ``t`` is 
+        ``T`` is the number of time points in the stimulus, and ``t`` is
         the number of time points in the filter. This is the valid portion
         of the convolution between the stimulus and filter.
 
@@ -692,7 +691,7 @@ def revcorr(stimulus, response, nsamples_before, nsamples_after=0):
     ----------
     stimulus : array_like
         A input stimulus correlated with the ``response``. Must be of shape
-        ``(t, ...)``, where ``t`` is the time and ``...`` indicates any spatial 
+        ``(t, ...)``, where ``t`` is the time and ``...`` indicates any spatial
         dimensions.
 
     response : array_like
@@ -717,7 +716,7 @@ def revcorr(stimulus, response, nsamples_before, nsamples_after=0):
     lags : array_like
         An array of shape ``(nsamples_before + nsamples_after,)``, which gives
         the lags, in samples, between ``stimulus`` and ``response`` for the correlation
-        returned in ``rc``. This can be converted to an axis of time (like that 
+        returned in ``rc``. This can be converted to an axis of time (like that
         returned from ``filtertools.sta``) by multiplying by the sampling period.
 
     Raises
@@ -731,8 +730,8 @@ def revcorr(stimulus, response, nsamples_before, nsamples_after=0):
     ``stimulustools.upsamplestim`` to upsample it.
 
     Reverse correlation is a method analogous to spike-triggered averaging for
-    continuous response variables, such as a membrane voltage recording. It 
-    estimates the stimulus feature that most strongly correlates with the 
+    continuous response variables, such as a membrane voltage recording. It
+    estimates the stimulus feature that most strongly correlates with the
     response on average.
 
     It is the time-reverse of the standard cross-correlation function, and is defined
@@ -742,7 +741,7 @@ def revcorr(stimulus, response, nsamples_before, nsamples_after=0):
         c[-k] = \\sum_{n} s[n] r[n - k]
 
     The parameter ``k`` is the lag between the two signals in samples. The range
-    of lags computed in this method are determined by ``nsamples_before`` and 
+    of lags computed in this method are determined by ``nsamples_before`` and
     ``nsamples_after``.
 
     Note that, as with ``filtertools.sta``, the values (samples) in the ``lags``
@@ -754,7 +753,7 @@ def revcorr(stimulus, response, nsamples_before, nsamples_after=0):
     if response.ndim > 1:
         raise ValueError("The `response` must be 1-dimensional")
     if response.size != (stimulus.shape[0] - history + 1):
-        msg = ('`stimulus` must have {:#d} time points ' + 
+        msg = ('`stimulus` must have {:#d} time points ' +
                 '(`response.size` + `nsamples_before` + `nsamples_after`)')
         raise ValueError(msg.format(response.size + history + 1))
 
@@ -892,8 +891,8 @@ def _initial_gaussian_params(xm, ym, z, width=5):
     xc = ym[xi, yi]
 
     # compute precision matrix entries
-    a = 1/width
+    a = 1 / width
     b = 0
-    c = 1/width
+    c = 1 / width
 
     return xc, yc, a, b, c
