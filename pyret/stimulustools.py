@@ -22,7 +22,7 @@ def upsample(stim, upsample_factor, time=None):
     upsample_factor : int
         The upsample factor.
 
-    time : arra_like, optional
+    time : array_like, optional
         The time axis of the original stimulus.
 
     Returns

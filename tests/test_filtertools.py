@@ -257,7 +257,7 @@ def test_revcorr_raises():
     """Test raising ValueErrors with incorrect inputs"""
     np.random.seed(0)
     with pytest.raises(ValueError):
-        flt.revcorr(np.random.randn(10, 1), np.random.randn(10,), 2)[0]
+        flt.revcorr(np.random.randn(10, 1), np.random.randn(11,), 2)[0]
     with pytest.raises(ValueError):
         flt.revcorr(np.random.randn(10, 3), np.random.randn(10, 2), 2)[0]
 
@@ -275,8 +275,12 @@ def test_revcorr_1d():
     stimulus = np.random.randn(stim_length,)
     response = flt.linear_response(true_filter, stimulus)
 
-    # Reverse correlation
-    filt = flt.revcorr(stimulus, response, filter_length)[0]
+    # Reverse correlation, pad response with zeros to so that
+    # stim and response match. These will be ignored by
+    # filtertools.revcorr anyway.
+    padded_response = np.concatenate((np.zeros((filter_length - 1,)),
+            response), axis=0)
+    filt = flt.revcorr(stimulus, padded_response, filter_length)[0]
     filt /= np.linalg.norm(filt)
     tol = 0.1
     assert np.allclose(true_filter, filt, atol=tol)
@@ -298,8 +302,12 @@ def test_revcorr_acausal():
     stimulus = np.random.randn(stim_length,)
     response = flt.linear_response(true_filter, stimulus)
 
-    # Reverse correlation
-    filt = flt.revcorr(stimulus, response, nbefore, nafter)[0]
+    # Reverse correlation, pad response with zeros to so that
+    # stim and response match. These will be ignored by
+    # filtertools.revcorr anyway.
+    padded_response = np.concatenate((np.zeros((filter_length - 1,)),
+            response), axis=0)
+    filt = flt.revcorr(stimulus, padded_response, nbefore, nafter)[0]
     filt /= np.linalg.norm(filt)
     tol = 0.1
     assert np.allclose(true_filter, filt, atol=tol)
@@ -319,8 +327,12 @@ def test_revcorr_nd():
     stimulus = np.random.randn(stim_length, nx, ny)
     response = flt.linear_response(true_filter, stimulus)
 
-    # Reverse correlation
-    filt = flt.revcorr(stimulus, response, filter_length)[0]
+    # Reverse correlation, pad response with zeros to so that
+    # stim and response match. These will be ignored by
+    # filtertools.revcorr anyway.
+    padded_response = np.concatenate((np.zeros((filter_length - 1,)),
+            response), axis=0)
+    filt = flt.revcorr(stimulus, padded_response, filter_length)[0]
     filt /= np.linalg.norm(filt)
     tol = 0.1
     assert np.allclose(true_filter, filt, atol=tol)

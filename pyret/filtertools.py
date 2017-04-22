@@ -696,7 +696,12 @@ def revcorr(stimulus, response, nsamples_before, nsamples_after=0):
 
     response : array_like
         A continuous output response correlated with ``stimulus``. Must
-        be one-dimensional, of size ``t``.
+        be one-dimensional, of size ``t``, the same size as ``stimulus``
+        along the first axis. Note that the first ``history`` points of
+        the response are ignored, where ``history = nsamples_before +
+        nsamples_after``, in order to only return the portion of the
+        correlation during which the ``stimulus`` and ``response``
+        completely overlap.
 
     nsamples_before : int
         The maximum negative lag for the correlation between stimulus and response,
@@ -721,13 +726,14 @@ def revcorr(stimulus, response, nsamples_before, nsamples_after=0):
 
     Raises
     ------
-    ValueError : If the ``stimulus`` and ``response`` arrays are of different shapes.
+    ValueError : If the ``stimulus`` and ``response`` arrays do not match in
+    size along the first dimension.
 
     Notes
     -----
     The ``response`` and ``stimulus`` arrays must share the same sampling
     rate. As the stimulus often has a lower sampling rate, one can use
-    ``stimulustools.upsamplestim`` to upsample it.
+    ``stimulustools.upsample`` to upsample it.
 
     Reverse correlation is a method analogous to spike-triggered averaging for
     continuous response variables, such as a membrane voltage recording. It
@@ -752,13 +758,13 @@ def revcorr(stimulus, response, nsamples_before, nsamples_after=0):
     history = nsamples_before + nsamples_after
     if response.ndim > 1:
         raise ValueError("The `response` must be 1-dimensional")
-    if response.size != (stimulus.shape[0] - history + 1):
-        msg = ('`stimulus` must have {:#d} time points ' +
-                '(`response.size` + `nsamples_before` + `nsamples_after`)')
-        raise ValueError(msg.format(response.size + history + 1))
+    if response.size != stimulus.shape[0]:
+        raise ValueError('`stimulus` and `response` must match in ' +
+                'size along the first axis')
 
     slices = slicestim(stimulus, nsamples_before, nsamples_after)
-    recovered = np.einsum('tx,t->x', flat2d(slices), response).reshape(slices.shape[1:])
+    recovered = np.einsum('tx,t->x', flat2d(slices),
+            response[history - 1:]).reshape(slices.shape[1:])
     lags = np.arange(-nsamples_before, nsamples_after)
     return recovered, lags
 
