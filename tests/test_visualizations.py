@@ -6,117 +6,81 @@ Testing code for pyret.visualizations module.
 import os
 
 from matplotlib.testing.compare import compare_images
-from matplotlib.patches import Ellipse
-import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
 from pyret import visualizations as viz
 from pyret import spiketools
-import utils # Pyret testing utilities
+import utils # Pyret testing and image generation utilities
 
-IMG_DIR = os.path.join(os.path.dirname(__file__), 'test-images')
+def _comparison_wrapper(filename, save_func):
+    """A wrapper function for comparing a test image with the baseline version.
+
+    The actual methods which generate and save the testing (and baseline)
+    images are defined in the `utils` module. These are the functions such
+    as `plot_cells_saver`, which will save the output of 
+    `pyret.visualizations.plot_cells` into the file with the given name.
+
+    This method calls the saver function with the given filename, then
+    compares the baseline version (which has the same name but is in the
+    `test-images/baseline` directory) against the generated test image.
+
+    Parameters
+    ----------
+    
+    filename : str
+        The name of the file (without a path) in which to save the test
+        image.
+
+    save_func : callable
+        The saver function which will generate and save the test image
+        in the passed `filename`.
+    """
+    test_name = os.path.join(utils.get_test_image_dir(), filename)
+    base_name = os.path.join(utils.get_baseline_image_dir(), filename)
+    save_func(test_name)
+    assert not compare_images(test_name, base_name, 1)
+    os.remove(test_name)
+
 
 def test_temporal_filter():
     """Test plotting a temporal filter from a full 3D spatiotemporal STA."""
-    nx, ny, nt = 10, 10, 50
-    time = np.arange(nt)
-    sta = utils.create_spatiotemporal_filter(nx, ny, nt)[-1]
-
-    viz.temporal(time, sta)
-    filename = os.path.join(IMG_DIR, 'test-temporal-filter.png')
-    plt.savefig(filename)
-    assert not compare_images(
-            os.path.join(IMG_DIR, 'baseline-temporal-filter.png'), filename, 1)
-    os.remove(filename)
-    plt.close('all')
+    _comparison_wrapper('temporal-filter.png', utils.temporal_filter_saver)
 
 
 def test_spatial_filter():
     """Test plotting a spatial filter from a full 3D spatiotemporal STA."""
-    nx, ny, nt = 10, 10, 50
-    time = np.arange(nt)
-    sta = utils.create_spatiotemporal_filter(nx, ny, nt)[-1]
-    viz.spatial(sta)
-    filename = os.path.join(IMG_DIR, 'test-spatial-filter.png')
-    plt.savefig(filename)
-    assert not compare_images(
-            os.path.join(IMG_DIR, 'baseline-spatial-filter.png'), filename, 1)
-    os.remove(filename)
-    plt.close('all')
+    _comparison_wrapper('spatial-filter.png', utils.spatial_filter_saver)
 
 
 def test_spatiotemporal_filter():
     """Test plotting a full 3D spatiotemporal STA."""
-    nx, ny, nt = 10, 10, 50
-    time = np.arange(nt)
-    t, s, sta = utils.create_spatiotemporal_filter(nx, ny, nt)
-
     # Test plotting temporal component
-    filename = os.path.join(IMG_DIR, 'test-temporal-filter.png')
-    viz.plot_sta(time, t)
-    plt.savefig(filename)
-    assert not compare_images(
-            os.path.join(IMG_DIR, 'baseline-temporal-from-spatiotemporal-filter.png'), 
-            filename, 1)
-    os.remove(filename)
-    plt.close('all')
+    _comparison_wrapper('temporal-from-full-filter.png', 
+            utils.temporal_from_spatiotemporal_filter_saver)
 
     # Test plotting spatial component
-    filename = os.path.join(IMG_DIR, 'test-temporal-filter.png')
-    viz.plot_sta(time, s)
-    plt.savefig(filename)
-    assert not compare_images(
-            os.path.join(IMG_DIR, 'baseline-spatial-from-spatiotemporal-filter.png'), 
-            filename, 1)
-    os.remove(filename)
-    plt.close('all')
+    _comparison_wrapper('spatial-from-full-filter.png', 
+        utils.spatial_from_spatiotemporal_filter_saver)
 
     # Test plotting both spatial/temporal components
-    filename = os.path.join(IMG_DIR, 'test-full-spatiotemporal-filter.png')
-    viz.plot_sta(time, sta)
-    plt.savefig(filename)
-    assert not compare_images(
-            os.path.join(IMG_DIR, 'baseline-full-spatiotemporal-filter.png'), filename, 1)
-    os.remove(filename)
-    plt.close('all')
+    _comparison_wrapper('full-filter.png',
+        utils.spatiotemporal_filter_saver)
 
 
 def test_raster():
     """Test plotting a spike raster."""
-    spikes = np.arange(10)
-    labels = np.array((1, 1, 1, 1, 1, 2, 2, 2, 2, 2))
-    fig, axes = viz.raster(spikes, labels)
-    filename = os.path.join(IMG_DIR, 'test-raster.png')
-    plt.savefig(filename)
-    assert not compare_images(
-            os.path.join(IMG_DIR, 'baseline-raster.png'), filename, 1)
-    os.remove(filename)
-    plt.close('all')
+    _comparison_wrapper('raster.png', utils.raster_saver)
 
 
 def test_psth():
     """Test plotting a PSTH."""
-    spikes = np.arange(10)
-    fig, axes = viz.psth(spikes, trial_length=5.)
-    filename = os.path.join(IMG_DIR, 'test-psth.png')
-    plt.savefig(filename)
-    assert not compare_images(
-            os.path.join(IMG_DIR, 'baseline-psth.png'), filename, 1)
-    os.remove(filename)
-    plt.close('all')
+    _comparison_wrapper('psth.png', utils.psth_saver)
 
 
 def test_raster_and_psth():
     """Test plotting a raster and PSTH on the same axes."""
-    spikes = np.arange(10)
-    fig, axes = viz.raster_and_psth(spikes, trial_length=5.)
-    filename = os.path.join(IMG_DIR, 'test-raster-and-psth.png')
-    plt.savefig(filename)
-    assert not compare_images(
-            os.path.join(IMG_DIR, 'baseline-raster-and-psth.png'), filename, 1)
-    os.remove(filename)
-    plt.close('all')
+    _comparison_wrapper('raster-and-psth.png', utils.raster_and_psth_saver)
 
 
 def test_play_sta():
@@ -127,72 +91,22 @@ def test_play_sta():
     to test reliably. Instead, we write a specific frame of the animation
     to disk as an image, and compare it with a baseline.
     """
-    nx, ny, nt = 10, 10, 50
-    sta = utils.create_spatiotemporal_filter(nx, ny, nt)[-1]
-    anim = viz.play_sta(sta)
-    filename = os.path.join(IMG_DIR, 'test-sta-movie.png')
-    frame = 10
-    anim._func(frame)
-    plt.savefig(filename)
-    assert not compare_images(
-            os.path.join(IMG_DIR, 'baseline-sta-movie-frame.png'),
-            filename, 1)
-    os.remove(filename)
-    plt.close('all')
+    _comparison_wrapper('sta-movie-frame.png', utils.sta_movie_frame_saver)
+
 
 def test_ellipse():
     """Test plotting an ellipse fitted to an RF."""
-    nx, ny, nt = 10, 10, 50
-    sta = utils.create_spatiotemporal_filter(nx, ny, nt)[-1]
-    filename = os.path.join(IMG_DIR, 'test-ellipse.png')
-    viz.ellipse(sta)
-    plt.savefig(filename)
-    assert not compare_images(
-            os.path.join(IMG_DIR, 'baseline-ellipse.png'), filename, 1)
-    os.remove(filename)
-    plt.close('all')
-
+    _comparison_wrapper('ellipse.png', utils.ellipse_saver)
+    
 
 def test_plot_cells():
     """Test plotting ellipses for multiple cells on the same axes."""
-    nx, ny, nt = 10, 10, 50
-    stas = []
-    ncells = 2
-    for cell in range(ncells):
-        stas.append(utils.create_spatiotemporal_filter(nx, ny, nt)[-1])
-
-    filename = os.path.join(IMG_DIR, 'test-plotcells.png')
-    np.random.seed(0) # plot_cells() uses random colors for each cell
-    viz.plot_cells(stas)
-    plt.savefig(filename)
-    assert not compare_images(
-            os.path.join(IMG_DIR, 'baseline-plotcells.png'), filename, 1)
-    os.remove(filename)
-    plt.close('all')
+    _comparison_wrapper('plotcells.png', utils.plot_cells_saver)
 
 
 def test_play_rates():
     """Test playing firing rates for cells as a movie."""
-    nx, ny, nt = 10, 10, 50
-    sta = utils.create_spatiotemporal_filter(nx, ny, nt)[-1]
-    time = np.linspace(0, 10, 100)
-    spikes = np.arange(10)
-    binned_spikes = spiketools.binspikes(spikes, time)
-    rate = spiketools.estfr(binned_spikes, time)
-
-    # Plot cell
-    fig, axes = viz.ellipse(sta)
-    patch = plt.findobj(axes, Ellipse)[0]
-    anim = viz.play_rates(rate, patch)
-    filename = os.path.join(IMG_DIR, 'test-rates-movie.png')
-    frame = 10
-    anim._func(frame)
-    plt.savefig(filename)
-    assert not compare_images(
-            os.path.join(IMG_DIR, 'baseline-rates-movie-frame.png'),
-            filename, 1)
-    os.remove(filename)
-    plt.close('all')
+    _comparison_wrapper('rates-movie-frame.png', utils.play_rates_saver)
 
 
 def test_anim_to_html():
@@ -202,9 +116,7 @@ def test_anim_to_html():
     except ImportError:
         pytest.skip('Cannot convert movie to HTML without IPython.')
 
-    nx, ny, nt = 10, 10, 50
-    sta = utils.create_spatiotemporal_filter(nx, ny, nt)[-1]
-    anim = viz.play_sta(sta)
+    sta = utils.create_default_fake_filter()[-1]
     html = viz.anim_to_html(viz.play_sta(sta))
     assert isinstance(html, HTML)
 
