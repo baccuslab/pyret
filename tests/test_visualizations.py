@@ -120,3 +120,15 @@ def test_anim_to_html():
     html = viz.anim_to_html(viz.play_sta(sta))
     assert isinstance(html, HTML)
 
+
+def setup_module():
+    """Module-level setup, make the test images directory."""
+    if not os.path.exists(utils.get_test_image_dir()):
+        os.mkdir(utils.get_test_image_dir())
+
+
+def teardown_module():
+    """Module-level cleanup, remove the test images directory."""
+    if os.path.exists(utils.get_test_image_dir()):
+        os.rmdir(utils.get_test_image_dir())
+
