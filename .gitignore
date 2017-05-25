@@ -10,3 +10,4 @@ htmlcov/
 .cache/
 .DS_Store
 tests/test-images/test/
+.mypy_cache/

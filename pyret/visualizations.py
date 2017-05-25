@@ -298,7 +298,7 @@ def spatial(filt, maxval=None, **kwargs):
     ax : matplotlib Axes object
         Axes into which the spatial STA is plotted.
     """
-    fig = kwargs.pop('fig')
+    _ = kwargs.pop('fig')
     ax = kwargs.pop('ax')
 
     if filt.ndim > 2:
