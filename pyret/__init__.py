@@ -7,15 +7,13 @@ A Python package for analysis of retinal data
 Modules
 -------
 spiketools      - Tools for manipulating spike trains
-filtertools     - Analysis of linear filters
+nonlinearities  - Methods for estimating nonlinearities
 stimulustools   - Tools for getting stimulus history and statistics
 visualizations  - Tools for plotting receptive fields, filters, etc.
-nonlinearities  - Methods for estimating nonlinearities
+filtertools     - Analysis of linear filters
 
 For more information, see the accompanying README.md
-
 """
-
 __all__ = [
     'spiketools',
     'nonlinearities',
@@ -24,6 +22,5 @@ __all__ = [
     'filtertools',
     ]
 
-__version__ = '0.5.4'
-
+from .metadata import __author__, __version__
 from pyret import *
