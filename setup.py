@@ -1,11 +1,19 @@
+import re
+import os
 from setuptools import setup, find_packages
 
+
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+with open(os.path.join(__location__, 'pyret/metadata.py'), 'r') as f:
+    metadata = dict(re.findall("__([a-z_]+)__\s*=\s*'([^']+)'", f.read()))
+
+
 setup(name='pyret',
-      version='0.5.4',
-      description='Tools for the analysis of neural electrophysiology data',
-      author='Benjamin Naecker, Niru Maheshwaranathan',
-      author_email='bnaecker@stanford.edu',
-      url='https://github.com/baccuslab/pyret',
+      version=metadata['version'],
+      description=metadata['description'],
+      author=metadata['author'],
+      author_email=metadata['author_email'],
+      url=metadata['url'],
       long_description='''
           The pyret package contains tools for analyzing neural
           data. In particular, it contains methods for manipulating
@@ -30,8 +38,8 @@ setup(name='pyret',
           'scikit-image>=0.12',
           'scikit-learn>=0.18'
       ],
-      license='MIT',
+      license=metadata['license'],
       extras_require={
           'html': ['jupyter>=1.0']
       }
-      )
+     )
