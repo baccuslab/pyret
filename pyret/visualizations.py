@@ -2,12 +2,13 @@
 Visualization functions for displaying spikes, filters, and cells.
 """
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import animation, cm, gridspec
+from matplotlib.patches import Ellipse
+
 from . import filtertools as ft
 from .utils import plotwrapper
-from matplotlib import gridspec, animation, cm
-from matplotlib.patches import Ellipse
 
 __all__ = ['raster', 'psth', 'raster_and_psth', 'spatial', 'temporal',
            'plot_sta', 'play_sta', 'ellipse', 'plot_cells', 'play_rates']
@@ -100,7 +101,7 @@ def psth(spikes, trial_length=None, binsize=0.01, **kwargs):
     ax : matplotlib.axes.Axes
         Matplotlib Axes object into which PSTH is plotted.
     """
-    fig = kwargs.pop('fig')
+    _ = kwargs.pop('fig')
     ax = kwargs.pop('ax')
 
     # Input-checking
@@ -110,8 +111,8 @@ def psth(spikes, trial_length=None, binsize=0.01, **kwargs):
     # Compute the histogram bins to use
     ntrials = int(np.ceil(spikes.max() / trial_length))
     basebins = np.arange(0, trial_length + binsize, binsize)
-    tbins = np.tile(basebins, (ntrials, 1)) + (np.tile(np.arange(0, ntrials), 
-            (basebins.size, 1)).T * trial_length)
+    tbins = np.tile(basebins, (ntrials, 1)) + \
+            (np.tile(np.arange(0, ntrials), (basebins.size, 1)).T * trial_length)
 
     # Bin the spikes in each time bin
     bspk = np.empty((tbins.shape[0], tbins.shape[1] - 1))
@@ -119,10 +120,10 @@ def psth(spikes, trial_length=None, binsize=0.01, **kwargs):
         bspk[trial, :], _ = np.histogram(spikes, bins=tbins[trial, :])
 
     # Compute the mean over each trial, and multiply by the binsize
-    fr = np.mean(bspk, axis=0) / binsize
+    firing_rate = np.mean(bspk, axis=0) / binsize
 
     # Plot the PSTH
-    ax.plot(tbins[0, :-1], fr, color='k', marker=None, linestyle='-', linewidth=2)
+    ax.plot(tbins[0, :-1], firing_rate, color='k', marker=None, linestyle='-', linewidth=2)
 
     # Labels etc
     ax.set_title('PSTH', fontsize=24)
@@ -164,7 +165,7 @@ def raster_and_psth(spikes, trial_length=None, binsize=0.01, **kwargs):
     ax : matplotlib.axes.Axes
         Matplotlib Axes instance onto which the data is plotted.
     """
-    fig = kwargs.pop('fig')
+    _ = kwargs.pop('fig')
     ax = kwargs.pop('ax')
 
     # Input-checking
@@ -174,8 +175,8 @@ def raster_and_psth(spikes, trial_length=None, binsize=0.01, **kwargs):
     # Compute the histogram bins to use
     ntrials = int(np.ceil(spikes.max() / trial_length))
     basebins = np.arange(0, trial_length + binsize, binsize)
-    tbins = np.tile(basebins, (ntrials, 1)) + (np.tile(np.arange(0, ntrials), 
-            (basebins.size, 1)).T * trial_length)
+    tbins = np.tile(basebins, (ntrials, 1)) + \
+            (np.tile(np.arange(0, ntrials), (basebins.size, 1)).T * trial_length)
 
     # Bin the spikes in each time bin
     bspk = np.empty((tbins.shape[0], tbins.shape[1] - 1))
@@ -183,10 +184,10 @@ def raster_and_psth(spikes, trial_length=None, binsize=0.01, **kwargs):
         bspk[trial, :], _ = np.histogram(spikes, bins=tbins[trial, :])
 
     # Compute the mean over each trial, and multiply by the binsize
-    fr = np.mean(bspk, axis=0) / binsize
+    firing_rate = np.mean(bspk, axis=0) / binsize
 
     # Plot the PSTH
-    ax.plot(tbins[0, :-1], fr, color='r', marker=None, linestyle='-', linewidth=2)
+    ax.plot(tbins[0, :-1], firing_rate, color='r', marker=None, linestyle='-', linewidth=2)
     ax.set_xlabel('Time (s)', fontdict={'fontsize': 20})
     ax.set_ylabel('Firing rate (Hz)', color='r', fontdict={'fontsize': 20})
     for tick in ax.get_yticklabels():
@@ -363,7 +364,7 @@ def plot_sta(time, sta):
 
     If the given filter is 1D, it is direclty plotted. If it is 2D, it is
     shown as an image, with space and time as its axes. If the filter is 3D,
-    it is decomposed into its spatial and temporal components, each of which 
+    it is decomposed into its spatial and temporal components, each of which
     is plotted on its own axis.
 
     Parameters
@@ -469,11 +470,11 @@ def ellipse(filt, sigma=2.0, alpha=0.8, fc='none', ec='black', lw=3, **kwargs):
     -------
     fig : matplotlib.figure.Figure
         The figure onto which the ellipse is plotted.
-        
+
     ax : matplotlib.axes.Axes
         The axes onto which the ellipse is plotted.
     """
-    fig = kwargs.pop('fig')
+    _ = kwargs.pop('fig')
     ax = kwargs.pop('ax')
 
     if filt.ndim == 2:
@@ -516,25 +517,25 @@ def plot_cells(cells, **kwargs):
     ax : matplotlib.axes.Axes
         The axes onto which the ellipses are plotted.
     """
-    fig = kwargs.pop('fig')
+    _ = kwargs.pop('fig')
     ax = kwargs.pop('ax')
 
     # for each cell
-    for idx, sta in enumerate(cells):
+    for sta in cells:
 
         # get the spatial profile
-        sp = ft.decompose(sta)[0]
+        spatial_profile = ft.decompose(sta)[0]
 
         # plot ellipse
         color = cm.Set1(np.random.randint(100))
-        fig, ax = ellipse(sp, fc=color, ec=color, lw=2, alpha=0.3, ax=ax)
+        ellipse(spatial_profile, fc=color, ec=color, lw=2, alpha=0.3, ax=ax)
 
 
 def play_rates(rates, patches, num_levels=255, time=None, repeat=True, frametime=100):
     """
     Plays a movie representation of the firing rate of a list of cells, by
     coloring a list of patches with a color proportional to the firing rate. This
-    is useful, for example, in conjunction with ``plot_cells``, to color the 
+    is useful, for example, in conjunction with ``plot_cells``, to color the
     ellipses fitted to a set of receptive fields proportional to the firing rate.
 
     Parameters
@@ -544,7 +545,7 @@ def play_rates(rates, patches, num_levels=255, time=None, repeat=True, frametime
         ``T`` gives the firing rate at a each time point.
 
     patches : list
-        A list of ``N`` matplotlib patch elements. The facecolor of these patches is 
+        A list of ``N`` matplotlib patch elements. The facecolor of these patches is
         altered according to the rates values.
 
     Returns
@@ -577,14 +578,15 @@ def play_rates(rates, patches, num_levels=255, time=None, repeat=True, frametime
         ax.set_title('Time: %0.2f seconds' % (time[t]), fontsize=20)
 
     # Call the animator
-    anim = animation.FuncAnimation(fig, animate, 
-            np.arange(T), interval=frametime, repeat=repeat)
+    anim = animation.FuncAnimation(fig, animate,
+                                   np.arange(T), interval=frametime, repeat=repeat)
     return anim
+
 
 def anim_to_html(anim):
     """
     Convert an animation into an embedable HTML element.
-    
+
     This converts the animation objects returned by ``play_sta()`` and
     ``play_rates()`` into an HTML tag that can be embedded, for example
     in a Jupyter notebook.
