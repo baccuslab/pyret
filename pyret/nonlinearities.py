@@ -141,6 +141,48 @@ class Binterp(BaseEstimator, RegressorMixin, NonlinearityMixin):
         raise NotFittedError('No estimated parameters, call fit() first')
 
 
+class RBF(BaseEstimator, RegressorMixin, NonlinearityMixin):
+    def __init__(self, n_bases):
+        """Smooth nonlinearity parameterized by radial basis functions (gaussians)
+
+        Given samples (x, y) from the nonlinearity, estimates a smooth function using
+        an expansion into a feature basis formed by shifting basis functions (gaussians)
+        along the input scale.
+
+        Parameters
+        ----------
+        n_bases : int
+            How many basis functions to tile along the input axis
+        """
+        self.n_bases = n_bases
+
+    @staticmethod
+    def _gaussian(x, mu, sigma):
+        return np.exp(-(x-mu)**2/sigma**2) / (2 * np.pi * sigma)
+
+    def _apply(self, x):
+        return np.stack([self._gaussian(x, *args) for args in self.params]).T
+
+    def fit(self, x, y):
+
+        # generate tents
+        mu, sigma = np.mean(x), np.std(x)
+        xmin, xmax = mu - 5 * sigma, mu + 5 * sigma
+        dx = (xmax - xmin) / self.n_bases
+        centers = np.linspace(xmin, xmax, self.n_bases)
+        widths = np.linspace(-dx, dx, self.n_bases) ** 2 + dx
+        self.params = list(zip(centers, widths))
+
+        self.weights, self.resid = np.linalg.lstsq(self._apply(x), y)[:2]
+        return self
+
+    def predict(self, x):
+        try:
+            return self._apply(x).dot(self.weights)
+        except AttributeError:
+            raise NotFittedError('No estimated parameters, call fit() first')
+
+
 class GaussianProcess(GaussianProcessRegressor, NonlinearityMixin):
     def __init__(self, **kwargs):
         self._fitted = False
