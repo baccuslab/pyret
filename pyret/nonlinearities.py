@@ -173,7 +173,7 @@ class RBF(BaseEstimator, RegressorMixin, NonlinearityMixin):
         widths = np.linspace(-dx, dx, self.n_bases) ** 2 + dx
         self.params = list(zip(centers, widths))
 
-        self.weights, self.resid, *_ = np.linalg.lstsq(self._apply(x), y)
+        self.weights, self.resid = np.linalg.lstsq(self._apply(x), y)[:2]
         return self
 
     def predict(self, x):
