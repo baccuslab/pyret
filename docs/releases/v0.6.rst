@@ -1,0 +1,15 @@
+=============
+v0.6 (Active)
+=============
+
+New features
+------------
+- Adds the ability to extend temporal filters to be acausal (past the time of the spike)
+- Adds an ``RBF`` class for estimating a nonlinearity using tiled radial basis functions.
+
+API changes
+-----------
+
+Bug fixes
+----------
+- Fixes a bug in the ``Sigmoid`` nonlinearity due do shuffled dictionary keys
