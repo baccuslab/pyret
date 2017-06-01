@@ -11,9 +11,11 @@ import sklearn
 nonlinearities = [
     (nln.Sigmoid, (), 1234, 0.1, 0.99),
     (nln.Binterp, (50,), 1234, 0.1, 0.99),
+    (nln.RBF, (11,), 1234, 0.1, 0.99),
     (nln.GaussianProcess, (), 1234, 0.1, 0.99),
     (nln.Sigmoid, (), 5678, 0.5, 0.99),
     (nln.Binterp, (25,), 5678, 0.5, 0.99),
+    (nln.RBF, (11,), 1234, 0.5, 0.99),
     (nln.GaussianProcess, (), 5678, 0.5, 0.97),
 ]
 
