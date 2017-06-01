@@ -178,7 +178,7 @@ class RBF(BaseEstimator, RegressorMixin, NonlinearityMixin):
 
     def predict(self, x):
         try:
-            return self._apply(x) @ self.weights
+            return self._apply(x).dot(self.weights)
         except AttributeError:
             raise NotFittedError('No estimated parameters, call fit() first')
 
