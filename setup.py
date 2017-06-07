@@ -2,11 +2,9 @@ import re
 import os
 from setuptools import setup, find_packages
 
-
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 with open(os.path.join(__location__, 'pyret/metadata.py'), 'r') as f:
-    metadata = dict(re.findall("__([a-z_]+)__\s*=\s*'([^']+)'", f.read()))
-
+    metadata = dict(re.findall(r"__([a-z_]+)__\s*=\s*'([^']+)'", f.read()))
 
 setup(name='pyret',
       version=metadata['version'],

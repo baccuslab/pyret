@@ -356,6 +356,7 @@ def temporal(time, filt, **kwargs):
     else:
         temporal_filter = filt.copy()
     kwargs['ax'].plot(time, temporal_filter, linestyle='-', linewidth=2, color='LightCoral')
+    kwargs['ax'].plot([time[0], time[-1]], [0, 0], linestyle=':', linewidth=2, color='k')
 
 
 def plot_sta(time, sta):
