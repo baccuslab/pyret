@@ -205,7 +205,7 @@ def raster_and_psth(spikes, trial_length=None, binsize=0.01, **kwargs):
         tick.set_color('k')
 
 
-def play_sta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None):
+def play_sta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None, dx=1.0):
     """
     Plays a spatiotemporal spike-triggered average as a movie.
 
@@ -226,6 +226,9 @@ def play_sta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None):
     clim : array_like, optional
         2-element color limit for animation; e.g. [0, 255].
 
+    dx : float, optional
+        The spatial size of one pixel, setting the scale of the x- and y-axes.
+
     Returns
     -------
     anim : matplotlib animation object
@@ -240,10 +243,9 @@ def play_sta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None):
     # Set up the figure
     fig = plt.figure()
     plt.axis('equal')
-    ax = plt.axes(xlim=(0, X.shape[1]), ylim=(0, X.shape[2]))
-    img = plt.imshow(initial_frame)
-    ax.set_xticks([])
-    ax.set_yticks([])
+    extent = (0.0, X.shape[1] * dx, 0.0, X.shape[2] * dx)
+    ax = plt.axes(xlim=extent[:2], ylim=extent[2:])
+    img = plt.imshow(initial_frame, extent=extent)
 
     # Set up the colors
     img.set_cmap(cmap)
@@ -269,7 +271,7 @@ def play_sta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None):
 
 
 @plotwrapper
-def spatial(filt, maxval=None, **kwargs):
+def spatial(filt, dx=1.0, maxval=None, **kwargs):
     """
     Plot the spatial component of a full linear filter.
 
@@ -282,6 +284,9 @@ def spatial(filt, maxval=None, **kwargs):
     filt : array_like
         The filter whose spatial component is to be plotted. It may have
         temporal components.
+
+    dx : float, optional
+        The spatial size of one pixel, setting the scale of the x- and y-axes.
 
     maxval : float, optional
         The value to use as minimal and maximal values when normalizing the
@@ -313,12 +318,15 @@ def spatial(filt, maxval=None, **kwargs):
         maxval = np.max(np.abs(spatial_filter))
 
     # plot the spatial component
+    extent = (0.0, spatial_filter.shape[0] * dx, 
+            0.0, spatial_filter.shape[1] * dx)
     ax.imshow(spatial_filter,
               cmap='seismic_r',
               interpolation='nearest',
               aspect='equal',
               vmin=-maxval,
               vmax=maxval,
+              extent=extent,
               **kwargs)
 
 
@@ -359,7 +367,7 @@ def temporal(time, filt, **kwargs):
     kwargs['ax'].plot([time[0], time[-1]], [0, 0], linestyle=':', linewidth=2, color='k')
 
 
-def plot_sta(time, sta):
+def plot_sta(time, sta, dx=1.0):
     """
     Plot a linear filter.
 
@@ -372,6 +380,9 @@ def plot_sta(time, sta):
     ----------
     time : array_like
         A time vector to plot against.
+
+    dx : float, optional
+        The spatial size of one pixel, setting the scale of the x- and y-axes.
 
     sta : array_like
         The filter to plot.
@@ -387,7 +398,7 @@ def plot_sta(time, sta):
 
     # plot 1D temporal filter
     if sta.ndim == 1:
-        fig = plt.figure(figsize=(12, 8))
+        fig = plt.figure()
         fig, ax = temporal(time, sta, ax=fig.add_subplot(111))
 
     # plot 2D spatiotemporal filter
@@ -397,25 +408,21 @@ def plot_sta(time, sta):
         stan = (sta - np.mean(sta)) / np.var(sta)
 
         # create new axes
-        fig = plt.figure(figsize=(10, 10))
-        fig, ax = spatial(stan, ax=fig.add_subplot(111))
-        ax.axes.get_yaxis().set_visible(False)
-        ax.axes.get_xaxis().set_visible(False)
+        fig = plt.figure()
+        fig, ax = spatial(stan, dx=dx, ax=fig.add_subplot(111))
 
     # plot 3D spatiotemporal filter
     elif sta.ndim == 3:
 
         # build the figure
-        fig = plt.figure(figsize=(8, 10))
+        fig = plt.figure()
         gs = gridspec.GridSpec(2, 1, height_ratios=[3, 1])
 
         # decompose
         spatial_profile, temporal_filter = ft.decompose(sta)
 
         # plot spatial profile
-        _, axspatial = spatial(spatial_profile, ax=fig.add_subplot(gs[0]))
-        axspatial.set_xticks([])
-        axspatial.set_yticks([])
+        _, axspatial = spatial(spatial_profile, dx=dx, ax=fig.add_subplot(gs[0]))
 
         # plot temporal profile
         fig, axtemporal = temporal(time, temporal_filter, ax=fig.add_subplot(gs[1]))
@@ -435,7 +442,7 @@ def plot_sta(time, sta):
 
 
 @plotwrapper
-def ellipse(filt, sigma=2.0, alpha=0.8, fc='none', ec='black', lw=3, **kwargs):
+def ellipse(filt, sigma=2.0, alpha=0.8, fc='none', ec='black', lw=3, dx=1.0, **kwargs):
     """
     Plot an ellipse fitted to the given receptive field.
 
@@ -464,6 +471,9 @@ def ellipse(filt, sigma=2.0, alpha=0.8, fc='none', ec='black', lw=3, **kwargs):
     lw : int, optional
         Line width. (Default: 3)
 
+    dx : float, optional
+        The spatial size of one pixel, setting the scale of the x- and y-axes.
+
     ax : matplotlib Axes object, optional
         The axes onto which the ellipse should be plotted. Defaults to a new figure
 
@@ -488,27 +498,35 @@ def ellipse(filt, sigma=2.0, alpha=0.8, fc='none', ec='black', lw=3, **kwargs):
     # get the ellipse parameters
     center, widths, theta = ft.get_ellipse(spatial_filter, sigma=sigma)
 
+    # compute parameters given spatial scale
+    center, widths = map(lambda x: np.asarray(x) * dx, (center, widths))
+
     # create the ellipse
     ell = Ellipse(xy=center, width=widths[0], height=widths[1], angle=theta,
                   alpha=alpha, ec=ec, fc=fc, lw=lw, **kwargs)
 
     ax.add_artist(ell)
-    ax.set_xlim(0, spatial_filter.shape[0])
-    ax.set_ylim(0, spatial_filter.shape[1])
+    ax.set_xlim(0, spatial_filter.shape[0] * dx)
+    ax.set_ylim(0, spatial_filter.shape[1] * dx)
 
 
 @plotwrapper
-def plot_cells(cells, **kwargs):
+def plot_cells(cells, dx=1.0, **kwargs):
     """
     Plot the spatial receptive fields for multiple cells.
 
     Parameters
     ----------
     cells : list of array_like
-        A list of spatiotemporal receptive fields, each of which is a spatiotemporal array.
+        A list of spatiotemporal receptive fields, each of which is
+        a spatiotemporal array.
+
+    dx : float, optional
+        The spatial size of one pixel, setting the scale of the x- and y-axes.
 
     ax : matplotlib Axes object, optional
-        The axes onto which the ellipse should be plotted. Defaults to a new figure
+        The axes onto which the ellipse should be plotted.
+        Defaults to a new figure.
 
     Returns
     ------
@@ -520,16 +538,22 @@ def plot_cells(cells, **kwargs):
     """
     _ = kwargs.pop('fig')
     ax = kwargs.pop('ax')
+    colors = cm.Set1(np.random.rand(len(cells),))
 
     # for each cell
-    for sta in cells:
+    for color, sta in zip(colors, cells):
 
         # get the spatial profile
-        spatial_profile = ft.decompose(sta)[0]
+        try:
+            spatial_profile = ft.decompose(sta)[0]
+        except np.linalg.LinAlgError:
+            continue
 
         # plot ellipse
-        color = cm.Set1(np.random.randint(100))
-        ellipse(spatial_profile, fc=color, ec=color, lw=2, alpha=0.3, ax=ax)
+        try:
+            ellipse(spatial_profile, fc=color, ec=color, lw=2, dx=dx, alpha=0.3, ax=ax)
+        except RuntimeError:
+            pass
 
 
 def play_rates(rates, patches, num_levels=255, time=None, repeat=True, frametime=100):
