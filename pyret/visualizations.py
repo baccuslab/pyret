@@ -42,7 +42,7 @@ def raster(spikes, labels, title='Spike raster', marker_string='ko', **kwargs):
         An optional figure onto which the data is plotted.
 
     kwargs : dict
-        Optional keyword arguments are passed to matplotlib's plot function
+        Optional keyword arguments are passed to matplotlib's plot function.
 
     Returns
     -------
@@ -112,7 +112,8 @@ def psth(spikes, trial_length=None, binsize=0.01, **kwargs):
     ntrials = int(np.ceil(spikes.max() / trial_length))
     basebins = np.arange(0, trial_length + binsize, binsize)
     tbins = np.tile(basebins, (ntrials, 1)) + \
-            (np.tile(np.arange(0, ntrials), (basebins.size, 1)).T * trial_length)
+            (np.tile(np.arange(0, ntrials),
+            (basebins.size, 1)).T * trial_length)
 
     # Bin the spikes in each time bin
     bspk = np.empty((tbins.shape[0], tbins.shape[1] - 1))
@@ -123,7 +124,8 @@ def psth(spikes, trial_length=None, binsize=0.01, **kwargs):
     firing_rate = np.mean(bspk, axis=0) / binsize
 
     # Plot the PSTH
-    ax.plot(tbins[0, :-1], firing_rate, color='k', marker=None, linestyle='-', linewidth=2)
+    ax.plot(tbins[0, :-1], firing_rate, color='k', marker=None,
+            linestyle='-', linewidth=2)
 
     # Labels etc
     ax.set_title('PSTH', fontsize=24)
@@ -176,7 +178,8 @@ def raster_and_psth(spikes, trial_length=None, binsize=0.01, **kwargs):
     ntrials = int(np.ceil(spikes.max() / trial_length))
     basebins = np.arange(0, trial_length + binsize, binsize)
     tbins = np.tile(basebins, (ntrials, 1)) + \
-            (np.tile(np.arange(0, ntrials), (basebins.size, 1)).T * trial_length)
+            (np.tile(np.arange(0, ntrials),
+            (basebins.size, 1)).T * trial_length)
 
     # Bin the spikes in each time bin
     bspk = np.empty((tbins.shape[0], tbins.shape[1] - 1))
@@ -187,7 +190,8 @@ def raster_and_psth(spikes, trial_length=None, binsize=0.01, **kwargs):
     firing_rate = np.mean(bspk, axis=0) / binsize
 
     # Plot the PSTH
-    ax.plot(tbins[0, :-1], firing_rate, color='r', marker=None, linestyle='-', linewidth=2)
+    ax.plot(tbins[0, :-1], firing_rate, color='r', marker=None,
+            linestyle='-', linewidth=2)
     ax.set_xlabel('Time (s)', fontdict={'fontsize': 20})
     ax.set_ylabel('Firing rate (Hz)', color='r', fontdict={'fontsize': 20})
     for tick in ax.get_yticklabels():
@@ -197,15 +201,18 @@ def raster_and_psth(spikes, trial_length=None, binsize=0.01, **kwargs):
     rastax = ax.twinx()
     plt.hold(True)
     for trial in range(ntrials):
-        idx = np.bitwise_and(spikes > tbins[trial, 0], spikes <= tbins[trial, -1])
-        rastax.plot(spikes[idx] - tbins[trial, 0], trial * np.ones(spikes[idx].shape),
+        idx = np.bitwise_and(spikes > tbins[trial, 0],
+                             spikes <= tbins[trial, -1])
+        rastax.plot(spikes[idx] - tbins[trial, 0],
+                    trial * np.ones(spikes[idx].shape),
                     color='k', marker='.', linestyle='none')
     rastax.set_ylabel('Trial #', color='k', fontdict={'fontsize': 20})
     for tick in ax.get_yticklabels():
         tick.set_color('k')
 
 
-def play_sta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None, dx=1.0):
+def play_sta(sta, repeat=True, frametime=100, cmap='seismic_r',
+        clim=None, dx=1.0):
     """
     Plays a spatiotemporal spike-triggered average as a movie.
 
@@ -218,7 +225,8 @@ def play_sta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None, dx=1.
         Whether or not to repeat the animation (default is True).
 
     frametime : float, optional
-        Length of time each frame is displayed for in milliseconds (default is 100).
+        Length of time each frame is displayed for in milliseconds
+        (default is 100).
 
     cmap : string, optional
         Name of the colormap to use (Default: ``'seismic_r'``).
@@ -227,7 +235,8 @@ def play_sta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None, dx=1.
         2-element color limit for animation; e.g. [0, 255].
 
     dx : float, optional
-        The spatial size of one pixel, setting the scale of the x- and y-axes.
+        The spatial sampling rate of the STA, setting the scale of the
+        x- and y-axes.
 
     Returns
     -------
@@ -243,9 +252,10 @@ def play_sta(sta, repeat=True, frametime=100, cmap='seismic_r', clim=None, dx=1.
     # Set up the figure
     fig = plt.figure()
     plt.axis('equal')
-    extent = (0.0, X.shape[1] * dx, 0.0, X.shape[2] * dx)
-    ax = plt.axes(xlim=extent[:2], ylim=extent[2:])
-    img = plt.imshow(initial_frame, extent=extent)
+    spatial_range = (0.0, X.shape[1] * dx, 0.0, X.shape[2] * dx)
+    ax = plt.axes(xlim=spatial_range[:2],
+                  ylim=spatial_range[2:])
+    img = plt.imshow(initial_frame, extent=spatial_range)
 
     # Set up the colors
     img.set_cmap(cmap)
@@ -286,7 +296,8 @@ def spatial(filt, dx=1.0, maxval=None, **kwargs):
         temporal components.
 
     dx : float, optional
-        The spatial size of one pixel, setting the scale of the x- and y-axes.
+        The spatial sampling rate of the STA, setting the scale of the
+        x- and y-axes.
 
     maxval : float, optional
         The value to use as minimal and maximal values when normalizing the
@@ -318,15 +329,15 @@ def spatial(filt, dx=1.0, maxval=None, **kwargs):
         maxval = np.max(np.abs(spatial_filter))
 
     # plot the spatial component
-    extent = (0.0, spatial_filter.shape[0] * dx, 
-            0.0, spatial_filter.shape[1] * dx)
+    spatial_range = (0.0, spatial_filter.shape[0] * dx, 
+                     0.0, spatial_filter.shape[1] * dx)
     ax.imshow(spatial_filter,
               cmap='seismic_r',
               interpolation='nearest',
               aspect='equal',
               vmin=-maxval,
               vmax=maxval,
-              extent=extent,
+              extent=spatial_range,
               **kwargs)
 
 
@@ -363,8 +374,10 @@ def temporal(time, filt, **kwargs):
         _, temporal_filter = ft.decompose(filt)
     else:
         temporal_filter = filt.copy()
-    kwargs['ax'].plot(time, temporal_filter, linestyle='-', linewidth=2, color='LightCoral')
-    kwargs['ax'].plot([time[0], time[-1]], [0, 0], linestyle=':', linewidth=2, color='k')
+    kwargs['ax'].plot(time, temporal_filter,
+            linestyle='-', linewidth=2, color='LightCoral')
+    kwargs['ax'].plot([time[0], time[-1]], [0, 0],
+            linestyle=':', linewidth=2, color='k')
 
 
 def plot_sta(time, sta, dx=1.0):
@@ -382,7 +395,8 @@ def plot_sta(time, sta, dx=1.0):
         A time vector to plot against.
 
     dx : float, optional
-        The spatial size of one pixel, setting the scale of the x- and y-axes.
+        The spatial sampling rate of the STA, setting the scale of the
+        x- and y-axes.
 
     sta : array_like
         The filter to plot.
@@ -422,10 +436,12 @@ def plot_sta(time, sta, dx=1.0):
         spatial_profile, temporal_filter = ft.decompose(sta)
 
         # plot spatial profile
-        _, axspatial = spatial(spatial_profile, dx=dx, ax=fig.add_subplot(gs[0]))
+        _, axspatial = spatial(spatial_profile, dx=dx,
+                ax=fig.add_subplot(gs[0]))
 
         # plot temporal profile
-        fig, axtemporal = temporal(time, temporal_filter, ax=fig.add_subplot(gs[1]))
+        fig, axtemporal = temporal(time, temporal_filter,
+                ax=fig.add_subplot(gs[1]))
         axtemporal.set_xlim(time[0], time[-1])
         axtemporal.spines['right'].set_color('none')
         axtemporal.spines['top'].set_color('none')
@@ -436,31 +452,34 @@ def plot_sta(time, sta, dx=1.0):
         ax = (axspatial, axtemporal)
 
     else:
-        raise ValueError('The sta parameter has an invalid number of dimensions (must be 1-3)')
+        raise ValueError('The sta parameter has an invalid '
+                'number of dimensions (must be 1-3)')
 
     return fig, ax
 
 
 @plotwrapper
-def ellipse(filt, sigma=2.0, alpha=0.8, fc='none', ec='black', lw=3, dx=1.0, **kwargs):
+def ellipse(filt, sigma=2.0, alpha=0.8, fc='none', ec='black', 
+        lw=3, dx=1.0, **kwargs):
     """
     Plot an ellipse fitted to the given receptive field.
 
     Parameters
     ----------
     filt : array_like
-        A linear filter whose spatial extent is to be plotted. If this is 2D, it
-        is assumed to be the spatial component of the receptive field. If it is
-        3D, it is assumed to be a full spatiotemporal receptive field; the spatial
-        component is extracted and plotted.
+        A linear filter whose spatial extent is to be plotted. If this
+        is 2D, it is assumed to be the spatial component of the receptive
+        field. If it is 3D, it is assumed to be a full spatiotemporal
+        receptive field; the spatial component is extracted and plotted.
 
     sigma : float, optional
-        Determines the threshold of the ellipse contours. This is the standard
-        deviation of a Gaussian fitted to the filter at which the contours are plotted.
-        Default is 2.0.
+        Determines the threshold of the ellipse contours. This is
+        the standard deviation of a Gaussian fitted to the filter 
+        at which the contours are plotted. Default is 2.0.
 
     alpha : float, optional
-        The alpha blending value, between 0 (transparent) and 1 (opaque) (Default: 0.8).
+        The alpha blending value, between 0 (transparent) and
+        1 (opaque) (Default: 0.8).
 
     fc : string, optional
         Ellipse face color. (Default: none)
@@ -472,10 +491,12 @@ def ellipse(filt, sigma=2.0, alpha=0.8, fc='none', ec='black', lw=3, dx=1.0, **k
         Line width. (Default: 3)
 
     dx : float, optional
-        The spatial size of one pixel, setting the scale of the x- and y-axes.
+        The spatial sampling rate of the STA, setting the scale of the
+        x- and y-axes.
 
     ax : matplotlib Axes object, optional
-        The axes onto which the ellipse should be plotted. Defaults to a new figure
+        The axes onto which the ellipse should be plotted.
+        Defaults to a new figure.
 
     Returns
     -------
@@ -522,7 +543,8 @@ def plot_cells(cells, dx=1.0, **kwargs):
         a spatiotemporal array.
 
     dx : float, optional
-        The spatial size of one pixel, setting the scale of the x- and y-axes.
+        The spatial sampling rate of the STA, setting the scale of the
+        x- and y-axes.
 
     ax : matplotlib Axes object, optional
         The axes onto which the ellipse should be plotted.
@@ -551,12 +573,14 @@ def plot_cells(cells, dx=1.0, **kwargs):
 
         # plot ellipse
         try:
-            ellipse(spatial_profile, fc=color, ec=color, lw=2, dx=dx, alpha=0.3, ax=ax)
+            ellipse(spatial_profile, fc=color, ec=color,
+                    lw=2, dx=dx, alpha=0.3, ax=ax)
         except RuntimeError:
             pass
 
 
-def play_rates(rates, patches, num_levels=255, time=None, repeat=True, frametime=100):
+def play_rates(rates, patches, num_levels=255, time=None,
+        repeat=True, frametime=100):
     """
     Plays a movie representation of the firing rate of a list of cells, by
     coloring a list of patches with a color proportional to the firing rate. This
