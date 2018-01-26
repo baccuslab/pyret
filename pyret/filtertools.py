@@ -276,7 +276,6 @@ def lowranksta(sta_orig, k=10):
     # The full STA should have positive projection onto first temporal
     # component of the low-rank STA.
     sign = np.sign(np.tensordot(u[:, 0], f, axes=1).sum())
-    print(sign)
     u *= sign
     v *= sign
 
