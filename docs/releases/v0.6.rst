@@ -9,7 +9,14 @@ New features
 
 API changes
 -----------
+- Removes outdated ``stimulustools.rolling_window`` method.
+- In fixing a bug in ``linear_response``, then method now returns an array of the
+  same shape as the stimulus input, rather than one shorter by the length of the
+  filter whose response is computed.
 
 Bug fixes
 ----------
 - Fixes a bug in the ``Sigmoid`` nonlinearity due do shuffled dictionary keys
+- Fixes bug in ``linear_response``, which was supposed to take a filter, but actually
+  took a reverse-correlation.
+- Fixes incorrect documentation for ``stimulustools.slicestim``.
