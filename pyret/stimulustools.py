@@ -118,22 +118,32 @@ def slicestim(stimulus, nsamples_before, nsamples_after=0):
     slices : array_like
         A view onto the original stimulus array, giving the overlapping slices
         of the stimulus. The full shape of the returned array is:
-        ``(history, stimulus.shape[0] - history, ...)``, where
+        ``(stimulus.shape[0] - history + 1, history ...)``, where
         ``history == nsamples_before + nafter``. As above, the ellipses
         indicate any spatial dimensions to the stimulus.
 
     Examples
     --------
-    >>> x=np.arange(10).reshape((5, 2))
+    >>> x = np.arange(15).reshape((5, 3))
     >>> slicestim(x, 3)
-    array([[[0, 1, 2], [1, 2, 3], [2, 3, 4]],
-           [[5, 6, 7], [6, 7, 8], [7, 8, 9]]])
+    array([[[ 0,  1,  2],
+            [ 3,  4,  5]],
 
+           [[ 3,  4,  5],
+            [ 6,  7,  8]],
+
+           [[ 6,  7,  8],
+            [ 9, 10, 11]],
+
+           [[ 9, 10, 11],
+            [12, 13, 14]]])
     Calculate rolling mean of last dimension:
 
     >>> np.mean(slicestim(x, 3), -1)
-    array([[ 1.,  2.,  3.],
-           [ 6.,  7.,  8.]])
+     array([[ 1.,  4.],
+           [ 4.,  7.],
+           [ 7., 10.],
+           [10., 13.]])
 
     Notes
     -----
@@ -147,8 +157,8 @@ def slicestim(stimulus, nsamples_before, nsamples_after=0):
     allow computing acausal components of an STA (points *after* a spike occurs),
     this method must also allow that in order to keep the temporal alignment.
 
-    Practically this means that one must always pass the same value to
-    ``stimulustools.slicestim`` as is passed to ``filtertools.sta`` or
+    Practically this means that one must always pass the same value for the
+    ``nsamples_after`` argument as is passed to ``filtertools.sta`` or
     ``filtertools.revcorr``.
 
     """
@@ -191,45 +201,3 @@ def cov(stimulus, history, nsamples=None, verbose=False):
     """
     stim = slicestim(stimulus, history)
     return np.cov(flat2d(stim).T)
-
-
-def rolling_window(array, window, time_axis=0):
-    """
-    Make an ndarray with a rolling window of the last dimension
-
-    Parameters
-    ----------
-    array : array_like
-        Array to add rolling window to
-
-    window : int
-        Size of rolling window
-
-    time_axis : int, optional
-        The axis of the temporal dimension, either 0 or -1 (Default: 0)
-
-    Returns
-    -------
-    Array that is a view of the original array with a added dimension
-    of size w.
-
-    Examples
-    --------
-    >>> x=np.arange(10).reshape((2,5))
-    >>> rolling_window(x, 3)
-    array([[[0, 1, 2], [1, 2, 3], [2, 3, 4]],
-           [[5, 6, 7], [6, 7, 8], [7, 8, 9]]])
-
-    Calculate rolling mean of last dimension:
-
-    >>> np.mean(rolling_window(x, 3), -1)
-    array([[ 1.,  2.,  3.],
-           [ 6.,  7.,  8.]])
-
-    """
-    with warnings.catch_warnings():
-        warnings.simplefilter('always')
-        warnings.warn('`rolling_window` is deprecated and will be removed' +
-                ' in future releases. Use `stimulustools.slicestim` instead.',
-                DeprecationWarning)
-    return slicestim(array, window)

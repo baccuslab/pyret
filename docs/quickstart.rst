@@ -122,7 +122,7 @@ the *spike-triggered average* (STA) for the cell.
     >>> filter_length_seconds = 0.5  # 500 ms filter
     >>> filter_length = int(filter_length_seconds / frame_rate)
     >>> sta, tax = pyret.filtertools.sta(time, stimulus, spikes, filter_length)
-    >>> fig, axes = pyret.visualizations.plot_sta(tax[::-1], sta)
+    >>> fig, axes = pyret.visualizations.plot_sta(-tax, sta)
     >>> axes[0].set_title('Recovered spatial filter (STA)')
     >>> axes[1].set_title('Recovered temporal filter (STA)')
     >>> axes[1].set_xlabel('Time before spike (s)')
@@ -163,16 +163,19 @@ with the stimulus.
     >>> stimulus.shape
     (30011, 20, 20)
     >>> pred.shape
-    (29962,)
+    (30011,)
 
-The linear prediction is shorter than the full stimulus, because it only takes the
-portion of the convolution in which the stimulus and filter fully overlap 
-(the ``valid`` keyword argument to ``np.convolve``).
+.. IMPORTANT::
+    Note here that we're *flipping* the STA before passing it to the
+    ``linear_response`` function. This function expects a true *linear filter*,
+    while the arrays returned by ``sta`` and ``revcorr`` are reverse-
+    correlations. This must be flipped along the time (zero-th) axis
+    to arrive at a filter.
 
 We can get a sense for how poor our linear prediction is, simply by plotting the
 predicted versus the actual response at each time point.
 
-    >>> plt.plot(pred, rate[filter_length - 1 :], linestyle='none', marker='o', mew=1, mec='w')
+    >>> plt.plot(pred, rate, linestyle='none', marker='o', mew=1, mec='w')
     >>> plt.xlabel('Linearly predicted output')
     >>> plt.ylabel('True output (Hz)')
 
@@ -191,7 +194,7 @@ bins, so that each bin has roughly the same number of data points.
     
     >>> nbins = 50
     >>> binterp = pyret.nonlinearities.Binterp(nbins)
-    >>> binterp.fit(pred, rate[filter_length - 1 :])
+    >>> binterp.fit(pred, rate)
     >>> nonlin_range = (pred.min(), pred.max())
     >>> binterp.plot(nonlin_range, linewidth=5, label='Binterp')  # Plot nonlinearity over the given range
 
@@ -208,12 +211,12 @@ We can now compare how well the full LN model captures the cell's response chara
 
     >>> predicted_rate = binterp.predict(pred)
     >>> plt.figure()
-    >>> plt.plot(time[:500], rate[filter_length - 1 : filter_length - 1 + 500], linewidth=5, color=(0.75,) * 3, alpha=0.7, label='True rate')
+    >>> plt.plot(time[:500], rate[:500], linewidth=5, color=(0.75,) * 3, alpha=0.7, label='True rate')
     >>> plt.plot(time[:500], predicted_rate[:500], linewidth=2, color=(0.75, 0.1, 0.1), label='LN predicted rate')
     >>> plt.legend()
     >>> plt.xlabel('Time (s)')
     >>> plt.ylabel('Firing rate (Hz)')
-    >>> np.corrcoef(rate[filter_length - 1 :], predicted_rate)[0, 1] # Correlation coefficient on training data
+    >>> np.corrcoef(rate, predicted_rate)[0, 1] # Correlation coefficient on training data
     0.70315310866999448
 
 .. image:: /pyret-tutorial-figures/pred-vs-true-rates.png

@@ -52,6 +52,14 @@ def test_slicestim_raises():
     with pytest.raises(ValueError):
         stimulustools.slicestim(np.zeros(10,), 1.5)
 
+
+def test_slicestim_shape():
+    shape = (10, 3, 3)
+    history = 2
+    stim = np.zeros(shape)
+    assert (stimulustools.slicestim(stim, history).shape ==
+            (shape[0] - history + 1, history, shape[1], shape[2]))
+
 def test_slicestim_1d():
     """Test slicing a 1D stimulus into overlapping segments."""
     np.random.seed(0)
@@ -96,17 +104,3 @@ def test_cov():
     np.random.seed(0)
     stim = np.random.randn(10, 2)
     assert np.allclose(np.cov(stim.T), stimulustools.cov(stim, 1))
-
-def test_rolling_window_warns():
-    """Verify calling rolling_window results in Deprecation warning, but still returns
-    the correct value.
-    """
-    with pytest.warns(DeprecationWarning):
-        np.random.seed(0)
-        stim_size = 1000
-        stim = np.random.randn(stim_size,)
-        history = 10
-        sliced_stim = stimulustools.rolling_window(stim, history)
-
-        for i in range(stim_size - history):
-            assert np.all(sliced_stim[i] == stim[i:i + history]), 'slicing failed'
