@@ -276,11 +276,22 @@ def test_linear_response_acausal():
     the filter to an impulse should return the filter itself, plus
     zeros at any acausal time points.
     """
-    filt = np.array(((1, 0, 0)))
+    nacausal_points = 1
+    filt = np.concatenate((np.zeros((nacausal_points,)), (1, 0, 0)), axis=0)
     stim = np.concatenate(((1,), np.zeros((10,))), axis=0)
-    pred = flt.linear_response(filt, stim, 10)
-    assert np.allclose(pred[:filt.size], filt)
+    pred = flt.linear_response(filt, stim, nacausal_points)
+    assert np.allclose(pred[:filt.size - nacausal_points],
+            filt[nacausal_points:])
     assert np.allclose(pred[filt.size:], np.zeros_like(pred[filt.size:]))
+
+
+def test_linear_response_only_acausal():
+    """Test that calling ``linear_response`` with only acausal
+    points is invalid.
+    """
+    with pytest.raises(ValueError):
+        flt.linear_response(np.zeros((3,)), np.zeros((10,)),
+                nsamples_after=3)
 
 
 def test_linear_response_nd():

@@ -688,9 +688,12 @@ def linear_response(filt, stim, nsamples_after=0):
         raise ValueError("The filter and stimulus must have the same "
                          "number of dimensions and match in size along "
                          "spatial dimensions")
+    if (nsamples_after >= filt.shape[0]):
+        raise ValueError("Cannot compute the response of a "
+                "filter with no causal points.")
     padded = np.concatenate((
-            np.zeros((filt.shape[0] - 1,) + stim.shape[1:]), stim,
-            np.zeros((nsamples_after,) + stim.shape[1:])), axis=0)
+            np.zeros((filt.shape[0] - nsamples_after - 1,) + stim.shape[1:]),
+            stim, np.zeros((nsamples_after,) + stim.shape[1:])), axis=0)
     slices = np.fliplr(slicestim(padded, 
             filt.shape[0] - nsamples_after, nsamples_after))
     return np.einsum('tx,x->t', flat2d(slices), filt.ravel())
