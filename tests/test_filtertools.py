@@ -290,9 +290,9 @@ def test_linear_response_nd():
     should return the filter itself, scaled by the number of spatial points.
     """
     for ndim in range(2, 4):
-        filt = np.zeros((3, *((2,) * ndim)))
+        filt = np.zeros((3,) + ((2,) * ndim))
         filt[0] = 1.
-        stim = np.zeros((10, *((2,) * ndim)))
+        stim = np.zeros((10,) + ((2,) * ndim))
         stim[0] = 1.
         pred = flt.linear_response(filt, stim)
         assert np.allclose(pred[0], filt[0].sum())
@@ -367,9 +367,9 @@ def test_revcorr_nd():
     linear filter, scaled by the number of spatial points.
     """
     ndim = 3
-    filt = np.zeros((3, *((2,) * ndim)))
+    filt = np.zeros((3,) + ((2,) * ndim))
     filt[0] = 1.
-    stim = np.zeros((10, *((2,) * ndim)))
+    stim = np.zeros((10,) + ((2,) * ndim))
     stim[5] = 1.
     response = flt.linear_response(filt, stim)
     recovered, lags = flt.revcorr(stim, response, filt.shape[0])

@@ -689,8 +689,8 @@ def linear_response(filt, stim, nsamples_after=0):
                          "number of dimensions and match in size along "
                          "spatial dimensions")
     padded = np.concatenate((
-            np.zeros((filt.shape[0] - 1, *stim.shape[1:])), stim,
-            np.zeros((nsamples_after, *stim.shape[1:]))), axis=0)
+            np.zeros((filt.shape[0] - 1,) + stim.shape[1:]), stim,
+            np.zeros((nsamples_after,) + stim.shape[1:])), axis=0)
     slices = np.fliplr(slicestim(padded, 
             filt.shape[0] - nsamples_after, nsamples_after))
     return np.einsum('tx,x->t', flat2d(slices), filt.ravel())
