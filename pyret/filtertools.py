@@ -61,7 +61,7 @@ def ste(time, stimulus, spikes, nsamples_before, nsamples_after=0):
 
     # Get indices of non-zero firing, truncating spikes before nsamples_before
     # or after nsamples_after
-    slices = (stimulus[(idx - nb):(idx + na), ...].astype('float64')
+    slices = ((hist[idx] * stimulus[(idx - nb):(idx + na)].astype('float64'))
               for idx in np.where(hist > 0)[0]
               if (idx > nb and (idx + na) < len(stimulus)))
 
@@ -100,7 +100,7 @@ def sta(time, stimulus, spikes, nsamples_before, nsamples_after=0):
 
     tax : ndarray
         A time axis corresponding to the STA, giving the time relative
-        to the spike.
+        to the spike for each time point of the STA.
 
     Notes
     -----
@@ -122,6 +122,10 @@ def sta(time, stimulus, spikes, nsamples_before, nsamples_after=0):
     the STA is unbiased and proportional to the time-reverse of the
     linear filter.
 
+    Note that the ``tax`` time values returned by this method are
+    formally given by ``t_i - \\tau``, i.e., they are the actual
+    time relative to the spike of each corresponding point in the STA.
+
     References
     ----------
     [1] Dayan, P. and L.F. Abbott. Theoretical Neuroscience: Computational
@@ -130,7 +134,7 @@ def sta(time, stimulus, spikes, nsamples_before, nsamples_after=0):
     """
 
     # get the iterator
-    ste_it = ste(time, stimulus, spikes, nsamples_before, nsamples_after=nsamples_after)
+    ste_it = ste(time, stimulus, spikes, nsamples_before, nsamples_after)
 
     # time axis
     filter_length = nsamples_before + nsamples_after
@@ -181,7 +185,7 @@ def stc(time, stimulus, spikes, nsamples_before, nsamples_after=0):
     outer = scipy.linalg.blas.get_blas_funcs('syr', dtype='d')
 
     # get the iterator
-    ste_it = ste(time, stimulus, spikes, nsamples_before, nsamples_after=nsamples_after)
+    ste_it = ste(time, stimulus, spikes, nsamples_before, nsamples_after)
 
     filter_length = nsamples_before + nsamples_after
 
@@ -257,7 +261,7 @@ def lowranksta(sta_orig, k=10):
 
     # Compute the SVD of the full STA
     assert f.ndim >= 2, "STA must be at least 2-D"
-    u, s, v = np.linalg.svd(f.reshape(f.shape[0], -1), full_matrices=False)
+    u, s, v = np.linalg.svd(flat2d(f), full_matrices=False)
 
     # Keep the top k components
     k = np.min([k, s.size])
@@ -271,7 +275,7 @@ def lowranksta(sta_orig, k=10):
     # Ensure that the computed STA components have the correct sign.
     # The full STA should have positive projection onto first temporal
     # component of the low-rank STA.
-    sign = np.sign(np.einsum('i,ijk->jk', u[:, 0], f).sum())
+    sign = np.sign(np.tensordot(u[:, 0], f, axes=1).sum())
     u *= sign
     v *= sign
 
@@ -376,12 +380,13 @@ def cutout(arr, idx=None, width=5):
     Parameters
     ----------
     arr : array_like
-        Stimulus, STA, or filter array from which the chunk is cut out. The array
-        should be shaped as ``(time, spatial, spatial)``.
+        Stimulus, STA, or filter array from which the chunk is cut out. The
+        array should be shaped as ``(time, spatial, spatial)``.
 
     idx : array_like, optional
         2D array specifying the row and column indices of the center of the
-        section to be cut out (if None, the indices are taken from ``filterpeak``).
+        section to be cut out (if None, the indices are taken from
+        ``filterpeak``).
 
     width : int, optional
         The size of the chunk to cut out from the start indices. Defaults
@@ -454,12 +459,14 @@ def resample(arr, scale_factor):
     assert scale_factor > 0, "Scale factor must be non-negative"
 
     if arr.ndim == 1:
-        return scipy.signal.resample(arr, int(np.ceil(scale_factor * arr.size)))
+        return scipy.signal.resample(arr,
+                int(np.ceil(scale_factor * arr.size)))
 
     elif arr.ndim == 2:
         assert arr.shape[0] == arr.shape[1], "Array must be square"
         n = int(np.ceil(scale_factor * arr.shape[0]))
-        return scipy.signal.resample(scipy.signal.resample(arr, n, axis=0), n, axis=1)
+        return scipy.signal.resample(
+                scipy.signal.resample(arr, n, axis=0), n, axis=1)
 
     else:
         raise ValueError('Input array must be either 1-D or 2-D')
@@ -610,8 +617,8 @@ def rfsize(spatial_filter, dx, dy=None, sigma=2.):
         value as dx. (Default: None)
 
     sigma : float, optional
-        Determines the size of the ellipse contour, in units of standard deviation
-        of the fitted gaussian. E.g., 2.0 means a 2 SD ellipse.
+        Determines the size of the ellipse contour, in units of standard
+        deviation of the fitted gaussian. E.g., 2.0 means a 2 SD ellipse.
 
     Returns
     -------
@@ -639,14 +646,14 @@ def linear_response(filt, stim, nsamples_after=0):
     ----------
     filt : array_like
         The linear filter whose response is to be computed. The array should
-        have shape ``(t, ...)``, where ``t`` is the number of time points in the
-        filter and the ellipsis indicates any remaining spatial dimenions.
+        have shape ``(t, ...)``, where ``t`` is the number of time points in
+        the filter and the ellipsis indicates any remaining spatial dimenions.
         The number of dimensions and the sizes of the spatial dimensions
         must match that of ``stim``.
 
     stim : array_like
         The stimulus to which the predicted response is computed. The array
-        should have shape (T,...), where ``T`` is the number of time points
+        should have shape ``(T,...)``, where ``T`` is the number of time points
         in the stimulus and the ellipsis indicates any remaining spatial
         dimensions. The number of dimensions and the sizes of the spatial
         dimenions must match that of ``filt``.
@@ -657,10 +664,7 @@ def linear_response(filt, stim, nsamples_after=0):
     Returns
     -------
     pred : array_like
-        The predicted linear response. The shape is ``(T - t + 1,)`` where
-        ``T`` is the number of time points in the stimulus, and ``t`` is
-        the number of time points in the filter. This is the valid portion
-        of the convolution between the stimulus and filter.
+        The predicted linear response, of shape ``(t,)``.
 
     Raises
     ------
@@ -669,6 +673,11 @@ def linear_response(filt, stim, nsamples_after=0):
 
     Notes
     -----
+    Note that the first parameter is a *linear filter*. The values returned by
+    ``filtertools.sta`` and ``filtertools.revcorr`` are proportional to the
+    time-reverse of the linear filter, so to use those values in this function,
+    they must be flipped along the first dimension.
+
     Both ``filtertools.sta`` and ``filtertools.revcorr`` can estimate "acausal"
     components, such as points in the stimulus occuring *after* a spike. The
     value passed as parameter ``nsamples_after`` must match that value used
@@ -676,10 +685,17 @@ def linear_response(filt, stim, nsamples_after=0):
 
     """
     if (filt.ndim != stim.ndim) or (filt.shape[1:] != stim.shape[1:]):
-        raise ValueError("The filter and stimulus must have the same " +
-                         "number of dimensions and match in size along spatial dimensions")
-
-    slices = slicestim(stim, filt.shape[0] - nsamples_after, nsamples_after)
+        raise ValueError("The filter and stimulus must have the same "
+                         "number of dimensions and match in size along "
+                         "spatial dimensions")
+    if (nsamples_after >= filt.shape[0]):
+        raise ValueError("Cannot compute the response of a "
+                "filter with no causal points.")
+    padded = np.concatenate((
+            np.zeros((filt.shape[0] - nsamples_after - 1,) + stim.shape[1:]),
+            stim, np.zeros((nsamples_after,) + stim.shape[1:])), axis=0)
+    slices = np.fliplr(slicestim(padded, 
+            filt.shape[0] - nsamples_after, nsamples_after))
     return np.einsum('tx,x->t', flat2d(slices), filt.ravel())
 
 
@@ -704,25 +720,27 @@ def revcorr(stimulus, response, nsamples_before, nsamples_after=0):
         completely overlap.
 
     nsamples_before : int
-        The maximum negative lag for the correlation between stimulus and response,
-        in samples.
+        The maximum negative lag for the correlation between stimulus and
+        response, in samples.
 
     nsamples_after : int, optional
-        The maximum positive lag for the correlation between stimulus and response,
-        in samples. Defaults to 0.
+        The maximum positive lag for the correlation between stimulus and
+        response, in samples. Defaults to 0.
 
     Returns
     -------
     rc : array_like
         An array of shape ``(nsamples_before + nsamples_after, ...)``
-        containing the best-fitting linear filter which predicts the response from
-        the stimulus. The ellipses indicates spatial dimensions of the filter.
+        containing the best-fitting linear filter which predicts the response
+        from the stimulus. The ellipses indicates spatial dimensions of the
+        filter.
 
     lags : array_like
         An array of shape ``(nsamples_before + nsamples_after,)``, which gives
-        the lags, in samples, between ``stimulus`` and ``response`` for the correlation
-        returned in ``rc``. This can be converted to an axis of time (like that
-        returned from ``filtertools.sta``) by multiplying by the sampling period.
+        the lags, in samples, between ``stimulus`` and ``response`` for the
+        correlation returned in ``rc``. This can be converted to an axis of time
+        (like that returned from ``filtertools.sta``) by multiplying by the 
+        sampling period.
 
     Raises
     ------
@@ -754,6 +772,9 @@ def revcorr(stimulus, response, nsamples_before, nsamples_after=0):
     array increase with increasing array index. This means that time is moving
     forward with increasing array index.
 
+    Also note that this method assumes an uncorrelated stimulus. If the
+    stimulus is correlated, those will bias the estimated reverse correlation.
+
     """
     history = nsamples_before + nsamples_after
     if response.ndim > 1:
@@ -761,11 +782,10 @@ def revcorr(stimulus, response, nsamples_before, nsamples_after=0):
     if response.size != stimulus.shape[0]:
         raise ValueError('`stimulus` and `response` must match in ' +
                 'size along the first axis')
-
     slices = slicestim(stimulus, nsamples_before, nsamples_after)
     recovered = np.einsum('tx,t->x', flat2d(slices),
             response[history - 1:]).reshape(slices.shape[1:])
-    lags = np.arange(-nsamples_before, nsamples_after)
+    lags = np.arange(-nsamples_before + 1, nsamples_after + 1)
     return recovered, lags
 
 

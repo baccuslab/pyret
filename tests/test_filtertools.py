@@ -102,23 +102,71 @@ def test_empty_stc():
     assert np.all(np.isnan(tmp))
 
 
-def test_decompose():
-    """Tests computing a rank-1 approximation to a filter.
-    Note that this tests both filtertools.decompose() and filtertools.lowranksta().
+def test_decompose_2d():
+    """Tests computing a rank-1 approximation to a 2D filter.
+    Note that this tests both ``filtertools.decompose()`` and
+    ``filtertools.lowranksta()``.
     """
     np.random.seed(0)
     filter_length = 50
-    nx, ny = 10, 10
-    temporal, spatial, true_filter = utils.create_spatiotemporal_filter(nx, ny, filter_length)
-
-    noise_std = 0.01
+    nx = 10
+    def gaussian(x, mu, sigma):
+        return np.exp(-((x - mu) / sigma)**2) / np.sqrt(sigma * 2 * np.pi)
+    temporal = gaussian(np.linspace(-3, 3, filter_length), -1, 1.5)
+    spatial = gaussian(np.linspace(-3, 3, nx), 0, 1.0)
+    true_filter = np.outer(temporal, spatial)
+    noise_std = 0.01 * (temporal.max() - temporal.min())
     true_filter += np.random.randn(*true_filter.shape) * noise_std
 
     s, t = flt.decompose(true_filter)
+   
+    # s/t are unit vectors, scale them and the inputs
+    s -= s.min()
+    s /= s.max()
+    t -= t.min()
+    t /= t.max()
+    temporal -= temporal.min()
+    temporal /= temporal.max()
+    spatial -= spatial.min()
+    spatial /= spatial.max()
 
     tol = 0.1
     assert np.allclose(temporal, t, atol=tol)
     assert np.allclose(spatial, s, atol=tol)
+
+
+def test_decompose_3d():
+    """Tests computing a rank-1 approximation to a 3D filter.
+    Note that this tests both ``filtertools.decompose()`` and
+    ``filtertools.lowranksta()``.
+    """
+    np.random.seed(0)
+    filter_length = 50
+    nx, ny = 10, 10
+    def gaussian(x, mu, sigma):
+        return np.exp(-((x - mu) / sigma)**2) / np.sqrt(sigma * 2 * np.pi)
+    temporal = gaussian(np.linspace(-3, 3, filter_length), -1, 1.5)
+    spatial = gaussian(np.linspace(-3, 3, nx * ny), 0, 1.0).reshape(nx, ny)
+    true_filter = np.outer(temporal, spatial.ravel())
+    noise_std = 0.01 * (temporal.max() - temporal.min())
+    true_filter += np.random.randn(*true_filter.shape) * noise_std
+
+    s, t = flt.decompose(true_filter)
+   
+    # s/t are unit vectors, scale them and the inputs
+    s -= s.min()
+    s /= s.max()
+    t -= t.min()
+    t /= t.max()
+    temporal -= temporal.min()
+    temporal /= temporal.max()
+    spatial -= spatial.min()
+    spatial /= spatial.max()
+
+    tol = 0.1
+    assert np.allclose(temporal, t, atol=tol)
+    assert np.allclose(spatial.ravel(), s.ravel(), atol=tol)
+
 
 def test_filterpeak():
     """Test finding the maximal point in a 3D filter"""
@@ -132,6 +180,7 @@ def test_filterpeak():
     assert true_indices[0] == tidx
     assert np.all(true_indices[1:] == sidx)
 
+
 def test_cutout():
     """Test cutting out a small tube through a 3D spatiotemporal filter"""
     np.random.seed(0)
@@ -140,18 +189,24 @@ def test_cutout():
     cutout = flt.cutout(arr, (2, 2), width=1)
     assert np.allclose(cutout, chunk)
 
+
 def test_cutout_peak():
-    """Test that the `filtertools.cutout()` method correctly uses the filter peak."""
+    """Test that the `filtertools.cutout()` method correctly
+    uses the filter peak."""
     chunk = np.zeros((4, 2, 2))
     chunk[2, 1, 1] = 1
-    arr = np.pad(chunk, ((0, 0), (1, 1), (1, 1)), 'constant', constant_values=0)
+    arr = np.pad(chunk, ((0, 0), (1, 1), (1, 1)),
+            'constant', constant_values=0)
     cutout = flt.cutout(arr, width=1)
     assert np.allclose(cutout, chunk)
 
+
 def test_cutout_raises():
-    """Test cutout() raises an exception when the index argument does not have two elements."""
+    """Test cutout() raises an exception when the index argument
+    does not have two elements."""
     with pytest.raises(ValueError):
         flt.cutout(np.zeros((10, 10, 10)), (1,))
+
 
 def test_resample():
     """Test resampling a 1 or 2D array."""
@@ -174,166 +229,160 @@ def test_resample():
     assert np.allclose(orig_power[:int(size / 2), :int(size / 2)],
             up_power[:int(size / 2), :int(size / 2)])
 
+
 def test_normalize_spatial():
     """Test normalizing a noisy filter."""
     np.random.seed(0)
-    filter_length = 100
     nx, ny = 10, 10
-    true_filter = utils.create_spatiotemporal_filter(nx, ny, filter_length)[1]
+    shape = (nx, ny)
+    true_filter = np.random.randn(*shape)
     noise_std = 0.01
-    noisy_filter = true_filter + 1.0 + np.random.randn(*true_filter.shape) * 0.01
+    noisy_filter = true_filter + 1.0 * np.random.randn(*shape) * noise_std
 
     normalized = flt.normalize_spatial(noisy_filter)
-    normalized /= np.linalg.norm(normalized)
 
     atol = 0.1
     assert np.allclose(normalized, true_filter, atol=atol)
 
+
 def test_rfsize():
     np.random.seed(0)
-    filter_length = 100
     nx, ny = 10, 10
-    true_filter = utils.create_spatiotemporal_filter(nx, ny, filter_length)[1]
+    from pyret.filtertools import _gaussian_function
+    x, y = np.meshgrid(np.linspace(-3, 3, nx), np.linspace(-3, 3, ny))
+    points = np.stack((x.ravel(), y.ravel()), axis=0)
+    true_filter = _gaussian_function(points, 0, 0, 1, 0, 1).reshape(nx, ny)
 
     xsize, ysize = flt.rfsize(true_filter, 1., 1.)
-    assert np.allclose(xsize, 3., 0.1) # 1 SD is about 3 units
-    assert np.allclose(ysize, 3., 0.1)
+    assert np.allclose(xsize, 4, 0.1) # 2SDs on either side == RF size
+    assert np.allclose(ysize, 4., 0.1)
 
 
 def test_linear_response_1d():
     """Test method for computing linear response from a
-    filter to a one-dimensional stimulus.
+    filter to a one-dimensional stimulus. The linear response of the
+    filter to an impulse should return the filter itself.
     """
-    np.random.seed(0)
-    filt = np.random.randn(100,)
-    stim = np.random.randn(1000,)
-    pred = flt.linear_response(filt, stim)
-
-    sl = slicestim(stim, filt.shape[0])
-    assert np.allclose(sl.dot(filt), pred)
+    filt = np.array(((1, 0, 0)))
+    stim = np.concatenate(((1,), np.zeros((10,))), axis=0)
+    pred = flt.linear_response(filt, stim) # Impulse response is linear filter
+    assert np.allclose(pred[:filt.size], filt)
+    assert np.allclose(pred[filt.size:], np.zeros_like(pred[filt.size:]))
 
 
 def test_linear_response_acausal():
     """Test computing a linear response from a filter to a 1D stimulus,
-    including acausal portions of the stimulus.
+    including acausal portions of the stimulus. The linear response of
+    the filter to an impulse should return the filter itself, plus
+    zeros at any acausal time points.
     """
-    np.random.seed(0)
-    filt = np.random.randn(100,)
-    stim = np.random.randn(1000,)
-    pred = flt.linear_response(filt, stim, 10)
+    nacausal_points = 1
+    filt = np.concatenate((np.zeros((nacausal_points,)), (1, 0, 0)), axis=0)
+    stim = np.concatenate(((1,), np.zeros((10,))), axis=0)
+    pred = flt.linear_response(filt, stim, nacausal_points)
+    assert np.allclose(pred[:filt.size - nacausal_points],
+            filt[nacausal_points:])
+    assert np.allclose(pred[filt.size:], np.zeros_like(pred[filt.size:]))
 
-    sl = slicestim(stim, filt.shape[0] - 10, 10)
-    assert np.allclose(sl.dot(filt), pred)
+
+def test_linear_response_only_acausal():
+    """Test that calling ``linear_response`` with only acausal
+    points is invalid.
+    """
+    with pytest.raises(ValueError):
+        flt.linear_response(np.zeros((3,)), np.zeros((10,)),
+                nsamples_after=3)
 
 
 def test_linear_response_nd():
     """Test method for computing linear response from a
-    filter to a multi-dimensional stimulus.
+    filter to a multi-dimensional stimulus. The linear response of
+    the filter to an impulse (1 at first time point in all spatial dimensions)
+    should return the filter itself, scaled by the number of spatial points.
     """
-    np.random.seed(0)
     for ndim in range(2, 4):
-        filt = np.random.randn(100, *((10,) * ndim))
-        stim = np.random.randn(1000, *((10,) * ndim))
+        filt = np.zeros((3,) + ((2,) * ndim))
+        filt[0] = 1.
+        stim = np.zeros((10,) + ((2,) * ndim))
+        stim[0] = 1.
         pred = flt.linear_response(filt, stim)
-
-        sl = slicestim(stim, filt.shape[0])
-        tmp = np.zeros(sl.shape[0])
-        for i in range(tmp.size):
-            tmp[i] = np.inner(filt.ravel(), sl[i].ravel())
-
-        assert np.allclose(tmp, pred)
+        assert np.allclose(pred[0], filt[0].sum())
+        assert np.allclose(pred[1:], np.zeros_like(pred[1:]))
 
 
 def test_linear_response_raises():
     """Test raising ValueErrors with incorrect inputs"""
-    np.random.seed(0)
     with pytest.raises(ValueError):
-        flt.linear_response(np.random.randn(10,), np.random.randn(10,2))
+        flt.linear_response(np.zeros((10,)), np.zeros((10,2)))
     with pytest.raises(ValueError):
-        flt.linear_response(np.random.randn(10, 2), np.random.randn(10, 3))
+        flt.linear_response(np.zeros((10, 2)), np.zeros((10, 3)))
 
 
 def test_revcorr_raises():
     """Test raising ValueErrors with incorrect inputs"""
-    np.random.seed(0)
     with pytest.raises(ValueError):
-        flt.revcorr(np.random.randn(10, 1), np.random.randn(11,), 2)[0]
+        flt.revcorr(np.zeros((10, 1)), np.zeros((11,)), 2)[0]
     with pytest.raises(ValueError):
-        flt.revcorr(np.random.randn(10, 3), np.random.randn(10, 2), 2)[0]
+        flt.revcorr(np.zeros((10, 3)), np.zeros((10, 2)), 2)[0]
+
+
+def test_revcorr_1d_ignores_beginning():
+    """Verify revcorr ignores the first filter-length points of the stimulus,
+    to only consider those points which the response and stimulus overlap
+    completely.
+    """
+    filt = np.array(((1, 0, 0)))
+    stim = np.concatenate(((1,), np.zeros((10,))), axis=0)
+    response = np.convolve(filt, stim, 'full')[:stim.size]
+    recovered, lags = flt.revcorr(stim, response, filt.size)
+    assert np.allclose(recovered, 0)
 
 
 def test_revcorr_1d():
-    """Test computation of a 1D linear filter by reverse correlation"""
-    np.random.seed(0)
-
-    # Create fake filter, 100 time points
-    filter_length = 100
-    true_filter = utils.create_temporal_filter(filter_length)
-
-    # Compute linear response
-    stim_length = 10000
-    stimulus = np.random.randn(stim_length,)
-    response = flt.linear_response(true_filter, stimulus)
-
-    # Reverse correlation, pad response with zeros to so that
-    # stim and response match. These will be ignored by
-    # filtertools.revcorr anyway.
-    padded_response = np.concatenate((np.zeros((filter_length - 1,)),
-            response), axis=0)
-    filt = flt.revcorr(stimulus, padded_response, filter_length)[0]
-    filt /= np.linalg.norm(filt)
-    tol = 0.1
-    assert np.allclose(true_filter, filt, atol=tol)
+    """Test computation of 1D reverse correlation.
+    The reverse-correlation should recover the time-reverse of the
+    linear filter, and the lags should be start at negative values
+    and be strictly increasing.
+    """
+    filt = np.array(((1, 0, 0)))
+    stim = np.zeros((10,))
+    stim[5] = 1
+    response = np.convolve(filt, stim, 'full')[:stim.size]
+    recovered, lags = flt.revcorr(stim, response, filt.size)
+    assert np.allclose(recovered, filt[::-1])
+    assert lags[0] == -(filt.size - 1)
+    assert (np.diff(lags) == 1).all()
 
 
 def test_revcorr_acausal():
     """Test computation of a 1D linear filter by reverse correlation,
-    including acausal lag values.
+    including acausal lag values. The reverse-correlation should recover
+    the time-reverse of the linear filter.
     """
-    np.random.seed(0)
-
-    # Create fake filter, 100 time points
-    nbefore, nafter = 90, 10
-    filter_length = nbefore + nafter
-    true_filter = utils.create_temporal_filter(filter_length)
-
-    # Compute linear response
-    stim_length = 10000
-    stimulus = np.random.randn(stim_length,)
-    response = flt.linear_response(true_filter, stimulus)
-
-    # Reverse correlation, pad response with zeros to so that
-    # stim and response match. These will be ignored by
-    # filtertools.revcorr anyway.
-    padded_response = np.concatenate((np.zeros((filter_length - 1,)),
-            response), axis=0)
-    filt = flt.revcorr(stimulus, padded_response, nbefore, nafter)[0]
-    filt /= np.linalg.norm(filt)
-    tol = 0.1
-    assert np.allclose(true_filter, filt, atol=tol)
+    filt = np.array(((1, 0, 0)))
+    stim = np.zeros((10,))
+    stim[5] = 1.0
+    response = np.convolve(filt, stim, 'full')[:stim.size]
+    nsamples_after = 2
+    recovered, lags = flt.revcorr(stim, response, filt.size, nsamples_after)
+    assert np.allclose(recovered[nsamples_after:], filt[::-1])
+    assert np.allclose(recovered[:filt.size], 0)
+    assert lags[0] == -(filt.size - 1)
+    assert lags[-1] == nsamples_after
+    assert (np.diff(lags) == 1).all()
 
 
 def test_revcorr_nd():
-    np.random.seed(0)
-
-    """Test computation of 3D linear filter by reverse correlation"""
-    # Create fake filter
-    filter_length = 100
-    nx, ny = 10, 10
-    true_filter = utils.create_spatiotemporal_filter(nx, ny, filter_length)[-1]
-
-    # Compute linear response
-    stim_length = 10000
-    stimulus = np.random.randn(stim_length, nx, ny)
-    response = flt.linear_response(true_filter, stimulus)
-
-    # Reverse correlation, pad response with zeros to so that
-    # stim and response match. These will be ignored by
-    # filtertools.revcorr anyway.
-    padded_response = np.concatenate((np.zeros((filter_length - 1,)),
-            response), axis=0)
-    filt = flt.revcorr(stimulus, padded_response, filter_length)[0]
-    filt /= np.linalg.norm(filt)
-    tol = 0.1
-    assert np.allclose(true_filter, filt, atol=tol)
-
+    """Test computation of 3D linear filter by reverse correlation.
+    The reverse correlation should return the time-reverse of the
+    linear filter, scaled by the number of spatial points.
+    """
+    ndim = 3
+    filt = np.zeros((3,) + ((2,) * ndim))
+    filt[0] = 1.
+    stim = np.zeros((10,) + ((2,) * ndim))
+    stim[5] = 1.
+    response = flt.linear_response(filt, stim)
+    recovered, lags = flt.revcorr(stim, response, filt.shape[0])
+    assert np.allclose(recovered[-1], filt[0].sum())
+    assert np.allclose(recovered[:-1], 0)
