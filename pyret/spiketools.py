@@ -8,6 +8,7 @@ for smoothing a histogram into a firing rate (`estfr`)
 """
 import sys
 import numpy as np
+from scipy import signal
 import matplotlib.pyplot as plt
 from collections import Counter
 
@@ -65,7 +66,7 @@ def estfr(bspk, time, sigma=0.01):
     size = int(np.round(filt.size / 2))
 
     # Filter  binned spike times
-    return np.convolve(filt, bspk, mode='full')[size:size + time.size] / dt
+    return signal.fftconvolve(filt, bspk, mode='full')[size:size + time.size] / dt
 
 
 class SpikingEvent(object):
