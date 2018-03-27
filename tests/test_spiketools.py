@@ -36,7 +36,7 @@ def test_estfr():
     # test a single spike
     bspk[T // 2] = 1.
     fr = spk.estfr(bspk, time, sigma=0.01)
-    assert (fr.sum() * dt) == bspk.sum()
+    assert np.isclose((fr.sum() * dt), bspk.sum())
 
 
 def test_spiking_events():
