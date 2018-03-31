@@ -199,7 +199,6 @@ def raster_and_psth(spikes, trial_length=None, binsize=0.01, **kwargs):
 
     # Plot the raster
     rastax = ax.twinx()
-    plt.hold(True)
     for trial in range(ntrials):
         idx = np.bitwise_and(spikes > tbins[trial, 0],
                              spikes <= tbins[trial, -1])
