@@ -122,10 +122,10 @@ the *spike-triggered average* (STA) for the cell.
     >>> filter_length_seconds = 0.5  # 500 ms filter
     >>> filter_length = int(filter_length_seconds / frame_rate)
     >>> sta, tax = pyret.filtertools.sta(time, stimulus, spikes, filter_length)
-    >>> fig, axes = pyret.visualizations.plot_sta(-tax, sta)
+    >>> fig, axes = pyret.visualizations.plot_sta(tax, sta)
     >>> axes[0].set_title('Recovered spatial filter (STA)')
     >>> axes[1].set_title('Recovered temporal filter (STA)')
-    >>> axes[1].set_xlabel('Time before spike (s)')
+    >>> axes[1].set_xlabel('Time relative to spike (s)')
     >>> axes[1].set_ylabel('Filter response')
 
 .. image:: /pyret-tutorial-figures/recovered-sta.png
@@ -159,7 +159,7 @@ The first step in computing a nonlinearity is to compute how the recovered linea
 filter responds to the input stimulus. This is done via convolution of the linear filter
 with the stimulus.
 
-    >>> pred = pyret.filtertools.linear_response(sta, stimulus)
+    >>> pred = pyret.filtertools.linear_response(sta[::-1], stimulus)
     >>> stimulus.shape
     (30011, 20, 20)
     >>> pred.shape
